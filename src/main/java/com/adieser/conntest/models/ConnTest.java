@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.net.InetAddress;
-import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 
 public abstract class ConnTest implements Pingable {
@@ -31,12 +30,15 @@ public abstract class ConnTest implements Pingable {
     protected Ping ping(){
         Ping ping = Ping.builder()
                 .ipAddress(ipAddress)
-                .reachable(isReachable(ipAddress))
+                .reachable(false)
                 .build();
 
         long currentTime = System.currentTimeMillis();
-        if(ping.isReachable())
-            ping.setTime(System.currentTimeMillis() - currentTime);
+        if(isReachable(ipAddress)) {
+            long time = System.currentTimeMillis() - currentTime;
+            ping.setTime(time);
+            ping.setReachable(true);
+        }
 
         return ping;
     }
