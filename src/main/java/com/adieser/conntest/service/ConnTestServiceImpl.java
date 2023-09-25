@@ -1,5 +1,6 @@
 package com.adieser.conntest.service;
 
+import com.adieser.conntest.controllers.responses.PingResponse;
 import com.adieser.conntest.models.Pingable;
 import com.adieser.conntest.models.ConnTestLogFileImpl;
 import org.slf4j.Logger;
@@ -35,5 +36,10 @@ public class ConnTestServiceImpl implements ConnTestService {
             logger.warn("No tests to stop");
         else
             tests.forEach(Pingable::stopPingSession);
+    }
+
+    @Override
+    public List<PingResponse> getPings() {
+        return null;
     }
 }

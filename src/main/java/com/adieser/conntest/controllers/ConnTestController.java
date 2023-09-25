@@ -1,11 +1,15 @@
 package com.adieser.conntest.controllers;
 
+import com.adieser.conntest.controllers.responses.PingResponse;
 import com.adieser.conntest.service.ConnTestService;
 import com.adieser.conntest.service.ConnTestServiceImpl;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Arrays;
+import java.util.List;
 
 @RestController
 public class ConnTestController {
@@ -33,4 +37,8 @@ public class ConnTestController {
         return "Connection tests stopped";
     }
 
+    @GetMapping("/pings")
+    public ResponseEntity<List<PingResponse>> getPings() {
+        return new ResponseEntity<>(connTestService.getPings(), HttpStatus.OK);
+    }
 }
