@@ -22,30 +22,34 @@ import java.util.logging.SimpleFormatter;
  * - SEVERE: Indicates an exception
  * </pre>
  * <pre>
- * Format: timestamp;loglevel;ipAddress;time/avg
+ * Format: timestamp,loglevel,ipAddress,time/avg
  *
  * Ex:
- * 2023-09-24 17:33:45;INFO;8.8.8.8;13
- * 2023-09-24 17:33:45;FINE;8.8.8.8;0
- * 2023-09-24 17:48:48;WARNING;8.8.8.8;-1
+ * 2023-09-24 17:33:45,INFO,8.8.8.8,13
+ * 2023-09-24 17:33:45,FINE,8.8.8.8,0
+ * 2023-09-24 17:48:48,WARNING,8.8.8.8,-1
  * </pre>
  */
 @SuppressWarnings("BusyWait")
 public class ConnTestLogFileImpl extends ConnTest {
 
     private final java.util.logging.Logger pingLogger;
+    private final String pingLogsPath;
 
-    public ConnTestLogFileImpl(ExecutorService threadPoolExecutor, String ipAddress, Logger logger) {
+    private static final String SEPARATOR = ",";
+
+    public ConnTestLogFileImpl(ExecutorService threadPoolExecutor, String ipAddress, Logger logger, String pingLogsPath) {
         super(threadPoolExecutor, ipAddress, logger);
         this.pingLogger = java.util.logging.Logger.getLogger(ipAddress);
+        this.pingLogsPath = pingLogsPath;
         pingLogger.setLevel(Level.FINE);
         setupLogger(ipAddress, pingLogger);
     }
 
-    private static void setupLogger(String ipAddress, java.util.logging.Logger logger) {
+    private void setupLogger(String ipAddress, java.util.logging.Logger logger) {
         FileHandler fh;
         try {
-            fh = new FileHandler("C:\\pingLogs\\pingTest"+ ipAddress +".log",10 * 1024 * 1024, 10 , false);
+            fh = new FileHandler(pingLogsPath + "/pingTest"+ ipAddress +".log",10 * 1024 * 1024, 10 , false);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -56,9 +60,9 @@ public class ConnTestLogFileImpl extends ConnTest {
             public String format(LogRecord logRecord) {
 
                 return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date(logRecord.getMillis())) +
-                        ";" +
+                        SEPARATOR +
                         logRecord.getLevel() +
-                        ";" +
+                        SEPARATOR +
                         formatMessage(logRecord) +
                         "\n";
             }
@@ -88,15 +92,15 @@ public class ConnTestLogFileImpl extends ConnTest {
             while(running) {
                 Ping ping = ping();
                 if(ping.isReachable())
-                    pingLogger.log(Level.INFO, "{0};{1}", new Object[]{ping.getIpAddress(), ping.getTime()});
+                    pingLogger.log(Level.INFO, "{0},{1}", new Object[]{ping.getIpAddress(), ping.getTime()});
                 else {
-                    pingLogger.log(Level.WARNING, "{0};-1", ping.getIpAddress());
+                    pingLogger.log(Level.WARNING, "{0},-1", ping.getIpAddress());
                     lost++;
                 }
 
                 count++;
                 if(count== CUTOFF) {
-                    pingLogger.log(Level.FINE, "{0};{1}", new Object[]{ping.getIpAddress(), getAvg(lost)});
+                    pingLogger.log(Level.FINE, "{0},{1}", new Object[]{ping.getIpAddress(), getAvg(lost)});
                     count = 0;
                     lost = 0;
                 }

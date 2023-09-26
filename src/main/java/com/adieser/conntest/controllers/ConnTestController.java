@@ -1,6 +1,6 @@
 package com.adieser.conntest.controllers;
 
-import com.adieser.conntest.controllers.responses.PingResponse;
+import com.adieser.conntest.controllers.responses.PingLogFile;
 import com.adieser.conntest.service.ConnTestService;
 import com.adieser.conntest.service.ConnTestServiceImpl;
 import org.springframework.http.HttpStatus;
@@ -38,7 +38,12 @@ public class ConnTestController {
     }
 
     @GetMapping("/pings")
-    public ResponseEntity<List<PingResponse>> getPings() {
+    public ResponseEntity<List<PingLogFile>> getPings() {
         return new ResponseEntity<>(connTestService.getPings(), HttpStatus.OK);
+    }
+
+    @GetMapping("/pings/avg")
+    public ResponseEntity<List<PingLogFile>> getPingsLostAvg() {
+        return new ResponseEntity<>(connTestService.getPingsLostAvg(), HttpStatus.OK);
     }
 }
