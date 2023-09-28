@@ -27,20 +27,14 @@ public abstract class ConnTest implements Pingable {
                 .divide(BigDecimal.valueOf(CUTOFF), 2, RoundingMode.HALF_UP);
     }
 
-    protected Ping ping(){
-        Ping ping = Ping.builder()
-                .ipAddress(ipAddress)
-                .reachable(false)
-                .build();
+    protected long ping(){
+        long time = -1L;
 
         long currentTime = System.currentTimeMillis();
-        if(isReachable(ipAddress)) {
-            long time = System.currentTimeMillis() - currentTime;
-            ping.setTime(time);
-            ping.setReachable(true);
-        }
+        if(isReachable(ipAddress))
+            time = System.currentTimeMillis() - currentTime;
 
-        return ping;
+        return time;
     }
 
     protected static boolean isReachable(String ip) {

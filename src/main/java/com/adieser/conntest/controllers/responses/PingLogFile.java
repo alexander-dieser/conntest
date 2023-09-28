@@ -1,5 +1,6 @@
 package com.adieser.conntest.controllers.responses;
 
+import com.adieser.conntest.models.PingLog;
 import lombok.Builder;
 import lombok.Data;
 

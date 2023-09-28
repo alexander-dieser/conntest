@@ -1,51 +1,41 @@
 package com.adieser.conntest.service;
 
-import com.adieser.conntest.controllers.responses.PingLog;
 import com.adieser.conntest.controllers.responses.PingLogFile;
-import com.adieser.conntest.models.Pingable;
 import com.adieser.conntest.models.ConnTestLogFileImpl;
-import com.adieser.conntest.service.utils.CsvReaderService;
+import com.adieser.conntest.models.PingLog;
+import com.adieser.conntest.models.PingLogRepository;
+import com.adieser.conntest.models.Pingable;
 import org.slf4j.Logger;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
-import java.nio.file.FileVisitResult;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.ExecutorService;
-import java.util.logging.Level;
-
-import static com.adieser.conntest.service.utils.CsvReaderService.LEVEL;
 
 @Service
 public class ConnTestServiceImpl implements ConnTestService {
 
-    private static final String PINGLOGS_PATH = "conntest.pinglogs.path";
     private final Logger logger;
     private List<ConnTestLogFileImpl> tests = new ArrayList<>();
     private final ExecutorService threadPoolExecutor;
-    private final Environment env;
 
-    private final CsvReaderService csvReaderService;
+    private final PingLogRepository pingLogRepository;
 
-    public ConnTestServiceImpl(ExecutorService threadPoolExecutor, Logger logger, Environment env, CsvReaderService csvReaderService) {
+    public ConnTestServiceImpl(ExecutorService threadPoolExecutor, Logger logger,
+                               @Qualifier("csvPingLogRepository") PingLogRepository pingLogRepository) {
         this.logger = logger;
         this.threadPoolExecutor = threadPoolExecutor;
-        this.env = env;
-        this.csvReaderService = csvReaderService;
+        this.pingLogRepository = pingLogRepository;
     }
 
     @Override
     public void testLocalISPInternet(List<String> ipAddresses){
         tests = ipAddresses.stream()
-                .map(s -> new ConnTestLogFileImpl(threadPoolExecutor, s, logger, env.getProperty(PINGLOGS_PATH)))
+                .map(s -> new ConnTestLogFileImpl(threadPoolExecutor, s, logger, pingLogRepository))
                 .toList();
 
         tests.forEach(Pingable::startPingSession);
@@ -54,69 +44,67 @@ public class ConnTestServiceImpl implements ConnTestService {
     public void stopTests(){
         if(tests.isEmpty())
             logger.warn("No tests to stop");
-        else
+        else {
             tests.forEach(Pingable::stopPingSession);
+            threadPoolExecutor.shutdown();
+        }
     }
 
     @Override
     public List<PingLogFile> getPings() {
         List<PingLogFile> pingResponses = new ArrayList<>();
 
-        try {
-            Path directory = Paths.get(Objects.requireNonNull(env.getProperty(PINGLOGS_PATH)));
-            Files.walkFileTree(directory, new SimpleFileVisitor<Path>() {
-                @Override
-                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                    logger.info("reading file {}", file);
+        List<PingLog> pingLogs = pingLogRepository.findAllPingLogs();
 
-                    List<PingLog> pingLogs = csvReaderService.getAll(file.toFile());
+        pingResponses.add(
+                PingLogFile.builder()
+                        .pingLogs(pingLogs)
+                        .amountOfPings(pingLogs.size())
+                        .build()
+        );
 
-                    pingResponses.add(
-                            PingLogFile.builder()
-                                .fileName(file.getFileName().toString())
-                                .pingLogs(pingLogs)
-                                .amountOfPings(pingLogs.size())
-                                .build()
-                    );
-
-                    return FileVisitResult.CONTINUE;
-                }
-            });
-
-            return pingResponses;
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        return pingResponses;
     }
 
     @Override
-    public List<PingLogFile> getPingsLostAvg() {
+    public List<PingLogFile> getPingsByIp(String ipAddress) {
         List<PingLogFile> pingResponses = new ArrayList<>();
 
-        try {
-            Path directory = Paths.get(Objects.requireNonNull(env.getProperty(PINGLOGS_PATH)));
-            Files.walkFileTree(directory, new SimpleFileVisitor<Path>() {
-                @Override
-                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                    logger.info("reading file {}", file);
+        List<PingLog> pingLogs = pingLogRepository.findPingLogByIp(ipAddress);
 
-                    List<PingLog> pingLogs = csvReaderService.getAvg(file.toFile(), line -> line[LEVEL].equals(Level.FINE.toString()));
+        pingResponses.add(
+                PingLogFile.builder()
+                        .pingLogs(pingLogs)
+                        .amountOfPings(pingLogs.size())
+                        .build()
+        );
 
-                    pingResponses.add(
-                            PingLogFile.builder()
-                                    .fileName(file.getFileName().toString())
-                                    .pingLogs(pingLogs)
-                                    .amountOfPings(pingLogs.size())
-                                    .build()
-                    );
+        return pingResponses;
+    }
 
-                    return FileVisitResult.CONTINUE;
-                }
-            });
+    @Override
+    public List<PingLogFile> getPingsByDateTimeRangeByIp(LocalDateTime start, LocalDateTime end, String ipAddress) {
+        List<PingLogFile> pingResponses = new ArrayList<>();
 
-            return pingResponses;
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        List<PingLog> pingLogs = pingLogRepository.findPingLogsByDateTimeRangeByIp(start, end, ipAddress);
+
+        pingResponses.add(
+                PingLogFile.builder()
+                        .pingLogs(pingLogs)
+                        .amountOfPings(pingLogs.size())
+                        .build()
+        );
+
+        return pingResponses;
+    }
+
+    @Override
+    public BigDecimal getPingsLostAvgByIp(String ipAddress) {
+        return pingLogRepository.findLostPingLogsAvgByIP(ipAddress);
+    }
+
+    @Override
+    public BigDecimal getPingsLostAvgByDateTimeRangeByIp(LocalDateTime start, LocalDateTime end, String ipAddress) {
+        return pingLogRepository.findLostPingLogsAvgByDateTimeRangeByIp(start, end, ipAddress);
     }
 }
