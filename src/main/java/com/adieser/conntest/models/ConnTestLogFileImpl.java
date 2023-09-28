@@ -9,24 +9,17 @@ import java.util.concurrent.ExecutorService;
  * <pre>
  * ConnTest implementation where pings are stored in JUL log files.
  * Logs are in CSV format for easing the reporting
- * The following log levels represent:
- * - INFO: normal ping
- * - WARNING: unreachable ping
- * - FINE: average of lost pings within the last 100 pings
- * - SEVERE: Indicates an exception
  * </pre>
  * <pre>
- * Format: timestamp,loglevel,ipAddress,time/avg
+ * Format: timestamp,ipAddress,time
  *
  * Ex:
- * 2023-09-24 17:33:45,INFO,8.8.8.8,13
- * 2023-09-24 17:33:45,FINE,8.8.8.8,0
- * 2023-09-24 17:48:48,WARNING,8.8.8.8,-1
+ * 2023-09-27 01:17:26,192.168.1.1,0
+ * 2023-09-27 01:17:26,131.100.65.1,-1
  * </pre>
  */
 @SuppressWarnings("BusyWait")
 public class ConnTestLogFileImpl extends ConnTest {
-
 
     private final PingLogRepository pingLogRepository;
 
