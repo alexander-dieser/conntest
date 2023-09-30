@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.List;
 
 @RestController
@@ -27,10 +26,7 @@ public class ConnTestController {
 
     @PostMapping("/test-local-isp-cloud")
     public void testLocalIspCloud() {
-
-        connTestService.testLocalISPInternet(
-                Arrays.asList("192.168.1.1", "131.100.65.1", "8.8.8.8")
-        );
+        connTestService.testLocalISPInternet();
     }
 
     @PostMapping("/stop-tests")
