@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.List;
 
 @RestController
@@ -27,10 +26,7 @@ public class ConnTestController {
 
     @PostMapping("/test-local-isp-cloud")
     public void testLocalIspCloud() {
-
-        connTestService.testLocalISPInternet(
-                Arrays.asList("192.168.1.1", "131.100.65.1", "8.8.8.8")
-        );
+        connTestService.testLocalISPInternet();
     }
 
     @PostMapping("/stop-tests")
@@ -41,6 +37,13 @@ public class ConnTestController {
     @GetMapping("/pings")
     public ResponseEntity<List<PingLogFile>> getPings() {
         return new ResponseEntity<>(connTestService.getPings(), HttpStatus.OK);
+    }
+
+    @GetMapping("/pings/{start}/{end}")
+    public ResponseEntity<List<PingLogFile>> getPingsByDateTimeRange(
+            @PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime start,
+            @PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime end) {
+        return new ResponseEntity<>(connTestService.getPingsByDateTimeRange(start, end), HttpStatus.OK);
     }
 
     @GetMapping("/pings/{ipAddress}")
