@@ -39,6 +39,13 @@ public class ConnTestController {
         return new ResponseEntity<>(connTestService.getPings(), HttpStatus.OK);
     }
 
+    @GetMapping("/pings/{start}/{end}")
+    public ResponseEntity<List<PingLogFile>> getPingsByDateTimeRange(
+            @PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime start,
+            @PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime end) {
+        return new ResponseEntity<>(connTestService.getPingsByDateTimeRange(start, end), HttpStatus.OK);
+    }
+
     @GetMapping("/pings/{ipAddress}")
     public ResponseEntity<List<PingLogFile>> getPingsByIp(@PathVariable String ipAddress) {
         return new ResponseEntity<>(connTestService.getPingsByIp(ipAddress), HttpStatus.OK);

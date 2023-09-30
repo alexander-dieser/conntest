@@ -31,7 +31,7 @@ public class ConnTestServiceImpl implements ConnTestService {
     /**
      * Tracert IP regex (Windows) for extracting the IP addresses from tracert output
      */
-    private static final String REGEX_PATTERN_TRACERT_WINDOWS = "(?<!\\[)(\\b(?:\\d{1,3}\\.){3}\\d{1,3}\\b)(?!\\])";
+    private static final String REGEX_PATTERN_TRACERT_WINDOWS = "(?<!\\[)(\\b(?:\\d{1,3}\\.){3}\\d{1,3}\\b)(?!])";
     private final PingLogRepository pingLogRepository;
 
     public ConnTestServiceImpl(ExecutorService threadPoolExecutor, Logger logger,
@@ -54,27 +54,7 @@ public class ConnTestServiceImpl implements ConnTestService {
         tests.forEach(Pingable::startPingSession);
     }
 
-    private List<String> traceroute() {
-        List<String> ipAddresses = new ArrayList<>();
-
-        try {
-            Process tracertProcess = Runtime.getRuntime().exec("tracert -h 2 8.8.8.8");
-
-            BufferedReader reader = new BufferedReader(new InputStreamReader(tracertProcess.getInputStream()));
-            String line;
-            while ((line = reader.readLine()) != null) {
-                Matcher matcher = Pattern.compile(REGEX_PATTERN_TRACERT_WINDOWS).matcher(line);
-                if (matcher.find())
-                    ipAddresses.add(matcher.group());
-            }
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return ipAddresses;
-    }
-
+    @Override
     public void stopTests(){
         if(tests.isEmpty())
             logger.warn("No tests to stop");
@@ -90,12 +70,18 @@ public class ConnTestServiceImpl implements ConnTestService {
 
         List<PingLog> pingLogs = pingLogRepository.findAllPingLogs();
 
-        pingResponses.add(
-                PingLogFile.builder()
-                        .pingLogs(pingLogs)
-                        .amountOfPings(pingLogs.size())
-                        .build()
-        );
+        createResponse(pingResponses, pingLogs);
+
+        return pingResponses;
+    }
+
+    @Override
+    public List<PingLogFile> getPingsByDateTimeRange(LocalDateTime start, LocalDateTime end) {
+        List<PingLogFile> pingResponses = new ArrayList<>();
+
+        List<PingLog> pingLogs = pingLogRepository.findPingLogsByDateTimeRange(start, end);
+
+        createResponse(pingResponses, pingLogs);
 
         return pingResponses;
     }
@@ -106,12 +92,7 @@ public class ConnTestServiceImpl implements ConnTestService {
 
         List<PingLog> pingLogs = pingLogRepository.findPingLogByIp(ipAddress);
 
-        pingResponses.add(
-                PingLogFile.builder()
-                        .pingLogs(pingLogs)
-                        .amountOfPings(pingLogs.size())
-                        .build()
-        );
+        createResponse(pingResponses, pingLogs);
 
         return pingResponses;
     }
@@ -122,12 +103,7 @@ public class ConnTestServiceImpl implements ConnTestService {
 
         List<PingLog> pingLogs = pingLogRepository.findPingLogsByDateTimeRangeByIp(start, end, ipAddress);
 
-        pingResponses.add(
-                PingLogFile.builder()
-                        .pingLogs(pingLogs)
-                        .amountOfPings(pingLogs.size())
-                        .build()
-        );
+        createResponse(pingResponses, pingLogs);
 
         return pingResponses;
     }
@@ -140,5 +116,35 @@ public class ConnTestServiceImpl implements ConnTestService {
     @Override
     public BigDecimal getPingsLostAvgByDateTimeRangeByIp(LocalDateTime start, LocalDateTime end, String ipAddress) {
         return pingLogRepository.findLostPingLogsAvgByDateTimeRangeByIp(start, end, ipAddress);
+    }
+
+    private static void createResponse(List<PingLogFile> pingResponses, List<PingLog> pingLogs) {
+        pingResponses.add(
+                PingLogFile.builder()
+                        .pingLogs(pingLogs)
+                        .amountOfPings(pingLogs.size())
+                        .build()
+        );
+    }
+
+    private List<String> traceroute() {
+        List<String> ipAddresses = new ArrayList<>();
+
+        try {
+            Process tracertProcess = Runtime.getRuntime().exec("tracert -h 2 8.8.8.8");
+
+            BufferedReader reader = new BufferedReader(new InputStreamReader(tracertProcess.getInputStream()));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                Matcher matcher = Pattern.compile(REGEX_PATTERN_TRACERT_WINDOWS).matcher(line);
+                if (matcher.find())
+                    ipAddresses.add(matcher.group());
+            }
+
+        } catch (IOException e) {
+            logger.error("Tracerout error", e);
+        }
+
+        return ipAddresses;
     }
 }

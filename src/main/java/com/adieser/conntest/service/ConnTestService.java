@@ -10,6 +10,7 @@ public interface ConnTestService {
     void testLocalISPInternet();
     void stopTests();
     List<PingLogFile> getPings();
+    List<PingLogFile> getPingsByDateTimeRange(LocalDateTime start, LocalDateTime end);
     List<PingLogFile> getPingsByIp(String ipAddress);
     List<PingLogFile> getPingsByDateTimeRangeByIp(LocalDateTime start, LocalDateTime end, String ipAddress);
     BigDecimal getPingsLostAvgByIp(String ipAddress);

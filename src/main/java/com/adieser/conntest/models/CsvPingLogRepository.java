@@ -23,12 +23,12 @@ import java.util.List;
 import java.util.stream.Stream;
 
 public class CsvPingLogRepository implements PingLogRepository {
-    private final Logger logger;
     private final String path;
+    private final Logger logger;
 
-    public CsvPingLogRepository(Logger logger, String path) {
-        this.logger = logger;
+    public CsvPingLogRepository(String path, Logger logger) {
         this.path = path;
+        this.logger = logger;
     }
 
     @Override
@@ -47,7 +47,7 @@ public class CsvPingLogRepository implements PingLogRepository {
 
             sbc.write(pingLog);
         } catch (IOException | CsvRequiredFieldEmptyException | CsvDataTypeMismatchException e) {
-            throw new RuntimeException(e);
+            logger.error("Save Ping error", e);
         }
     }
 
@@ -58,24 +58,25 @@ public class CsvPingLogRepository implements PingLogRepository {
 
     @Override
     public List<PingLog> findPingLogByIp(String ipAddress) {
-        return getPingLogsByIpStream(ipAddress)
+        return getPingLogsByIpStream(readAll().stream(), ipAddress)
                 .toList();
     }
 
     @Override
     public List<PingLog> findPingLogsByDateTimeRange(LocalDateTime start, LocalDateTime end) {
-        return null;
+        return getPingLogsByDateTimeRange(readAll().stream(), start, end)
+                .toList();
     }
 
     @Override
     public List<PingLog> findPingLogsByDateTimeRangeByIp(LocalDateTime start, LocalDateTime end, String ipAddress) {
-        return getPingLogsByDateTimeRangeByIp(start, end, ipAddress)
+        return getPingLogsByDateTimeRangeByIp(readAll().stream(), start, end, ipAddress)
                 .toList();
     }
 
     @Override
     public BigDecimal findLostPingLogsAvgByIP(String ipAddress) {
-        List<PingLog> pingLogsByIp = getPingLogsByIpStream(ipAddress).toList();
+        List<PingLog> pingLogsByIp = getPingLogsByIpStream(readAll().stream(), ipAddress).toList();
 
         long lost = getLostPingLogs(pingLogsByIp.stream())
                 .count();
@@ -91,7 +92,7 @@ public class CsvPingLogRepository implements PingLogRepository {
 
     @Override
     public BigDecimal findLostPingLogsAvgByDateTimeRangeByIp(LocalDateTime start, LocalDateTime end, String ipAddress) {
-        List<PingLog> pingLogsInDateTimeRange = getPingLogsByDateTimeRangeByIp(start, end, ipAddress)
+        List<PingLog> pingLogsInDateTimeRange = getPingLogsByDateTimeRangeByIp(readAll().stream(), start, end, ipAddress)
                 .toList();
 
         long lost = getLostPingLogs(pingLogsInDateTimeRange.stream())
@@ -114,25 +115,35 @@ public class CsvPingLogRepository implements PingLogRepository {
 
             return cb.parse();
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            logger.error("Tracerout error", e);
         }
+
+        return List.of();
     }
 
-    private Stream<PingLog> getPingLogsByIpStream(String ipAddress){
-        return readAll().stream()
+    private Stream<PingLog> getPingLogsByIpStream(Stream<PingLog> st, String ipAddress){
+        return st
                 .filter(pingLog -> pingLog.getIpAddress().equals(ipAddress));
     }
 
-    private Stream<PingLog> getPingLogsByDateTimeRangeByIp(LocalDateTime start, LocalDateTime end, String ipAddress){
-        return getPingLogsByIpStream(ipAddress)
-                .filter(pingLog ->
-                        (pingLog.getDateTime().isAfter(start) || pingLog.getDateTime().isEqual(start))
-                        && (pingLog.getDateTime().isBefore(end) || pingLog.getDateTime().isEqual(end))
-                );
+    private Stream<PingLog> getPingLogsByDateTimeRangeByIp(Stream<PingLog> st, LocalDateTime start, LocalDateTime end, String ipAddress){
+        return getPingLogsByDateTimeRange(
+                getPingLogsByIpStream(st, ipAddress),
+                start,
+                end
+        );
     }
 
     private Stream<PingLog> getLostPingLogs(Stream<PingLog> st){
         return st
                 .filter(pingLog -> pingLog.getPingTime() < 0);
+    }
+
+    private Stream<PingLog> getPingLogsByDateTimeRange(Stream<PingLog> st, LocalDateTime start, LocalDateTime end){
+        return st
+                .filter(pingLog ->
+                        (pingLog.getDateTime().isAfter(start) || pingLog.getDateTime().isEqual(start))
+                                && (pingLog.getDateTime().isBefore(end) || pingLog.getDateTime().isEqual(end))
+                );
     }
 }
