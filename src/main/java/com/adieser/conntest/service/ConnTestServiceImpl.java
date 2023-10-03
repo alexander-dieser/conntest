@@ -1,7 +1,7 @@
 package com.adieser.conntest.service;
 
-import com.adieser.conntest.controllers.responses.PingLogFile;
-import com.adieser.conntest.models.ConnTestLogFileImpl;
+import com.adieser.conntest.controllers.responses.PingSessionResponseEntity;
+import com.adieser.conntest.models.ConnTest;
 import com.adieser.conntest.models.PingLog;
 import com.adieser.conntest.models.PingLogRepository;
 import com.adieser.conntest.models.Pingable;
@@ -20,18 +20,23 @@ import java.util.concurrent.ExecutorService;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * ConnTestService implementation. It uses {@link ExecutorService} for multithreading.
+ * To automatically gather the local and ISP IP addresses it leverages the OS traceroute-like command
+ */
 @Service
 public class ConnTestServiceImpl implements ConnTestService {
 
     public static final String CLOUD_IP = "8.8.8.8";
     private final Logger logger;
-    private List<ConnTestLogFileImpl> tests = new ArrayList<>();
+    private List<ConnTest> tests = new ArrayList<>();
     private final ExecutorService threadPoolExecutor;
 
     /**
      * Tracert IP regex (Windows) for extracting the IP addresses from tracert output
      */
     private static final String REGEX_PATTERN_TRACERT_WINDOWS = "(?<!\\[)(\\b(?:\\d{1,3}\\.){3}\\d{1,3}\\b)(?!])";
+
     private final PingLogRepository pingLogRepository;
 
     public ConnTestServiceImpl(ExecutorService threadPoolExecutor, Logger logger,
@@ -44,11 +49,11 @@ public class ConnTestServiceImpl implements ConnTestService {
     @Override
     public void testLocalISPInternet(){
 
-        List<String> ipAddresses = traceroute();
+        List<String> ipAddresses = getLocalAndISPIpAddresses();
         ipAddresses.add(CLOUD_IP);
 
         tests = ipAddresses.stream()
-                .map(s -> new ConnTestLogFileImpl(threadPoolExecutor, s, logger, pingLogRepository))
+                .map(s -> new ConnTest(threadPoolExecutor, s, logger, pingLogRepository))
                 .toList();
 
         tests.forEach(Pingable::startPingSession);
@@ -65,8 +70,8 @@ public class ConnTestServiceImpl implements ConnTestService {
     }
 
     @Override
-    public List<PingLogFile> getPings() {
-        List<PingLogFile> pingResponses = new ArrayList<>();
+    public List<PingSessionResponseEntity> getPings() {
+        List<PingSessionResponseEntity> pingResponses = new ArrayList<>();
 
         List<PingLog> pingLogs = pingLogRepository.findAllPingLogs();
 
@@ -76,8 +81,8 @@ public class ConnTestServiceImpl implements ConnTestService {
     }
 
     @Override
-    public List<PingLogFile> getPingsByDateTimeRange(LocalDateTime start, LocalDateTime end) {
-        List<PingLogFile> pingResponses = new ArrayList<>();
+    public List<PingSessionResponseEntity> getPingsByDateTimeRange(LocalDateTime start, LocalDateTime end) {
+        List<PingSessionResponseEntity> pingResponses = new ArrayList<>();
 
         List<PingLog> pingLogs = pingLogRepository.findPingLogsByDateTimeRange(start, end);
 
@@ -87,8 +92,8 @@ public class ConnTestServiceImpl implements ConnTestService {
     }
 
     @Override
-    public List<PingLogFile> getPingsByIp(String ipAddress) {
-        List<PingLogFile> pingResponses = new ArrayList<>();
+    public List<PingSessionResponseEntity> getPingsByIp(String ipAddress) {
+        List<PingSessionResponseEntity> pingResponses = new ArrayList<>();
 
         List<PingLog> pingLogs = pingLogRepository.findPingLogByIp(ipAddress);
 
@@ -98,8 +103,8 @@ public class ConnTestServiceImpl implements ConnTestService {
     }
 
     @Override
-    public List<PingLogFile> getPingsByDateTimeRangeByIp(LocalDateTime start, LocalDateTime end, String ipAddress) {
-        List<PingLogFile> pingResponses = new ArrayList<>();
+    public List<PingSessionResponseEntity> getPingsByDateTimeRangeByIp(LocalDateTime start, LocalDateTime end, String ipAddress) {
+        List<PingSessionResponseEntity> pingResponses = new ArrayList<>();
 
         List<PingLog> pingLogs = pingLogRepository.findPingLogsByDateTimeRangeByIp(start, end, ipAddress);
 
@@ -118,16 +123,27 @@ public class ConnTestServiceImpl implements ConnTestService {
         return pingLogRepository.findLostPingLogsAvgByDateTimeRangeByIp(start, end, ipAddress);
     }
 
-    private static void createResponse(List<PingLogFile> pingResponses, List<PingLog> pingLogs) {
+    /**
+     * Create the ping session results formatted as {@link PingSessionResponseEntity}
+     * @param pingResponses List carrying the {@link PingSessionResponseEntity}
+     * @param pingLogs List of ping sessions results
+     */
+    private static void createResponse(List<PingSessionResponseEntity> pingResponses, List<PingLog> pingLogs) {
         pingResponses.add(
-                PingLogFile.builder()
+                PingSessionResponseEntity.builder()
                         .pingLogs(pingLogs)
                         .amountOfPings(pingLogs.size())
                         .build()
         );
     }
 
-    private List<String> traceroute() {
+    /**
+     * Gather the necessary IP addresses
+     * This method leverage the traceroute OS tool
+     *
+     * @return List of IP addresses, containing the first (local gateway) and the second hop (ISP)
+     */
+    private List<String> getLocalAndISPIpAddresses() {
         List<String> ipAddresses = new ArrayList<>();
 
         try {

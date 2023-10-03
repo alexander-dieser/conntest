@@ -6,10 +6,12 @@ import lombok.Data;
 
 import java.util.List;
 
+/**
+ * Class to hold the result of a set of pings
+ */
 @Data
 @Builder
-public class PingLogFile {
-    private String fileName;
+public class PingSessionResponseEntity {
     private long amountOfPings;
     private List<PingLog> pingLogs;
 }
