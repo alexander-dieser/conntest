@@ -33,3 +33,4 @@ build/
 .vscode/
 /logs/
 /src/main/resources/pingLogs/
+/db.mv.db

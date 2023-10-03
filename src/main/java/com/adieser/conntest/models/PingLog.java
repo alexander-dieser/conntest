@@ -9,6 +9,9 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
+/**
+ * Data structure to represent a Ping
+ */
 @Data
 @Builder
 @NoArgsConstructor
@@ -22,11 +25,14 @@ public class PingLog {
     @CsvBindByPosition(position = 0)
     private LocalDateTime dateTime;
 
+    /**
+     * Ip address that was pinged
+     */
     @CsvBindByPosition(position = 1)
     private String ipAddress;
 
     /**
-     * time in milliseconds
+     * time it took to ping the ip address (milliseconds)
      */
     @CsvBindByPosition(position = 2)
     private long pingTime;

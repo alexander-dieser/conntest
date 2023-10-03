@@ -5,6 +5,9 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 
+/**
+ * Class to hold the result of average of lost pings
+ */
 @Data
 @AllArgsConstructor
 public class AverageResponse {

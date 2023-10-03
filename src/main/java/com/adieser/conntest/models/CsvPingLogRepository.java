@@ -22,6 +22,16 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Stream;
 
+/**
+ *  Repository for pings stored in a text file. Pings are in CSV format
+ *  <pre>
+ *  Format: timestamp,ipAddress,time
+ *
+ *  Ex:
+ *  2023-09-27 01:17:26,192.168.1.1,0
+ *  2023-09-27 01:17:26,131.100.65.1,-1
+ *  </pre>
+ */
 public class CsvPingLogRepository implements PingLogRepository {
     private final String path;
     private final Logger logger;
@@ -107,6 +117,10 @@ public class CsvPingLogRepository implements PingLogRepository {
                     RoundingMode.CEILING);
     }
 
+    /**
+     * Retrieve all the pings from the CSV file
+     * @return List of pings
+     */
     private List<PingLog> readAll(){
         try (Reader reader = Files.newBufferedReader(Path.of(path + "/ping.log"))) {
             CsvToBean<PingLog> cb = new CsvToBeanBuilder<PingLog>(reader)
@@ -121,11 +135,26 @@ public class CsvPingLogRepository implements PingLogRepository {
         return List.of();
     }
 
+    /**
+     * Get a Stream of pings, applying a filter for retrieving only those pings related to a given ipAddress
+     * @param st stream to apply the filtering
+     * @param ipAddress IP address for filtering
+     * @return Stream of pings with a filter applied
+     */
     private Stream<PingLog> getPingLogsByIpStream(Stream<PingLog> st, String ipAddress){
         return st
                 .filter(pingLog -> pingLog.getIpAddress().equals(ipAddress));
     }
 
+    /**
+     * Get a Stream of pings, applying a filter for retrieving only those pings related to a given ipAddress, within
+     * a datetime range
+     * @param st stream to apply the filtering
+     * @param start start date and time of the range
+     * @param end end date in the range
+     * @param ipAddress IP address for filtering
+     * @return Stream of pings with a filter applied
+     */
     private Stream<PingLog> getPingLogsByDateTimeRangeByIp(Stream<PingLog> st, LocalDateTime start, LocalDateTime end, String ipAddress){
         return getPingLogsByDateTimeRange(
                 getPingLogsByIpStream(st, ipAddress),
@@ -134,11 +163,24 @@ public class CsvPingLogRepository implements PingLogRepository {
         );
     }
 
+    /**
+     * Get a Stream of pings, applying a filter for retrieving only those pings that have failed
+     * @param st stream to apply the filtering
+     * @return Stream of pings with a filter applied
+     */
     private Stream<PingLog> getLostPingLogs(Stream<PingLog> st){
         return st
                 .filter(pingLog -> pingLog.getPingTime() < 0);
     }
 
+    /**
+     * Get a Stream of pings, applying a filter for retrieving only those pings that have failed within a
+     * datetime range
+     * @param st stream to apply the filtering
+     * @param start start date and time of the range
+     * @param end end date in the range
+     * @return Stream of pings with a filter applied
+     */
     private Stream<PingLog> getPingLogsByDateTimeRange(Stream<PingLog> st, LocalDateTime start, LocalDateTime end){
         return st
                 .filter(pingLog ->
