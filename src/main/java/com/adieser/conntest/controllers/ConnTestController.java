@@ -3,7 +3,6 @@ package com.adieser.conntest.controllers;
 import com.adieser.conntest.controllers.responses.AverageResponse;
 import com.adieser.conntest.controllers.responses.PingSessionResponseEntity;
 import com.adieser.conntest.service.ConnTestService;
-import com.adieser.conntest.service.ConnTestServiceImpl;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,7 +22,7 @@ public class ConnTestController {
 
     private final ConnTestService connTestService;
 
-    public ConnTestController(ConnTestServiceImpl connTestService) {
+    public ConnTestController(ConnTestService connTestService) {
         this.connTestService = connTestService;
     }
 
