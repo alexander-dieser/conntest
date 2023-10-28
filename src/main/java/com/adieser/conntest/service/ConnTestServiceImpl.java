@@ -1,7 +1,7 @@
 package com.adieser.conntest.service;
 
-import com.adieser.conntest.controllers.responses.PingLogFile;
-import com.adieser.conntest.models.ConnTestLogFileImpl;
+import com.adieser.conntest.controllers.responses.PingSessionResponseEntity;
+import com.adieser.conntest.models.ConnTest;
 import com.adieser.conntest.models.PingLog;
 import com.adieser.conntest.models.PingLogRepository;
 import com.adieser.conntest.models.Pingable;
@@ -11,70 +11,56 @@ import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * ConnTestService implementation. It uses {@link ExecutorService} for multithreading.
+ * To automatically gather the local and ISP IP addresses it leverages the OS traceroute-like command
+ */
 @Service
 public class ConnTestServiceImpl implements ConnTestService {
 
     public static final String CLOUD_IP = "8.8.8.8";
     private final Logger logger;
-    private List<ConnTestLogFileImpl> tests = new ArrayList<>();
+    List<ConnTest> tests = new ArrayList<>();
     private final ExecutorService threadPoolExecutor;
+
+    private final TracertProvider tracertProvider;
 
     /**
      * Tracert IP regex (Windows) for extracting the IP addresses from tracert output
      */
-    private static final String REGEX_PATTERN_TRACERT_WINDOWS = "(?<!\\[)(\\b(?:\\d{1,3}\\.){3}\\d{1,3}\\b)(?!\\])";
+    private static final String REGEX_PATTERN_TRACERT_WINDOWS = "(?<!\\[)(\\b(?:\\d{1,3}\\.){3}\\d{1,3}\\b)(?!])";
+
     private final PingLogRepository pingLogRepository;
 
     public ConnTestServiceImpl(ExecutorService threadPoolExecutor, Logger logger,
-                               @Qualifier("csvPingLogRepository") PingLogRepository pingLogRepository) {
+                               TracertProvider tracertProvider, @Qualifier("csvPingLogRepository") PingLogRepository pingLogRepository) {
         this.logger = logger;
         this.threadPoolExecutor = threadPoolExecutor;
+        this.tracertProvider = tracertProvider;
         this.pingLogRepository = pingLogRepository;
     }
 
     @Override
     public void testLocalISPInternet(){
 
-        List<String> ipAddresses = traceroute();
+        List<String> ipAddresses = getLocalAndISPIpAddresses();
         ipAddresses.add(CLOUD_IP);
 
-        tests = ipAddresses.stream()
-                .map(s -> new ConnTestLogFileImpl(threadPoolExecutor, s, logger, pingLogRepository))
-                .toList();
+        tests = getConnTestsFromIpAddresses(ipAddresses);
 
         tests.forEach(Pingable::startPingSession);
     }
 
-    private List<String> traceroute() {
-        List<String> ipAddresses = new ArrayList<>();
-
-        try {
-            Process tracertProcess = Runtime.getRuntime().exec("tracert -h 2 8.8.8.8");
-
-            BufferedReader reader = new BufferedReader(new InputStreamReader(tracertProcess.getInputStream()));
-            String line;
-            while ((line = reader.readLine()) != null) {
-                Matcher matcher = Pattern.compile(REGEX_PATTERN_TRACERT_WINDOWS).matcher(line);
-                if (matcher.find())
-                    ipAddresses.add(matcher.group());
-            }
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return ipAddresses;
-    }
-
+    @Override
     public void stopTests(){
         if(tests.isEmpty())
             logger.warn("No tests to stop");
@@ -85,49 +71,45 @@ public class ConnTestServiceImpl implements ConnTestService {
     }
 
     @Override
-    public List<PingLogFile> getPings() {
-        List<PingLogFile> pingResponses = new ArrayList<>();
+    public List<PingSessionResponseEntity> getPings() {
+        List<PingSessionResponseEntity> pingResponses = new ArrayList<>();
 
         List<PingLog> pingLogs = pingLogRepository.findAllPingLogs();
 
-        pingResponses.add(
-                PingLogFile.builder()
-                        .pingLogs(pingLogs)
-                        .amountOfPings(pingLogs.size())
-                        .build()
-        );
+        createResponse(pingResponses, pingLogs);
 
         return pingResponses;
     }
 
     @Override
-    public List<PingLogFile> getPingsByIp(String ipAddress) {
-        List<PingLogFile> pingResponses = new ArrayList<>();
+    public List<PingSessionResponseEntity> getPingsByDateTimeRange(LocalDateTime start, LocalDateTime end) {
+        List<PingSessionResponseEntity> pingResponses = new ArrayList<>();
+
+        List<PingLog> pingLogs = pingLogRepository.findPingLogsByDateTimeRange(start, end);
+
+        createResponse(pingResponses, pingLogs);
+
+        return pingResponses;
+    }
+
+    @Override
+    public List<PingSessionResponseEntity> getPingsByIp(String ipAddress) {
+        List<PingSessionResponseEntity> pingResponses = new ArrayList<>();
 
         List<PingLog> pingLogs = pingLogRepository.findPingLogByIp(ipAddress);
 
-        pingResponses.add(
-                PingLogFile.builder()
-                        .pingLogs(pingLogs)
-                        .amountOfPings(pingLogs.size())
-                        .build()
-        );
+        createResponse(pingResponses, pingLogs);
 
         return pingResponses;
     }
 
     @Override
-    public List<PingLogFile> getPingsByDateTimeRangeByIp(LocalDateTime start, LocalDateTime end, String ipAddress) {
-        List<PingLogFile> pingResponses = new ArrayList<>();
+    public List<PingSessionResponseEntity> getPingsByDateTimeRangeByIp(LocalDateTime start, LocalDateTime end, String ipAddress) {
+        List<PingSessionResponseEntity> pingResponses = new ArrayList<>();
 
         List<PingLog> pingLogs = pingLogRepository.findPingLogsByDateTimeRangeByIp(start, end, ipAddress);
 
-        pingResponses.add(
-                PingLogFile.builder()
-                        .pingLogs(pingLogs)
-                        .amountOfPings(pingLogs.size())
-                        .build()
-        );
+        createResponse(pingResponses, pingLogs);
 
         return pingResponses;
     }
@@ -140,5 +122,64 @@ public class ConnTestServiceImpl implements ConnTestService {
     @Override
     public BigDecimal getPingsLostAvgByDateTimeRangeByIp(LocalDateTime start, LocalDateTime end, String ipAddress) {
         return pingLogRepository.findLostPingLogsAvgByDateTimeRangeByIp(start, end, ipAddress);
+    }
+
+    /**
+     * Create the ping session results formatted as {@link PingSessionResponseEntity}
+     * @param pingResponses List carrying the {@link PingSessionResponseEntity}
+     * @param pingLogs List of ping sessions results
+     */
+    void createResponse(List<PingSessionResponseEntity> pingResponses, List<PingLog> pingLogs) {
+        pingResponses.add(
+                PingSessionResponseEntity.builder()
+                        .pingLogs(pingLogs)
+                        .amountOfPings(pingLogs.size())
+                        .build()
+        );
+    }
+
+    /**
+     * Gather the necessary IP addresses
+     * This method leverage the traceroute OS tool
+     *
+     * @return List of IP addresses, containing the first (local gateway) and the second hop (ISP)
+     */
+    List<String> getLocalAndISPIpAddresses() {
+        List<String> ipAddresses = new ArrayList<>();
+
+        try (BufferedReader reader = executeTracert()
+                .orElseThrow(() -> new IOException("Error executing tracert in the OS"))) {
+
+            String line;
+            while ((line = reader.readLine()) != null) {
+                Matcher matcher = Pattern.compile(REGEX_PATTERN_TRACERT_WINDOWS).matcher(line);
+                if (matcher.find())
+                    ipAddresses.add(matcher.group());
+            }
+        }catch (IOException e) {
+            logger.error("Traceroute error", e);
+        }
+
+        return ipAddresses;
+    }
+
+    /**
+     * Get a list of ConnTests objects created from a list of IP addresses
+     * @param ipAddresses IP address to create the ConnTest
+     * @return A list of ConnTests
+     */
+    List<ConnTest> getConnTestsFromIpAddresses(List<String> ipAddresses) {
+        return ipAddresses.stream()
+                .map(s -> new ConnTest(threadPoolExecutor, s, logger, pingLogRepository))
+                .toList();
+    }
+
+    /**
+     * Execute OS tracert command and return the buffer reader containing the command output
+     * @return the BufferReader containing the command output
+     * @throws IOException throws by java.lang.Runtime exec command
+     */
+    Optional<BufferedReader> executeTracert() throws IOException {
+        return tracertProvider.executeTracert();
     }
 }
