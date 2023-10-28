@@ -1,9 +1,11 @@
 package com.adieser.conntest.models;
 
+import lombok.Getter;
 import org.slf4j.Logger;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.time.LocalDateTime;
 import java.util.concurrent.ExecutorService;
 
@@ -13,12 +15,15 @@ import java.util.concurrent.ExecutorService;
  */
 @SuppressWarnings("BusyWait")
 public class ConnTest implements Pingable {
-    private static final int TIMEOUT = 3000;
+    protected static final int TIMEOUT = 3000;
+    public static final String PING_SESSION_INTERRUPTED_MSG = "Ping session was interrupted";
     private final ExecutorService threadPoolExecutor;
-    private final String ipAddress;
-    private boolean running = true;
+    protected boolean running = true;
     private final Logger logger;
     private final PingLogRepository pingLogRepository;
+
+    @Getter
+    private final String ipAddress;
 
     public ConnTest(ExecutorService threadPoolExecutor, String ipAddress, Logger logger,
                     PingLogRepository pingLogRepository) {
@@ -44,21 +49,26 @@ public class ConnTest implements Pingable {
      * Ping task running in a loop only stoppable by changing the value of {@code running} variable to false.
      * Each ping is triggered once per second
      */
-    private void pingSession() {
+    void pingSession() {
         try {
             while(running) {
                 long ping = ping();
-                pingLogRepository.savePingLog(PingLog.builder()
-                        .dateTime(LocalDateTime.now())
-                        .ipAddress(ipAddress)
-                        .pingTime(ping)
-                        .build());
+                pingLogRepository.savePingLog(buildPingLog(ping));
 
                 Thread.sleep(1000);
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
+            logger.warn(PING_SESSION_INTERRUPTED_MSG);
         }
+    }
+
+    PingLog buildPingLog(long ping) {
+        return PingLog.builder()
+                .dateTime(LocalDateTime.now())
+                .ipAddress(ipAddress)
+                .pingTime(ping)
+                .build();
     }
 
     /**
@@ -66,7 +76,7 @@ public class ConnTest implements Pingable {
      * @return the time (milliseconds) it takes to check if an ip address is reachable.
      * If it's not reachable it returns -1
      */
-    private long ping(){
+    long ping(){
         long time = -1L;
 
         long currentTime = System.currentTimeMillis();
@@ -82,15 +92,19 @@ public class ConnTest implements Pingable {
      * @param ip ip address to check connectivity
      * @return true if the ip address is reachable. False otherwise
      */
-    private boolean isReachable(String ip) {
+    boolean isReachable(String ip) {
         InetAddress inet;
         boolean ping=false;
         try {
-            inet = InetAddress.getByName(ip);
+            inet = getInet(ip);
             ping = inet.isReachable(TIMEOUT);
         } catch (IOException e) {
-            logger.error("isReachable error", e);
+            logger.error("IP address {} is not reachable", ipAddress, e);
         }
         return ping;
+    }
+
+    InetAddress getInet(String ip) throws UnknownHostException {
+        return InetAddress.getByName(ip);
     }
 }

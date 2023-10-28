@@ -10,6 +10,7 @@ import com.opencsv.exceptions.CsvDataTypeMismatchException;
 import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
 import org.slf4j.Logger;
 
+import java.io.BufferedReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Reader;
@@ -33,7 +34,11 @@ import java.util.stream.Stream;
  *  </pre>
  */
 public class CsvPingLogRepository implements PingLogRepository {
+    public static final String SAVE_PING_ERROR_MSG = "Save Ping error";
+    public static final String PING_LOG_NAME = "ping.log";
+    public static final String PARSE_ERROR = "Parse error";
     private final String path;
+
     private final Logger logger;
 
     public CsvPingLogRepository(String path, Logger logger) {
@@ -43,22 +48,32 @@ public class CsvPingLogRepository implements PingLogRepository {
 
     @Override
     public void savePingLog(PingLog pingLog) {
-        try (Writer writer  = new FileWriter(path + "/ping.log", true)) {
-
-            CSVWriter csvWriter = new CSVWriter(writer,
-                    ICSVWriter.DEFAULT_SEPARATOR,
-                    ICSVWriter.NO_QUOTE_CHARACTER,
-                    ICSVWriter.DEFAULT_ESCAPE_CHARACTER,
-                    ICSVWriter.DEFAULT_LINE_END
-            );
-
-            StatefulBeanToCsv<PingLog> sbc = new StatefulBeanToCsvBuilder<PingLog>(csvWriter)
-                    .build();
+        try (Writer writer  = getFileWriter()) {
+            CSVWriter csvWriter = getCsvWriter(writer);
+            StatefulBeanToCsv<PingLog> sbc = getStatefulBeanToCsv(csvWriter);
 
             sbc.write(pingLog);
         } catch (IOException | CsvRequiredFieldEmptyException | CsvDataTypeMismatchException e) {
-            logger.error("Save Ping error", e);
+            logger.error(SAVE_PING_ERROR_MSG, e);
         }
+    }
+
+    FileWriter getFileWriter() throws IOException {
+        return new FileWriter(path + "/" + PING_LOG_NAME, true);
+    }
+
+    CSVWriter getCsvWriter(Writer writer) {
+        return new CSVWriter(writer,
+                ICSVWriter.DEFAULT_SEPARATOR,
+                ICSVWriter.NO_QUOTE_CHARACTER,
+                ICSVWriter.DEFAULT_ESCAPE_CHARACTER,
+                ICSVWriter.DEFAULT_LINE_END
+        );
+    }
+
+    StatefulBeanToCsv<PingLog> getStatefulBeanToCsv(CSVWriter csvWriter) {
+        return new StatefulBeanToCsvBuilder<PingLog>(csvWriter)
+                .build();
     }
 
     @Override
@@ -74,21 +89,22 @@ public class CsvPingLogRepository implements PingLogRepository {
 
     @Override
     public List<PingLog> findPingLogsByDateTimeRange(LocalDateTime start, LocalDateTime end) {
-        return getPingLogsByDateTimeRange(readAll().stream(), start, end)
+        return getPingLogsByDateTimeRangeStream(readAll().stream(), start, end)
                 .toList();
     }
 
     @Override
     public List<PingLog> findPingLogsByDateTimeRangeByIp(LocalDateTime start, LocalDateTime end, String ipAddress) {
-        return getPingLogsByDateTimeRangeByIp(readAll().stream(), start, end, ipAddress)
+        return getPingLogsByDateTimeRangeByIpStream(readAll().stream(), start, end, ipAddress)
                 .toList();
     }
 
     @Override
     public BigDecimal findLostPingLogsAvgByIP(String ipAddress) {
+
         List<PingLog> pingLogsByIp = getPingLogsByIpStream(readAll().stream(), ipAddress).toList();
 
-        long lost = getLostPingLogs(pingLogsByIp.stream())
+        long lost = getLostPingLogsStream(pingLogsByIp.stream())
                 .count();
 
         if(pingLogsByIp.isEmpty())
@@ -102,10 +118,10 @@ public class CsvPingLogRepository implements PingLogRepository {
 
     @Override
     public BigDecimal findLostPingLogsAvgByDateTimeRangeByIp(LocalDateTime start, LocalDateTime end, String ipAddress) {
-        List<PingLog> pingLogsInDateTimeRange = getPingLogsByDateTimeRangeByIp(readAll().stream(), start, end, ipAddress)
+        List<PingLog> pingLogsInDateTimeRange = getPingLogsByDateTimeRangeByIpStream(readAll().stream(), start, end, ipAddress)
                 .toList();
 
-        long lost = getLostPingLogs(pingLogsInDateTimeRange.stream())
+        long lost = getLostPingLogsStream(pingLogsInDateTimeRange.stream())
                 .count();
 
         if(pingLogsInDateTimeRange.isEmpty())
@@ -121,18 +137,26 @@ public class CsvPingLogRepository implements PingLogRepository {
      * Retrieve all the pings from the CSV file
      * @return List of pings
      */
-    private List<PingLog> readAll(){
-        try (Reader reader = Files.newBufferedReader(Path.of(path + "/ping.log"))) {
-            CsvToBean<PingLog> cb = new CsvToBeanBuilder<PingLog>(reader)
-                    .withType(PingLog.class)
-                    .build();
+    protected List<PingLog> readAll(){
+        try (Reader reader = getReader()) {
+            CsvToBean<PingLog> cb = getCsvToBean(reader);
 
             return cb.parse();
         } catch (IOException e) {
-            logger.error("Tracerout error", e);
+            logger.error(PARSE_ERROR, e);
         }
 
         return List.of();
+    }
+
+    BufferedReader getReader() throws IOException {
+        return Files.newBufferedReader(Path.of(path + "/" + PING_LOG_NAME));
+    }
+
+    CsvToBean<PingLog> getCsvToBean(Reader reader) {
+        return new CsvToBeanBuilder<PingLog>(reader)
+                .withType(PingLog.class)
+                .build();
     }
 
     /**
@@ -141,7 +165,7 @@ public class CsvPingLogRepository implements PingLogRepository {
      * @param ipAddress IP address for filtering
      * @return Stream of pings with a filter applied
      */
-    private Stream<PingLog> getPingLogsByIpStream(Stream<PingLog> st, String ipAddress){
+    protected Stream<PingLog> getPingLogsByIpStream(Stream<PingLog> st, String ipAddress){
         return st
                 .filter(pingLog -> pingLog.getIpAddress().equals(ipAddress));
     }
@@ -155,8 +179,8 @@ public class CsvPingLogRepository implements PingLogRepository {
      * @param ipAddress IP address for filtering
      * @return Stream of pings with a filter applied
      */
-    private Stream<PingLog> getPingLogsByDateTimeRangeByIp(Stream<PingLog> st, LocalDateTime start, LocalDateTime end, String ipAddress){
-        return getPingLogsByDateTimeRange(
+    protected Stream<PingLog> getPingLogsByDateTimeRangeByIpStream(Stream<PingLog> st, LocalDateTime start, LocalDateTime end, String ipAddress){
+        return getPingLogsByDateTimeRangeStream(
                 getPingLogsByIpStream(st, ipAddress),
                 start,
                 end
@@ -168,7 +192,7 @@ public class CsvPingLogRepository implements PingLogRepository {
      * @param st stream to apply the filtering
      * @return Stream of pings with a filter applied
      */
-    private Stream<PingLog> getLostPingLogs(Stream<PingLog> st){
+    protected Stream<PingLog> getLostPingLogsStream(Stream<PingLog> st){
         return st
                 .filter(pingLog -> pingLog.getPingTime() < 0);
     }
@@ -181,7 +205,7 @@ public class CsvPingLogRepository implements PingLogRepository {
      * @param end end date in the range
      * @return Stream of pings with a filter applied
      */
-    private Stream<PingLog> getPingLogsByDateTimeRange(Stream<PingLog> st, LocalDateTime start, LocalDateTime end){
+    protected Stream<PingLog> getPingLogsByDateTimeRangeStream(Stream<PingLog> st, LocalDateTime start, LocalDateTime end){
         return st
                 .filter(pingLog ->
                         (pingLog.getDateTime().isAfter(start) || pingLog.getDateTime().isEqual(start))

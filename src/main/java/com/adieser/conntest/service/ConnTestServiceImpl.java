@@ -11,11 +11,11 @@ import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -29,8 +29,10 @@ public class ConnTestServiceImpl implements ConnTestService {
 
     public static final String CLOUD_IP = "8.8.8.8";
     private final Logger logger;
-    private List<ConnTest> tests = new ArrayList<>();
+    List<ConnTest> tests = new ArrayList<>();
     private final ExecutorService threadPoolExecutor;
+
+    private final TracertProvider tracertProvider;
 
     /**
      * Tracert IP regex (Windows) for extracting the IP addresses from tracert output
@@ -40,9 +42,10 @@ public class ConnTestServiceImpl implements ConnTestService {
     private final PingLogRepository pingLogRepository;
 
     public ConnTestServiceImpl(ExecutorService threadPoolExecutor, Logger logger,
-                               @Qualifier("csvPingLogRepository") PingLogRepository pingLogRepository) {
+                               TracertProvider tracertProvider, @Qualifier("csvPingLogRepository") PingLogRepository pingLogRepository) {
         this.logger = logger;
         this.threadPoolExecutor = threadPoolExecutor;
+        this.tracertProvider = tracertProvider;
         this.pingLogRepository = pingLogRepository;
     }
 
@@ -52,9 +55,7 @@ public class ConnTestServiceImpl implements ConnTestService {
         List<String> ipAddresses = getLocalAndISPIpAddresses();
         ipAddresses.add(CLOUD_IP);
 
-        tests = ipAddresses.stream()
-                .map(s -> new ConnTest(threadPoolExecutor, s, logger, pingLogRepository))
-                .toList();
+        tests = getConnTestsFromIpAddresses(ipAddresses);
 
         tests.forEach(Pingable::startPingSession);
     }
@@ -128,7 +129,7 @@ public class ConnTestServiceImpl implements ConnTestService {
      * @param pingResponses List carrying the {@link PingSessionResponseEntity}
      * @param pingLogs List of ping sessions results
      */
-    private static void createResponse(List<PingSessionResponseEntity> pingResponses, List<PingLog> pingLogs) {
+    void createResponse(List<PingSessionResponseEntity> pingResponses, List<PingLog> pingLogs) {
         pingResponses.add(
                 PingSessionResponseEntity.builder()
                         .pingLogs(pingLogs)
@@ -143,24 +144,42 @@ public class ConnTestServiceImpl implements ConnTestService {
      *
      * @return List of IP addresses, containing the first (local gateway) and the second hop (ISP)
      */
-    private List<String> getLocalAndISPIpAddresses() {
+    List<String> getLocalAndISPIpAddresses() {
         List<String> ipAddresses = new ArrayList<>();
 
-        try {
-            Process tracertProcess = Runtime.getRuntime().exec("tracert -h 2 8.8.8.8");
+        try (BufferedReader reader = executeTracert()
+                .orElseThrow(() -> new IOException("Error executing tracert in the OS"))) {
 
-            BufferedReader reader = new BufferedReader(new InputStreamReader(tracertProcess.getInputStream()));
             String line;
             while ((line = reader.readLine()) != null) {
                 Matcher matcher = Pattern.compile(REGEX_PATTERN_TRACERT_WINDOWS).matcher(line);
                 if (matcher.find())
                     ipAddresses.add(matcher.group());
             }
-
-        } catch (IOException e) {
-            logger.error("Tracerout error", e);
+        }catch (IOException e) {
+            logger.error("Traceroute error", e);
         }
 
         return ipAddresses;
+    }
+
+    /**
+     * Get a list of ConnTests objects created from a list of IP addresses
+     * @param ipAddresses IP address to create the ConnTest
+     * @return A list of ConnTests
+     */
+    List<ConnTest> getConnTestsFromIpAddresses(List<String> ipAddresses) {
+        return ipAddresses.stream()
+                .map(s -> new ConnTest(threadPoolExecutor, s, logger, pingLogRepository))
+                .toList();
+    }
+
+    /**
+     * Execute OS tracert command and return the buffer reader containing the command output
+     * @return the BufferReader containing the command output
+     * @throws IOException throws by java.lang.Runtime exec command
+     */
+    Optional<BufferedReader> executeTracert() throws IOException {
+        return tracertProvider.executeTracert();
     }
 }
