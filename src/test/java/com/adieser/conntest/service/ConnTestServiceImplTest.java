@@ -303,14 +303,6 @@ class ConnTestServiceImplTest {
         );
     }
 
-//    static Stream<String> osProvider() {
-//        return Stream.of(
-//                "Windows",
-//                "Linux",
-//                "MacOs"
-//        );
-//    }
-
     private static void assertPingSessionResponseEntities(List<PingLog> pingLogs, List<PingSessionResponseEntity> pings) {
         if(pingLogs.isEmpty()) {
             assertEquals(0, pings.get(0).getAmountOfPings());

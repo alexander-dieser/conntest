@@ -48,7 +48,13 @@ public class ConnTestController {
      */
     @GetMapping("/pings")
     public ResponseEntity<List<PingSessionResponseEntity>> getPings() {
-        return new ResponseEntity<>(connTestService.getPings(), HttpStatus.OK);
+        HttpStatus httpStatus = HttpStatus.OK;
+        List<PingSessionResponseEntity> pings = connTestService.getPings();
+
+        if(pings.isEmpty())
+            httpStatus = HttpStatus.NO_CONTENT;
+
+        return new ResponseEntity<>(pings, httpStatus);
     }
 
     /**
@@ -61,7 +67,13 @@ public class ConnTestController {
     public ResponseEntity<List<PingSessionResponseEntity>> getPingsByDateTimeRange(
             @PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime start,
             @PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime end) {
-        return new ResponseEntity<>(connTestService.getPingsByDateTimeRange(start, end), HttpStatus.OK);
+        HttpStatus httpStatus = HttpStatus.OK;
+        List<PingSessionResponseEntity> pings = connTestService.getPingsByDateTimeRange(start, end);
+
+        if(pings.isEmpty())
+            httpStatus = HttpStatus.NO_CONTENT;
+
+        return new ResponseEntity<>(pings, httpStatus);
     }
 
     /**
@@ -71,7 +83,13 @@ public class ConnTestController {
      */
     @GetMapping("/pings/{ipAddress}")
     public ResponseEntity<List<PingSessionResponseEntity>> getPingsByIp(@PathVariable String ipAddress) {
-        return new ResponseEntity<>(connTestService.getPingsByIp(ipAddress), HttpStatus.OK);
+        HttpStatus httpStatus = HttpStatus.OK;
+        List<PingSessionResponseEntity> pings = connTestService.getPingsByIp(ipAddress);
+
+        if(pings.isEmpty())
+            httpStatus = HttpStatus.NO_CONTENT;
+
+        return new ResponseEntity<>(pings, httpStatus);
     }
 
     /**
@@ -86,8 +104,13 @@ public class ConnTestController {
             @PathVariable String ipAddress,
             @PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime start,
             @PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime end) {
+        HttpStatus httpStatus = HttpStatus.OK;
+        List<PingSessionResponseEntity> pings = connTestService.getPingsByDateTimeRangeByIp(start, end, ipAddress);
 
-        return new ResponseEntity<>(connTestService.getPingsByDateTimeRangeByIp(start, end, ipAddress), HttpStatus.OK);
+        if(pings.isEmpty())
+            httpStatus = HttpStatus.NO_CONTENT;
+
+        return new ResponseEntity<>(pings, httpStatus);
     }
 
     /**
