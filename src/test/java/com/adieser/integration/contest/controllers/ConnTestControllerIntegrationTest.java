@@ -4,6 +4,8 @@ import com.adieser.conntest.ConntestApplication;
 import com.adieser.conntest.controllers.responses.PingSessionResponseEntity;
 import com.adieser.conntest.service.ConnTestService;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -17,6 +19,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.stream.Stream;
 
 import static com.adieser.utils.PingLogUtils.DEFAULT_LOG_DATE_TIME;
 import static com.adieser.utils.PingLogUtils.DEFAULT_PING_TIME;
@@ -63,51 +66,55 @@ class ConnTestControllerIntegrationTest {
         verify(connTestService, times(1)).stopTests();
     }
 
-    @Test
-    void getPings() throws Exception {
+    @ParameterizedTest
+    @MethodSource("responseProvider")
+    void getPings(List<PingSessionResponseEntity> pings) throws Exception {
         // when
-        when(connTestService.getPings()).thenReturn(getResponse());
+        when(connTestService.getPings()).thenReturn(pings);
 
         // then assert
         MockHttpServletRequestBuilder requestBuilder = get("/pings");
 
-        assertPingLogControllerResponse(requestBuilder);
+        assertPingLogControllerResponse(requestBuilder, pings);
         verify(connTestService, times(1)).getPings();
     }
 
-    @Test
-    void getPingsByDateTimeRange() throws Exception {
+    @ParameterizedTest
+    @MethodSource("responseProvider")
+    void getPingsByDateTimeRange(List<PingSessionResponseEntity> pings) throws Exception {
         // when
         when(connTestService.getPingsByDateTimeRange(START, END))
-                .thenReturn(getResponse());
+                .thenReturn(pings);
 
         // then assert
         MockHttpServletRequestBuilder requestBuilder = get("/pings/{start}/{end}",
                 START.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
                 END.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
 
-        assertPingLogControllerResponse(requestBuilder);
+        assertPingLogControllerResponse(requestBuilder, pings);
         verify(connTestService, times(1)).getPingsByDateTimeRange(START, END);
     }
 
-    @Test
-    void getPingsByIp() throws Exception {
+    @ParameterizedTest
+    @MethodSource("responseProvider")
+    void getPingsByIp(List<PingSessionResponseEntity> pings) throws Exception {
         // when
         when(connTestService.getPingsByIp(LOCAL_IP_ADDRESS))
-                .thenReturn(getResponse());
+                .thenReturn(pings);
 
         // then assert
         MockHttpServletRequestBuilder requestBuilder = get("/pings/{ipAddress}", LOCAL_IP_ADDRESS);
 
-        assertPingLogControllerResponse(requestBuilder);
+        assertPingLogControllerResponse(requestBuilder, pings);
         verify(connTestService, times(1)).getPingsByIp(LOCAL_IP_ADDRESS);
     }
 
-    @Test
-    void getPingsByDateTimeRangeByIp() throws Exception {
+    @ParameterizedTest
+    @MethodSource("responseProvider")
+    void getPingsByDateTimeRangeByIp(List<PingSessionResponseEntity> pings) throws Exception {
         // when
         when(connTestService.getPingsByDateTimeRangeByIp(START, END, LOCAL_IP_ADDRESS))
-                .thenReturn(getResponse());
+                .thenReturn(pings);
 
         // then assert
         MockHttpServletRequestBuilder requestBuilder = get("/pings/{ipAddress}/{start}/{end}",
@@ -115,7 +122,7 @@ class ConnTestControllerIntegrationTest {
                 START.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
                 END.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
 
-        assertPingLogControllerResponse(requestBuilder);
+        assertPingLogControllerResponse(requestBuilder, pings);
         verify(connTestService, times(1)).getPingsByDateTimeRangeByIp(START, END, LOCAL_IP_ADDRESS);
     }
 
@@ -149,18 +156,25 @@ class ConnTestControllerIntegrationTest {
         verify(connTestService, times(1)).getPingsLostAvgByDateTimeRangeByIp(START, END, LOCAL_IP_ADDRESS);
     }
 
-    private void assertPingLogControllerResponse(MockHttpServletRequestBuilder requestBuilder) throws Exception {
+    private void assertPingLogControllerResponse(MockHttpServletRequestBuilder requestBuilder,
+                                                 List<PingSessionResponseEntity> pings) throws Exception {
         String jsonFormatExpectedDate = DEFAULT_LOG_DATE_TIME.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
 
-        mockMvc.perform(requestBuilder)
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].amountOfPings").value(1))
-                .andExpect(jsonPath("$[0].pingLogs", hasSize(1)))
-                .andExpect(jsonPath("$[0].pingLogs[0].dateTime").value(jsonFormatExpectedDate))
-                .andExpect(jsonPath("$[0].pingLogs[0].ipAddress").value(LOCAL_IP_ADDRESS))
-                .andExpect(jsonPath("$[0].pingLogs[0].pingTime").value(DEFAULT_PING_TIME));
+        if(pings.isEmpty())
+            mockMvc.perform(requestBuilder)
+                    .andExpect(status().isNoContent())
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(jsonPath("$", hasSize(0)));
+        else
+            mockMvc.perform(requestBuilder)
+                    .andExpect(status().isOk())
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(jsonPath("$", hasSize(1)))
+                    .andExpect(jsonPath("$[0].amountOfPings").value(1))
+                    .andExpect(jsonPath("$[0].pingLogs", hasSize(1)))
+                    .andExpect(jsonPath("$[0].pingLogs[0].dateTime").value(jsonFormatExpectedDate))
+                    .andExpect(jsonPath("$[0].pingLogs[0].ipAddress").value(LOCAL_IP_ADDRESS))
+                    .andExpect(jsonPath("$[0].pingLogs[0].pingTime").value(DEFAULT_PING_TIME));
     }
 
     private void assertAverage(MockHttpServletRequestBuilder requestBuilder) throws Exception {
@@ -168,6 +182,13 @@ class ConnTestControllerIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.average").value("0.3"));
+    }
+
+    static Stream<List<PingSessionResponseEntity>> responseProvider() {
+        return Stream.of(
+                List.of(),
+                getResponse()
+        );
     }
 
     private static List<PingSessionResponseEntity> getResponse() {
