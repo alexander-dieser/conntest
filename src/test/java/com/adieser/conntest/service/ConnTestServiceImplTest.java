@@ -53,37 +53,49 @@ class ConnTestServiceImplTest {
     @Mock
     TracertProvider tracertProvider;
 
-    @Test
-    void testTestLocalISPInternet() {
+    @ParameterizedTest
+    @MethodSource("areTestsRunningProvider")
+    void testTestLocalISPInternet(boolean areTestRunning) {
         // when
         ConnTestServiceImpl underTest = spy(new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository));
         List<String> localAndISPIpAddresses = new ArrayList<>(Arrays.asList(LOCAL_IP_ADDRESS, ISP_IP_ADDRESS));
-
         List<ConnTest> mockConnTests = List.of(mock(ConnTest.class),mock(ConnTest.class),mock(ConnTest.class));
-        when(underTest.getConnTestsFromIpAddresses(localAndISPIpAddresses)).thenReturn(mockConnTests);
-        doReturn(localAndISPIpAddresses).when(underTest).getLocalAndISPIpAddresses();
+
+        if(areTestRunning)
+            underTest.tests = mockConnTests;
+        else{
+            when(underTest.getConnTestsFromIpAddresses(localAndISPIpAddresses)).thenReturn(mockConnTests);
+            doReturn(localAndISPIpAddresses).when(underTest).getLocalAndISPIpAddresses();
+        }
 
         // then
         underTest.testLocalISPInternet();
 
         // assert
-        mockConnTests.forEach(mockConnTest ->
-                verify(mockConnTest, times(1)).startPingSession()
-        );
+        if(areTestRunning)
+            verify(logger, times(1)).warn("Tests are already running");
+        else{
+            underTest.tests.forEach(mockConnTest ->
+                    verify(mockConnTest, times(1)).startPingSession()
+            );
+        }
     }
 
     @ParameterizedTest
-    @MethodSource("connTestsProvider")
-    void testStopTests(List<ConnTest> mockConnTests) {
+    @MethodSource("areTestsRunningProvider")
+    void testStopTests(boolean areTestRunning) {
         // when
         ConnTestServiceImpl underTest = new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository);
-        underTest.tests = mockConnTests;
+        List<ConnTest> mockConnTests = List.of(mock(ConnTest.class),mock(ConnTest.class),mock(ConnTest.class));
+
+        if(areTestRunning)
+            underTest.tests = mockConnTests;
 
         // then
         underTest.stopTests();
 
         // assert
-        if(mockConnTests.isEmpty())
+        if(!areTestRunning)
             verify(logger, times(1)).warn("No tests to stop");
         else{
             mockConnTests.forEach(mockConnTest ->
@@ -289,10 +301,10 @@ class ConnTestServiceImplTest {
         assertEquals(mockReader, reader);
     }
 
-    static Stream<List<ConnTest>> connTestsProvider() {
+    static Stream<Boolean> areTestsRunningProvider() {
         return Stream.of(
-                List.of(mock(ConnTest.class)),
-                List.of()
+                true,
+                false
         );
     }
 

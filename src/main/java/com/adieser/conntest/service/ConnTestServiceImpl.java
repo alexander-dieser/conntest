@@ -51,13 +51,15 @@ public class ConnTestServiceImpl implements ConnTestService {
 
     @Override
     public void testLocalISPInternet(){
+        if(tests.isEmpty()){
+            List<String> ipAddresses = getLocalAndISPIpAddresses();
+            ipAddresses.add(CLOUD_IP);
 
-        List<String> ipAddresses = getLocalAndISPIpAddresses();
-        ipAddresses.add(CLOUD_IP);
+            tests = getConnTestsFromIpAddresses(ipAddresses);
 
-        tests = getConnTestsFromIpAddresses(ipAddresses);
-
-        tests.forEach(Pingable::startPingSession);
+            tests.forEach(Pingable::startPingSession);
+        }else
+            logger.warn("Tests are already running");
     }
 
     @Override
