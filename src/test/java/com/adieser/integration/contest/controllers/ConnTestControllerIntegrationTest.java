@@ -1,8 +1,11 @@
 package com.adieser.integration.contest.controllers;
 
 import com.adieser.conntest.ConntestApplication;
-import com.adieser.conntest.controllers.responses.PingSessionResponseEntity;
+import com.adieser.conntest.controllers.ConnTestController;
+import com.adieser.conntest.controllers.responses.PingSessionExtract;
+import com.adieser.conntest.models.PingLog;
 import com.adieser.conntest.service.ConnTestService;
+import com.adieser.conntest.utils.HATEOASLinkRelValueTemplates;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -12,6 +15,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
@@ -29,6 +33,8 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -50,7 +56,10 @@ class ConnTestControllerIntegrationTest {
     void testLocalIspCloud() throws Exception {
         // then
         mockMvc.perform(MockMvcRequestBuilders.post("/test-local-isp-cloud"))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$._links.stopTestSession.href")
+                        .value(linkTo(methodOn(ConnTestController.class)
+                                .stopTests()).toString()));
 
         // assert
         verify(connTestService, times(1)).testLocalISPInternet();
@@ -60,7 +69,10 @@ class ConnTestControllerIntegrationTest {
     void stopTests() throws Exception {
         // then
         mockMvc.perform(MockMvcRequestBuilders.post("/stop-tests"))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$._links.startTestSession.href")
+                        .value(linkTo(methodOn(ConnTestController.class)
+                                .testLocalIspCloud()).toString()));
 
         // assert
         verify(connTestService, times(1)).stopTests();
@@ -68,20 +80,23 @@ class ConnTestControllerIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("responseProvider")
-    void getPings(List<PingSessionResponseEntity> pings) throws Exception {
+    void getPings(PingSessionExtract pings) throws Exception {
         // when
         when(connTestService.getPings()).thenReturn(pings);
 
         // then assert
         MockHttpServletRequestBuilder requestBuilder = get("/pings");
 
-        assertPingLogControllerResponse(requestBuilder, pings);
+        ResultActions resultActions = performRequestAndBasicAssertPingLogControllerResponse(requestBuilder, pings);
+        if(!pings.getPingLogs().isEmpty())
+            AssertHATEOASLinks(resultActions, pings.getPingLogs().get(0));
+
         verify(connTestService, times(1)).getPings();
     }
 
     @ParameterizedTest
     @MethodSource("responseProvider")
-    void getPingsByDateTimeRange(List<PingSessionResponseEntity> pings) throws Exception {
+    void getPingsByDateTimeRange(PingSessionExtract pings) throws Exception {
         // when
         when(connTestService.getPingsByDateTimeRange(START, END))
                 .thenReturn(pings);
@@ -91,13 +106,16 @@ class ConnTestControllerIntegrationTest {
                 START.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
                 END.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
 
-        assertPingLogControllerResponse(requestBuilder, pings);
+        ResultActions resultActions = performRequestAndBasicAssertPingLogControllerResponse(requestBuilder, pings);
+        if(!pings.getPingLogs().isEmpty())
+            AssertHATEOASLinks(resultActions, pings.getPingLogs().get(0));
+
         verify(connTestService, times(1)).getPingsByDateTimeRange(START, END);
     }
 
     @ParameterizedTest
     @MethodSource("responseProvider")
-    void getPingsByIp(List<PingSessionResponseEntity> pings) throws Exception {
+    void getPingsByIp(PingSessionExtract pings) throws Exception {
         // when
         when(connTestService.getPingsByIp(LOCAL_IP_ADDRESS))
                 .thenReturn(pings);
@@ -105,13 +123,16 @@ class ConnTestControllerIntegrationTest {
         // then assert
         MockHttpServletRequestBuilder requestBuilder = get("/pings/{ipAddress}", LOCAL_IP_ADDRESS);
 
-        assertPingLogControllerResponse(requestBuilder, pings);
+        ResultActions resultActions = performRequestAndBasicAssertPingLogControllerResponse(requestBuilder, pings);
+        if(!pings.getPingLogs().isEmpty())
+            AssertHATEOASLinks(resultActions, pings.getPingLogs().get(0));
+
         verify(connTestService, times(1)).getPingsByIp(LOCAL_IP_ADDRESS);
     }
 
     @ParameterizedTest
     @MethodSource("responseProvider")
-    void getPingsByDateTimeRangeByIp(List<PingSessionResponseEntity> pings) throws Exception {
+    void getPingsByDateTimeRangeByIp(PingSessionExtract pings) throws Exception {
         // when
         when(connTestService.getPingsByDateTimeRangeByIp(START, END, LOCAL_IP_ADDRESS))
                 .thenReturn(pings);
@@ -122,7 +143,10 @@ class ConnTestControllerIntegrationTest {
                 START.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
                 END.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
 
-        assertPingLogControllerResponse(requestBuilder, pings);
+        ResultActions resultActions = performRequestAndBasicAssertPingLogControllerResponse(requestBuilder, pings);
+        if(!pings.getPingLogs().isEmpty())
+            AssertHATEOASLinks(resultActions, pings.getPingLogs().get(0));
+
         verify(connTestService, times(1)).getPingsByDateTimeRangeByIp(START, END, LOCAL_IP_ADDRESS);
     }
 
@@ -135,7 +159,17 @@ class ConnTestControllerIntegrationTest {
         // then assert
         MockHttpServletRequestBuilder requestBuilder = get("/pings/{ipAddress}/avg", LOCAL_IP_ADDRESS);
 
-        assertAverage(requestBuilder);
+        ResultActions resultActions = mockMvc.perform(requestBuilder)
+                .andExpect( // [' and '] are meant for escaping the '.' due to json navigation errors
+                    jsonPath("$._links.['%s'].href"
+                            .formatted(HATEOASLinkRelValueTemplates.GET_BY_IP
+                                    .formatted(LOCAL_IP_ADDRESS)
+                            )
+                    )
+                    .value(linkTo(methodOn(ConnTestController.class).getPingsByIp(LOCAL_IP_ADDRESS)).toString())
+                );
+
+        assertAverage(resultActions);
         verify(connTestService, times(1)).getPingsLostAvgByIp(LOCAL_IP_ADDRESS);
     }
 
@@ -151,52 +185,113 @@ class ConnTestControllerIntegrationTest {
                 START.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
                 END.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
 
-        assertAverage(requestBuilder);
+        ResultActions resultActions = mockMvc.perform(requestBuilder)
+                .andExpect( // [' and '] are meant for escaping the '.' due to json navigation errors
+                    jsonPath("$._links.['%s'].href"
+                            .formatted(HATEOASLinkRelValueTemplates.GET_30_MINS_NEIGHBORHOOD_BY_IP
+                                    .formatted(LOCAL_IP_ADDRESS)))
+                            .value(linkTo(methodOn(ConnTestController.class)
+                                    .getPingsByDateTimeRangeByIp(LOCAL_IP_ADDRESS, START, END)).toString())
+                );
 
-        verify(connTestService, times(1)).getPingsLostAvgByDateTimeRangeByIp(START, END, LOCAL_IP_ADDRESS);
+        assertAverage(resultActions);
+
+        verify(connTestService, times(1))
+                .getPingsLostAvgByDateTimeRangeByIp(START, END, LOCAL_IP_ADDRESS);
     }
 
-    private void assertPingLogControllerResponse(MockHttpServletRequestBuilder requestBuilder,
-                                                 List<PingSessionResponseEntity> pings) throws Exception {
+    private ResultActions performRequestAndBasicAssertPingLogControllerResponse(MockHttpServletRequestBuilder requestBuilder,
+                                                                                PingSessionExtract pings) throws Exception {
         String jsonFormatExpectedDate = DEFAULT_LOG_DATE_TIME.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
 
-        if(pings.isEmpty())
-            mockMvc.perform(requestBuilder)
+        ResultActions result;
+        if(pings.getPingLogs().isEmpty())
+            result = mockMvc.perform(requestBuilder)
                     .andExpect(status().isNoContent())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                    .andExpect(jsonPath("$", hasSize(0)));
+                    .andExpect(jsonPath("$.pingLogs", hasSize(0)));
         else
-            mockMvc.perform(requestBuilder)
+            result = mockMvc.perform(requestBuilder)
                     .andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                    .andExpect(jsonPath("$", hasSize(1)))
-                    .andExpect(jsonPath("$[0].amountOfPings").value(1))
-                    .andExpect(jsonPath("$[0].pingLogs", hasSize(1)))
-                    .andExpect(jsonPath("$[0].pingLogs[0].dateTime").value(jsonFormatExpectedDate))
-                    .andExpect(jsonPath("$[0].pingLogs[0].ipAddress").value(LOCAL_IP_ADDRESS))
-                    .andExpect(jsonPath("$[0].pingLogs[0].pingTime").value(DEFAULT_PING_TIME));
+                    .andExpect(jsonPath("$.amountOfPings").value(1))
+                    .andExpect(jsonPath("$.pingLogs", hasSize(1)))
+                    .andExpect(jsonPath("$.pingLogs[0].dateTime").value(jsonFormatExpectedDate))
+                    .andExpect(jsonPath("$.pingLogs[0].ipAddress").value(LOCAL_IP_ADDRESS))
+                    .andExpect(jsonPath("$.pingLogs[0].pingTime").value(DEFAULT_PING_TIME));
+
+        return result;
     }
 
-    private void assertAverage(MockHttpServletRequestBuilder requestBuilder) throws Exception {
-        mockMvc.perform(requestBuilder)
+    private void AssertHATEOASLinks(ResultActions resultActions, PingLog ping) {
+        try {
+            LocalDateTime floor = ping.getDateTime().minusMinutes(30);
+            LocalDateTime roof = ping.getDateTime().plusMinutes(30);
+            String ipAddress = ping.getIpAddress();
+
+            resultActions
+                    .andExpect(jsonPath("$.pingLogs[0].links[0].rel")
+                            .value(HATEOASLinkRelValueTemplates
+                                    .GET_BY_IP.formatted(ipAddress)))
+                    .andExpect(jsonPath("$.pingLogs[0].links[0].href")
+                            .value(linkTo(methodOn(ConnTestController.class)
+                                    .getPingsByIp(ipAddress)).toString()))
+                    .andExpect(jsonPath("$.pingLogs[0].links[1].rel")
+                            .value(HATEOASLinkRelValueTemplates
+                                    .GET_30_MINS_NEIGHBORHOOD))
+                    .andExpect(jsonPath("$.pingLogs[0].links[1].href")
+                            .value(linkTo(methodOn(ConnTestController.class)
+                                    .getPingsByDateTimeRange(floor, roof)).toString()))
+                    .andExpect(jsonPath("$.pingLogs[0].links[2].rel")
+                            .value(HATEOASLinkRelValueTemplates
+                                    .GET_30_MINS_NEIGHBORHOOD_BY_IP.formatted(ipAddress)))
+                    .andExpect(jsonPath("$.pingLogs[0].links[2].href")
+                            .value(linkTo(methodOn(ConnTestController.class)
+                                    .getPingsByDateTimeRangeByIp(ipAddress, floor, roof)).toString()))
+                    .andExpect(jsonPath("$.pingLogs[0].links[3].rel")
+                            .value(HATEOASLinkRelValueTemplates
+                                    .GET_LOST_AVG_BY_IP.formatted(ipAddress)))
+                    .andExpect(jsonPath("$.pingLogs[0].links[3].href")
+                            .value(linkTo(methodOn(ConnTestController.class)
+                                    .getPingsLostAvgByIp(ipAddress)).toString()))
+                    .andExpect(jsonPath("$.pingLogs[0].links[4].rel")
+                            .value(HATEOASLinkRelValueTemplates
+                                    .GET_30_MINS_NEIGHBORHOOD_LOST_AVG_BY_IP.formatted(ipAddress)))
+                    .andExpect(jsonPath("$.pingLogs[0].links[4].href")
+                            .value(linkTo(methodOn(ConnTestController.class)
+                                    .getPingsLostAvgByDateTimeRangeByIp(ipAddress, floor, roof)).toString()));
+
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void assertAverage(ResultActions resultActions) throws Exception {
+        resultActions
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.ipAddress").value(LOCAL_IP_ADDRESS))
                 .andExpect(jsonPath("$.average").value("0.3"));
     }
 
-    static Stream<List<PingSessionResponseEntity>> responseProvider() {
+    static Stream<PingSessionExtract> responseProvider() {
         return Stream.of(
-                List.of(),
-                getResponse()
+                getEmptyResponse(),
+                getDefaultResponse()
         );
     }
 
-    private static List<PingSessionResponseEntity> getResponse() {
-        return List.of(
-                PingSessionResponseEntity.builder()
+    private static PingSessionExtract getDefaultResponse() {
+        return PingSessionExtract.builder()
                         .amountOfPings(1)
                         .pingLogs(List.of(getDefaultPingLog()))
-                        .build()
-        );
+                        .build();
+    }
+
+    private static PingSessionExtract getEmptyResponse() {
+        return PingSessionExtract.builder()
+                        .amountOfPings(0)
+                        .pingLogs(List.of())
+                        .build();
     }
 }
