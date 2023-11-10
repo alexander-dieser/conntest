@@ -1,6 +1,6 @@
 package com.adieser.conntest.service;
 
-import com.adieser.conntest.controllers.responses.PingSessionResponseEntity;
+import com.adieser.conntest.controllers.responses.PingSessionExtract;
 import com.adieser.conntest.models.ConnTest;
 import com.adieser.conntest.models.PingLog;
 import com.adieser.conntest.models.PingLogRepository;
@@ -113,7 +113,7 @@ class ConnTestServiceImplTest {
         doReturn(pingLogs).when(pingLogRepository).findAllPingLogs();
 
         // then
-        List<PingSessionResponseEntity> pings = underTest.getPings();
+        PingSessionExtract pings = underTest.getPings();
 
         // assert
         assertPingSessionResponseEntities(pingLogs, pings);
@@ -127,7 +127,7 @@ class ConnTestServiceImplTest {
         doReturn(pingLogs).when(pingLogRepository).findPingLogsByDateTimeRange(START, END);
 
         // then
-        List<PingSessionResponseEntity> pings = underTest.getPingsByDateTimeRange(
+        PingSessionExtract pings = underTest.getPingsByDateTimeRange(
                 START,
                 END
         );
@@ -144,7 +144,7 @@ class ConnTestServiceImplTest {
         doReturn(pingLogs).when(pingLogRepository).findPingLogByIp(LOCAL_IP_ADDRESS);
 
         // then
-        List<PingSessionResponseEntity> pings = underTest.getPingsByIp(LOCAL_IP_ADDRESS);
+        PingSessionExtract pings = underTest.getPingsByIp(LOCAL_IP_ADDRESS);
 
         // assert
         assertPingSessionResponseEntities(pingLogs, pings);
@@ -162,7 +162,7 @@ class ConnTestServiceImplTest {
         );
 
         // then
-        List<PingSessionResponseEntity> pings = underTest.getPingsByDateTimeRangeByIp(
+        PingSessionExtract pings = underTest.getPingsByDateTimeRangeByIp(
                 START,
                 END,
                 LOCAL_IP_ADDRESS
@@ -215,17 +215,16 @@ class ConnTestServiceImplTest {
         List<PingLog> pingLogs = List.of(getDefaultPingLog());
 
         // then
-        List<PingSessionResponseEntity> responses = new ArrayList<>();
-        underTest.createResponse(responses, pingLogs);
+        PingSessionExtract response = underTest.createBasicResponse(pingLogs);
 
         // assert
-        PingSessionResponseEntity expectedResponse = PingSessionResponseEntity.builder()
+        PingSessionExtract expectedResponse = PingSessionExtract.builder()
                 .pingLogs(pingLogs)
                 .amountOfPings(pingLogs.size())
                 .build();
 
-        assertEquals(1, responses.size());
-        assertEquals(expectedResponse, responses.get(0));
+        assertEquals(1, response.getPingLogs().size());
+        assertEquals(expectedResponse, response);
     }
 
     @Test
@@ -315,13 +314,13 @@ class ConnTestServiceImplTest {
         );
     }
 
-    private static void assertPingSessionResponseEntities(List<PingLog> pingLogs, List<PingSessionResponseEntity> pings) {
+    private static void assertPingSessionResponseEntities(List<PingLog> pingLogs, PingSessionExtract pings) {
         if(pingLogs.isEmpty()) {
-            assertEquals(0, pings.get(0).getAmountOfPings());
-            assertTrue(pings.get(0).getPingLogs().isEmpty());
+            assertEquals(0, pings.getAmountOfPings());
+            assertTrue(pings.getPingLogs().isEmpty());
         }else{
-            assertEquals(1, pings.get(0).getAmountOfPings());
-            PingLog pingLog = pings.get(0).getPingLogs().get(0);
+            assertEquals(1, pings.getAmountOfPings());
+            PingLog pingLog = pings.getPingLogs().get(0);
             assertEquals(DEFAULT_PING_TIME, pingLog.getPingTime());
             assertEquals(DEFAULT_LOG_DATE_TIME, pingLog.getDateTime());
             assertEquals(LOCAL_IP_ADDRESS, pingLog.getIpAddress());
