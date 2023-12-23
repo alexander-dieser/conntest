@@ -1,6 +1,8 @@
 package com.adieser.conntest.service;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
@@ -18,6 +20,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
+@EnabledOnOs(OS.WINDOWS)
 class WindowsTracertProviderImplTest {
 
     @Test
