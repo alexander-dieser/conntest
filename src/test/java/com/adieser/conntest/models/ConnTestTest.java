@@ -98,8 +98,9 @@ class ConnTestTest {
         // then
         Thread thread = new Thread(underTestSpy::pingSession);
         thread.start();
-        Thread.sleep(300); // give time to start the thread before interrupting it
         thread.interrupt();
+
+        Thread.sleep(100); // give time to logger to react
 
         // assert
         verify(logger, times(1)).warn(PING_SESSION_INTERRUPTED_MSG);
