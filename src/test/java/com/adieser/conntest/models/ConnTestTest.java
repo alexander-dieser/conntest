@@ -100,7 +100,9 @@ class ConnTestTest {
         thread.start();
         thread.interrupt();
 
-        Thread.sleep(100); // give time to logger to react
+        synchronized (underTestSpy){
+            underTestSpy.wait(5000);
+        }
 
         // assert
         verify(logger, times(1)).warn(PING_SESSION_INTERRUPTED_MSG);

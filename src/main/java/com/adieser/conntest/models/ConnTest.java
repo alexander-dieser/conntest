@@ -49,6 +49,7 @@ public class ConnTest implements Pingable {
      * Ping task running in a loop only stoppable by changing the value of {@code running} variable to false.
      * Each ping is triggered once per second
      */
+    @SuppressWarnings("java:S2142")
     void pingSession() {
         try {
             while(running) {
@@ -58,8 +59,11 @@ public class ConnTest implements Pingable {
                 Thread.sleep(1000);
             }
         } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
             logger.warn(PING_SESSION_INTERRUPTED_MSG);
+            // notify all threads that are waiting for this interruption. This is meant to aid the test method
+            synchronized (this){
+                this.notifyAll();
+            }
         }
     }
 
