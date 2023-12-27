@@ -66,4 +66,5 @@ public interface ConnTestService {
      */
     BigDecimal getPingsLostAvgByDateTimeRangeByIp(LocalDateTime start, LocalDateTime end, String ipAddress);
 
+    List<String> getLocalAndISPIpAddresses();
 }

@@ -1,0 +1,118 @@
+.tittlebar{
+  -fx-background-color: #095C8A;
+}
+
+.tittlebar .button{
+  -fx-background-color: transparent;
+  -fx-font-weight: bold;
+  -fx-font-size: 15px;
+}
+
+.tittlebar .button:hover {
+  -fx-background-color: #074f75;
+  -fx-effect: dropshadow(gaussian, #07486b, 2, 0.04, 0, 0);
+  -fx-scale-x: 1.03;
+  -fx-scale-y: 1.03;
+}
+
+.tittlebar .button:pressed {
+  -fx-background-color: #07486b;
+  -fx-transition: all 0.25s;
+  -fx-effect: null;
+  -fx-scale-x: 1;
+  -fx-scale-y: 1;
+}
+
+.topbackground{
+  -fx-background-color: #095C8A;
+  -fx-background-radius: 0px 0px 10px 10px;
+}
+
+.root {
+  -fx-border-width: 0px;
+  -fx-border-radius: 5px;
+  -fx-border-color: #c9c5c5;
+  -fx-background-color: linear-gradient(to bottom, #ffffff, #ffffffe0);
+}
+
+/* Title style */
+.title{
+  -fx-font-size: 40px;
+  -fx-font-family: 'Helvetica Neue', sans-serif;
+  -fx-font-weight: bold;
+  -fx-letter-spacing: -1px;
+  -fx-text-fill: #f1f1f1;
+  -fx-effect: dropshadow( gaussian , #9E9E9E , 0,0,0.8,0.8 );
+}
+
+/* Start and Stop buttons style */
+.mainbutton {
+  -fx-padding: 12.5px 30px;
+  -fx-border-width: 0;
+  -fx-border-radius: 20px;
+  -fx-background-color: linear-gradient(to bottom, #f1f1f1, #f3faff);
+  -fx-text-fill: #3B4856;
+  -fx-font-weight: bold;
+  -fx-font-size: 15px;
+  -fx-transition: all 0.5s;
+}
+
+.mainbutton:hover {
+  -fx-background-color: #f3faff;
+  -fx-effect: dropshadow(gaussian, #dff1fd, 3, 0.06, 0, 0);
+  -fx-scale-x: 1.03;
+  -fx-scale-y: 1.03;
+}
+
+.mainbutton:pressed {
+  -fx-background-color: #dff1fd;
+  -fx-transition: all 0.25s;
+  -fx-effect: null;
+  -fx-scale-x: 1;
+  -fx-scale-y: 1;
+}
+
+/* Loader style */
+.loader {
+  -fx-progress-color: #FFF7D6;}
+
+/* Table title style */
+.tabletitle{
+  -fx-font-size: 15px;
+  -fx-font-weight: bold;
+}
+
+/* Save buttons style */
+.savebutton {
+  -fx-padding: 6px 20px;
+  -fx-border-width: 0;
+  -fx-border-radius: 80px;
+  -fx-background-color: #eeebeb;
+  -fx-text-fill: #0000009d;
+  -fx-font-weight: bold;
+  -fx-font-size: 10px;
+  -fx-transition: all 0.5s;
+}
+
+.savebutton:hover {
+  -fx-background-color: #d7d5d5;
+  -fx-effect: dropshadow(gaussian, #d7d5d5, 2, 0.04, 0, 0);
+  -fx-scale-x: 1.05;
+  -fx-scale-y: 1.05;
+}
+
+.resize-handle {
+  -fx-background-color: transparent;
+  -fx-border-color: lightgray;
+  -fx-border-width: 1;
+}
+
+.resize-handle:hover {
+  -fx-border-color: dodgerblue;
+}
+
+
+
+
+
+

@@ -146,7 +146,8 @@ public class ConnTestServiceImpl implements ConnTestService {
      *
      * @return List of IP addresses, containing the first (local gateway) and the second hop (ISP)
      */
-    List<String> getLocalAndISPIpAddresses() {
+    @Override
+    public List<String> getLocalAndISPIpAddresses() {
         List<String> ipAddresses = new ArrayList<>();
 
         try (BufferedReader reader = executeTracert()
