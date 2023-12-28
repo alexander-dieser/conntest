@@ -8,15 +8,15 @@
 <VBox alignment="TOP_CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" stylesheets="@/css/mainstyle.css, @/css/comboboxstyle.css, @/css/tablestyle.css" xmlns="http://javafx.com/javafx/11.0.14-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.adieser.conntest.views.UiController">
    <HBox alignment="CENTER_RIGHT" prefHeight="28.0" styleClass="tittlebar">
       <children>
-          <Button fx:id="button_minimize">
+          <Button fx:id="minimizeButton">
                <HBox.margin> <Insets top="5.0" /> </HBox.margin>
                <graphic> <ImageView fitHeight="18" fitWidth="18"> <Image url="@image/minimizebutton.png" /></ImageView></graphic>
           </Button>
-          <Button fx:id="button_maximizeRestore">
+          <Button fx:id="maximizeRestoreButton">
                <HBox.margin><Insets top="5.0" /> </HBox.margin>
               <graphic> <ImageView fitHeight="18" fitWidth="18"> <Image url="@image/maximizeRestorebutton1.png" /></ImageView></graphic>
           </Button>
-          <Button fx:id="button_close">
+          <Button fx:id="closeButton">
                 <HBox.margin><Insets left="5.0" right="5.0" top="5.0" /></HBox.margin>
                 <graphic> <ImageView fitHeight="18" fitWidth="18"> <Image url="@image/closebutton.png" /></ImageView></graphic>
           </Button>
@@ -39,11 +39,11 @@
             <HBox prefWidth="500.0" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="0" GridPane.valignment="CENTER">
                 <children>
                 <!-- START AND STOP BUTTONS -->
-                <Button fx:id="button_start" alignment="CENTER" contentDisplay="CENTER" styleClass="mainbutton" text="Start analysis">
+                <Button fx:id="startButton" alignment="CENTER" contentDisplay="CENTER" styleClass="mainbutton" text="Start analysis">
                       <HBox.margin>
                          <Insets left="40.0" right="15.0" />
                       </HBox.margin></Button>
-                <Button fx:id="button_stop" styleClass="mainbutton" text="Stop analysis">
+                <Button fx:id="stopButton" styleClass="mainbutton" text="Stop analysis">
                       <HBox.margin>
                          <Insets right="10.0" />
                       </HBox.margin></Button>
@@ -87,7 +87,7 @@
                                 <Insets right="5.0" />
                             </HBox.margin>
                         </Label>
-                        <ComboBox fx:id="timechoicebox" promptText="5" HBox.hgrow="SOMETIMES" />
+                        <ComboBox fx:id="timeChoiceBox" promptText="5" HBox.hgrow="SOMETIMES" />
                         <Label fx:id="refreshtimecont" text="  s" />
                     </children>
             <GridPane.margin>
@@ -130,10 +130,10 @@
             </Label>
 
             <!-- TABLES  -->
-            <TableView fx:id="tv_local" focusTraversable="false" styleClass="table" GridPane.columnIndex="0" GridPane.halignment="CENTER" GridPane.rowIndex="3" GridPane.vgrow="SOMETIMES">
+            <TableView fx:id="localTableView" focusTraversable="false" styleClass="table" GridPane.columnIndex="0" GridPane.halignment="CENTER" GridPane.rowIndex="3" GridPane.vgrow="SOMETIMES">
                 <columns>
-                    <TableColumn fx:id="cl_date_local" minWidth="120" text="Date" />
-                    <TableColumn fx:id="cl_ping_local" minWidth="70" text="Ping Time" />
+                    <TableColumn fx:id="dateLocalColumn" minWidth="120" text="Date" />
+                    <TableColumn fx:id="pingLocalColumn" minWidth="70" text="Ping Time" />
                 </columns>
                 <GridPane.margin>
                    <Insets left="10.0" right="10.0" />
@@ -146,10 +146,10 @@
                 </placeholder>
             </TableView>
 
-            <TableView fx:id="tv_isp" focusTraversable="false" styleClass="table" GridPane.columnIndex="1" GridPane.rowIndex="3">
+            <TableView fx:id="ispTableView" focusTraversable="false" styleClass="table" GridPane.columnIndex="1" GridPane.rowIndex="3">
                 <columns>
-                    <TableColumn fx:id="cl_date_isp" minWidth="120" text="Date" />
-                    <TableColumn fx:id="cl_ping_isp" minWidth="70" text="Ping Time" />
+                    <TableColumn fx:id="dateIspColumn" minWidth="120" text="Date" />
+                    <TableColumn fx:id="pingIspColumn" minWidth="70" text="Ping Time" />
                 </columns>
                 <GridPane.margin>
                    <Insets left="10.0" right="10.0" />
@@ -162,10 +162,10 @@
                 </placeholder>
             </TableView>
 
-            <TableView fx:id="tv_cloud" focusTraversable="false" styleClass="table" GridPane.columnIndex="2" GridPane.rowIndex="3">
+            <TableView fx:id="cloudTableView" focusTraversable="false" styleClass="table" GridPane.columnIndex="2" GridPane.rowIndex="3">
                 <columns>
-                    <TableColumn fx:id="cl_date_cloud" editable="false" minWidth="120" text="Date" />
-                    <TableColumn fx:id="cl_ping_cloud" editable="false" minWidth="70" text="Ping Time" />
+                    <TableColumn fx:id="dateCloudColumn" editable="false" minWidth="120" text="Date" />
+                    <TableColumn fx:id="pingCloudColumn" editable="false" minWidth="70" text="Ping Time" />
                 </columns>
                 <GridPane.margin>
                    <Insets left="10.0" right="10.0" />
@@ -179,15 +179,15 @@
             </TableView>
 
             <!-- SAVES BUTTONS -->
-            <Button fx:id="button_save_local" styleClass="savebutton" text="Save" GridPane.columnIndex="0" GridPane.halignment="RIGHT" GridPane.rowIndex="4">
+            <Button fx:id="saveLocalButton" styleClass="savebutton" text="Save" GridPane.columnIndex="0" GridPane.halignment="RIGHT" GridPane.rowIndex="4">
                 <GridPane.margin>
                    <Insets right="5.0" top="15.0" />
                 </GridPane.margin></Button>
-            <Button fx:id="button_save_isp" styleClass="savebutton" text="Save" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="4">
+            <Button fx:id="saveIspButton" styleClass="savebutton" text="Save" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="4">
                 <GridPane.margin>
                    <Insets right="5.0" top="15.0" />
                 </GridPane.margin></Button>
-            <Button fx:id="button_save_cloud" styleClass="savebutton" text="Save" GridPane.columnIndex="2" GridPane.halignment="RIGHT" GridPane.rowIndex="4">
+            <Button fx:id="saveCloudButton" styleClass="savebutton" text="Save" GridPane.columnIndex="2" GridPane.halignment="RIGHT" GridPane.rowIndex="4">
                 <GridPane.margin>
                    <Insets right="5.0" top="15.0" />
                 </GridPane.margin></Button>
@@ -197,6 +197,6 @@
             <Insets bottom="25.0" left="15.0" right="15.0" top="15.0" />
         </VBox.margin>
    </GridPane>
-   <Button fx:id="button_resize" alignment="BASELINE_RIGHT" mnemonicParsing="false" text="Button" visible="false" />
+   <Button fx:id="resizeButton" alignment="BASELINE_RIGHT" mnemonicParsing="false" text="Button" visible="false" />
 
 </VBox>

@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
+import org.slf4j.Logger;
 
 import java.io.*;
 import java.time.LocalDateTime;
@@ -30,19 +31,19 @@ import java.util.concurrent.TimeUnit;
 @Component
 public class UiController {
     @FXML
-    private Button button_close;
+    private Button closeButton;
     @FXML
-    private Button button_minimize;
+    private Button minimizeButton;
     @FXML
-    private Button button_maximizeRestore;
+    private Button maximizeRestoreButton;
     @FXML
-    private Button button_resize;
+    private Button resizeButton;
     @FXML
-    public Button button_start;
+    public Button startButton;
     @FXML
-    public Button button_stop;
+    public Button stopButton;
     @FXML
-    private ComboBox<Integer> timechoicebox;
+    private ComboBox<Integer> timeChoiceBox;
     @FXML
     private Label labelLostAvg1;
     @FXML
@@ -50,29 +51,29 @@ public class UiController {
     @FXML
     private Label labelLostAvg3;
     @FXML
-    public TableView tv_local;
+    public TableView<PingLog> localTableView;
     @FXML
-    private TableColumn<PingLog, String> cl_date_local;
+    private TableColumn<PingLog, String> dateLocalColumn;
     @FXML
-    private TableColumn<PingLog, Long> cl_ping_local;
+    private TableColumn<PingLog, Long> pingLocalColumn;
     @FXML
-    public TableView tv_isp;
+    public TableView<PingLog> ispTableView;
     @FXML
-    private TableColumn<PingLog, String> cl_date_isp;
+    private TableColumn<PingLog, String> dateIspColumn;
     @FXML
-    private TableColumn<PingLog, Long> cl_ping_isp;
+    private TableColumn<PingLog, Long> pingIspColumn;
     @FXML
-    public TableView tv_cloud;
+    public TableView<PingLog> cloudTableView;
     @FXML
-    private TableColumn<PingLog, String> cl_date_cloud;
+    private TableColumn<PingLog, String> dateCloudColumn;
     @FXML
-    private TableColumn<PingLog, Long> cl_ping_cloud;
+    private TableColumn<PingLog, Long> pingCloudColumn;
     @FXML
-    public Button button_save_local;
+    public Button saveLocalButton;
     @FXML
-    public Button button_save_isp;
+    public Button saveIspButton;
     @FXML
-    public Button button_save_cloud;
+    public Button saveCloudButton;
 
     private final ConnTestService connTestService;
     private ScheduledExecutorService executorService;
@@ -80,54 +81,59 @@ public class UiController {
     @FXML
     private ProgressIndicator progressIndicator;
 
-    private double xOffset = 0;
-    private double yOffset = 0;
+    //private double xOffset = 0;
+    //private double yOffset = 0;
 
+    public static final String COLUMN_NAME_DATE = "dateTime";
+    public static final String COLUMN_NAME_TIME = "pingTime";
+    public static final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
 
-    //@Value("${conntest.pinglogs.path}" + "/ping.log")
-    @Value("ping.log")
-    private Resource resource;
+    private final Logger logger;
+
+    @Value("${conntest.pinglogs.path}")
+    Resource logFileName;
 
     @Autowired
-    public UiController(ConnTestService connTestService) {
+    public UiController(ConnTestService connTestService, Logger logger) {
         this.connTestService = connTestService;
+        this.logger = logger;
     }
 
     @FXML
     public void initialize() {
-        button_stop.setDisable(true);
-        timechoicebox.getItems().addAll(1, 5, 10, 15);
-        this.button_start.setOnAction(actionEvent -> {
+        stopButton.setDisable(true);
+        timeChoiceBox.getItems().addAll(1, 5, 10, 15);
+        this.startButton.setOnAction(actionEvent -> {
 
-            button_start.setDisable(true);
+            startButton.setDisable(true);
             progressIndicator.setVisible(true);
-            timechoicebox.setDisable(true);
-            button_stop.setDisable(false);
+            timeChoiceBox.setDisable(true);
+            stopButton.setDisable(false);
             Integer timechoice;
-            if(timechoicebox.getValue() == null){
+            if(timeChoiceBox.getValue() == null){
                 timechoice = 5;
             }else {
-                timechoice = timechoicebox.getValue();
+                timechoice = timeChoiceBox.getValue();
             }
 
             Thread startThread = new Thread(() -> start(timechoice));
             startThread.start();
 
         });
-        this.button_stop.setOnAction(actionEvent -> {
-            button_stop.setDisable(true);
+        this.stopButton.setOnAction(actionEvent -> {
+            stopButton.setDisable(true);
             progressIndicator.setVisible(false);
             this.stop();
-            button_start.setDisable(false);
-            timechoicebox.setDisable(false);
+            startButton.setDisable(false);
+            timeChoiceBox.setDisable(false);
         });
-        this.button_save_local.setOnAction(actionEvent -> saveLogs(tv_local, cl_date_local, cl_ping_local ));
-        this.button_save_isp.setOnAction(actionEvent -> saveLogs(tv_isp, cl_date_isp, cl_ping_isp));
-        this.button_save_cloud.setOnAction(actionEvent -> saveLogs(tv_cloud, cl_date_cloud, cl_ping_cloud));
-        this.button_close.setOnAction(event -> handleClose());
-        this.button_minimize.setOnAction(event -> handleMinimize());
-        this.button_maximizeRestore.setOnAction(event -> handleMaximizeRestore());
-        this.button_resize.setOnAction(event -> handleResize());
+        this.saveLocalButton.setOnAction(actionEvent -> saveLogs(localTableView, dateLocalColumn, pingLocalColumn));
+        this.saveIspButton.setOnAction(actionEvent -> saveLogs(ispTableView, dateIspColumn, pingIspColumn));
+        this.saveCloudButton.setOnAction(actionEvent -> saveLogs(cloudTableView, dateCloudColumn, pingCloudColumn));
+        this.closeButton.setOnAction(event -> handleClose());
+        this.minimizeButton.setOnAction(event -> handleMinimize());
+        this.maximizeRestoreButton.setOnAction(event -> handleMaximizeRestore());
+        this.resizeButton.setOnAction(event -> handleResize());
     }
 
     public void start(Integer timechoice) {
@@ -160,16 +166,10 @@ public class UiController {
         connTestService.stopTests();
     }
 
-    public void readLog(List<String> ipAddress){
-        String logFileName  = "src/main/resources/pingLogs/ping.log";
-
-        LinkedList<PingLog> pingLogsIpLocal = new LinkedList<>();
-        LinkedList<PingLog> pingLogsIpIsp = new LinkedList<>();
-        LinkedList<PingLog> pingLogsIpCloud = new LinkedList<>();
-
-        cl_date_local.setCellValueFactory(new PropertyValueFactory<>("dateTime"));
-        cl_date_local.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getDateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))));
-        cl_ping_local.setCellValueFactory(new PropertyValueFactory<>("pingTime"));
+    public void buildTable(){
+        dateLocalColumn.setCellValueFactory(new PropertyValueFactory<>(COLUMN_NAME_DATE));
+        dateLocalColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getDateTime().format(DateTimeFormatter.ofPattern(DATE_TIME_PATTERN))));
+        pingLocalColumn.setCellValueFactory(new PropertyValueFactory<>(COLUMN_NAME_TIME));
         /*
         Platform.runLater(() -> {
             try {
@@ -196,9 +196,9 @@ public class UiController {
             }
         });
         */
-        cl_date_isp.setCellValueFactory(new PropertyValueFactory<>("dateTime"));
-        cl_date_isp.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getDateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))));
-        cl_ping_isp.setCellValueFactory(new PropertyValueFactory<>("pingTime"));
+        dateIspColumn.setCellValueFactory(new PropertyValueFactory<>(COLUMN_NAME_DATE));
+        dateIspColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getDateTime().format(DateTimeFormatter.ofPattern(DATE_TIME_PATTERN))));
+        pingIspColumn.setCellValueFactory(new PropertyValueFactory<>(COLUMN_NAME_TIME));
         /*
         Platform.runLater(() ->{
              try {
@@ -224,9 +224,9 @@ public class UiController {
             }
         });
         */
-        cl_date_cloud.setCellValueFactory(new PropertyValueFactory<>("dateTime"));
-        cl_date_cloud.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getDateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))));
-        cl_ping_cloud.setCellValueFactory(new PropertyValueFactory<>("pingTime"));
+        dateCloudColumn.setCellValueFactory(new PropertyValueFactory<>(COLUMN_NAME_DATE));
+        dateCloudColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getDateTime().format(DateTimeFormatter.ofPattern(DATE_TIME_PATTERN))));
+        pingCloudColumn.setCellValueFactory(new PropertyValueFactory<>(COLUMN_NAME_TIME));
         /*
         Platform.runLater(() -> {
             try {
@@ -255,7 +255,16 @@ public class UiController {
         */
 
 
-        try (BufferedReader br = new BufferedReader(new FileReader(logFileName))) {
+    }
+
+    public void readLog(List<String> ipAddress){
+        LinkedList<PingLog> pingLogsIpLocal = new LinkedList<>();
+        LinkedList<PingLog> pingLogsIpIsp = new LinkedList<>();
+        LinkedList<PingLog> pingLogsIpCloud = new LinkedList<>();
+
+        buildTable();
+
+        try (BufferedReader br = new BufferedReader(new FileReader(logFileName + "/ping.log"))) {
             String line;
 
             while ((line = br.readLine()) != null) {
@@ -263,31 +272,37 @@ public class UiController {
 
                 PingLog pingLog = new PingLog();
 
-                pingLog.setDateTime(LocalDateTime.parse(parts[0].trim(), DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+                pingLog.setDateTime(LocalDateTime.parse(parts[0].trim(), DateTimeFormatter.ofPattern(DATE_TIME_PATTERN)));
                 pingLog.setIpAddress(parts[1].trim());
                 pingLog.setPingTime(Long.parseLong(parts[2].trim()));
 
 
-                if (Objects.equals(ipAddress.size() > 0 ? ipAddress.get(0) : null, pingLog.getIpAddress())) {
+                if (Objects.equals(!ipAddress.isEmpty() ? ipAddress.get(0) : null, pingLog.getIpAddress())) {
                     pingLogsIpLocal.addFirst(pingLog);
                 } else if (Objects.equals(ipAddress.size() > 1 ? ipAddress.get(1) : null, pingLog.getIpAddress())) {
                     pingLogsIpIsp.addFirst(pingLog);
                 } else if (Objects.equals("8.8.8.8", pingLog.getIpAddress())) {
                     pingLogsIpCloud.addFirst(pingLog);
-                } else {}
+                }
             }
 
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error("Error reading logs", e);
         }
 
-        tv_local.getItems().clear();
-        tv_isp.getItems().clear();
-        tv_cloud.getItems().clear();
+        localTableView.getItems().clear();
+        ispTableView.getItems().clear();
+        cloudTableView.getItems().clear();
 
-        for (PingLog pl : pingLogsIpLocal){ if (pl != null) { tv_local.getItems().add(pl);}}
-        for (PingLog pl : pingLogsIpIsp){ if (pl != null) { tv_isp.getItems().add(pl);}}
-        for (PingLog pl : pingLogsIpCloud){ if (pl != null) { tv_cloud.getItems().add(pl);}}
+        loadData(pingLogsIpLocal, pingLogsIpIsp, pingLogsIpCloud);
+
+    }
+
+    void loadData(LinkedList<PingLog> pingLogsIpLocal, LinkedList<PingLog> pingLogsIpIsp, LinkedList<PingLog> pingLogsIpCloud){
+        for (PingLog pl : pingLogsIpLocal)
+            if (pl != null) localTableView.getItems().add(pl);
+        for (PingLog pl : pingLogsIpIsp){ if (pl != null) { ispTableView.getItems().add(pl);}}
+        for (PingLog pl : pingLogsIpCloud){ if (pl != null) { cloudTableView.getItems().add(pl);}}
     }
 
     public List<String> getIps() {
@@ -313,54 +328,54 @@ public class UiController {
 
                 ObservableList<PingLog> items = tableView.getItems();
                 for (PingLog log : items) {
-                    writer.write(log.getDateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+                    writer.write(log.getDateTime().format(DateTimeFormatter.ofPattern(DATE_TIME_PATTERN)));
                     writer.write("\t");
                     writer.write(String.valueOf(log.getPingTime()));
                     writer.newLine();
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                logger.error("Error saving logs to file", e);
             }
         }
-
     }
 
     public void setAverageLost(List<String> ipAddress){
+        final String text = "Average lost pings:";
         Platform.runLater(() -> {
-            if (ipAddress.size() > 0 && ipAddress.get(0) != null) {
-                labelLostAvg1.setText("Average lost pings: " + connTestService.getPingsLostAvgByIp(ipAddress.get(0)));
+            if (!ipAddress.isEmpty() && ipAddress.get(0) != null) {
+                labelLostAvg1.setText(text + connTestService.getPingsLostAvgByIp(ipAddress.get(0)));
             }
             if (ipAddress.size() > 1 && ipAddress.get(1) != null) {
-                labelLostAvg2.setText("Average lost pings: " + connTestService.getPingsLostAvgByIp(ipAddress.get(1)));
+                labelLostAvg2.setText(text + connTestService.getPingsLostAvgByIp(ipAddress.get(1)));
             }
-            labelLostAvg3.setText("Average lost pings: " + connTestService.getPingsLostAvgByIp("8.8.8.8"));
+            labelLostAvg3.setText(text + connTestService.getPingsLostAvgByIp("8.8.8.8"));
         });
     }
 
     private void handleClose() {
-        Stage stage = (Stage) button_close.getScene().getWindow();
+        Stage stage = (Stage) closeButton.getScene().getWindow();
         stage.close();
     }
 
     private void handleMinimize() {
-        Stage stage = (Stage) button_minimize.getScene().getWindow();
+        Stage stage = (Stage) minimizeButton.getScene().getWindow();
         stage.setIconified(true);
     }
 
     private void handleMaximizeRestore() {
-        Stage stage = (Stage) button_maximizeRestore.getScene().getWindow();
+        Stage stage = (Stage) maximizeRestoreButton.getScene().getWindow();
         if (stage.isMaximized()) {
             stage.setMaximized(false);
-            ImageView maximizeRestorebutton2 = new ImageView(new Image(getClass().getResourceAsStream("/image/maximizeRestorebutton1.png")));
+            ImageView maximizeRestorebutton2 = new ImageView(new Image(Objects.requireNonNull(getClass().getResourceAsStream("/image/maximizeRestorebutton1.png"))));
             maximizeRestorebutton2.setFitHeight(18);
             maximizeRestorebutton2.setFitWidth(18);
-            button_maximizeRestore.setGraphic(maximizeRestorebutton2);
+            maximizeRestoreButton.setGraphic(maximizeRestorebutton2);
         } else {
             stage.setMaximized(true);
-            ImageView maximizeRestorebutton1 = new ImageView(new Image(getClass().getResourceAsStream("/image/maximizeRestorebutton2.png")));
+            ImageView maximizeRestorebutton1 = new ImageView(new Image(Objects.requireNonNull(getClass().getResourceAsStream("/image/maximizeRestorebutton2.png"))));
             maximizeRestorebutton1.setFitHeight(18);
             maximizeRestorebutton1.setFitWidth(18);
-            button_maximizeRestore.setGraphic(maximizeRestorebutton1);
+            maximizeRestoreButton.setGraphic(maximizeRestorebutton1);
         }
     }
 

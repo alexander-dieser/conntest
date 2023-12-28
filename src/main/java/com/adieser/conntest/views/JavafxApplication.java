@@ -13,18 +13,14 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.support.GenericApplicationContext;
 
 public class JavafxApplication extends Application {
-
     private ConfigurableApplicationContext context;
 
     @Override
-    public void init() throws Exception {
-        ApplicationContextInitializer<GenericApplicationContext> initializer = new ApplicationContextInitializer<GenericApplicationContext>() {
-            @Override
-            public void initialize(GenericApplicationContext genericApplicationContext) {
-                genericApplicationContext.registerBean(Application.class, () -> JavafxApplication.this);
-                genericApplicationContext.registerBean(Parameters.class, () -> getParameters());
-                genericApplicationContext.registerBean(HostServices.class, () -> getHostServices());
-            }
+    public void init() {
+        ApplicationContextInitializer<GenericApplicationContext> initializer = genericApplicationContext -> {
+            genericApplicationContext.registerBean(Application.class, () -> JavafxApplication.this);
+            genericApplicationContext.registerBean(Parameters.class, this::getParameters);
+            genericApplicationContext.registerBean(HostServices.class, this::getHostServices);
         };
 
         this.context = new SpringApplicationBuilder().sources(ConntestApplication.class)
@@ -44,10 +40,10 @@ public class JavafxApplication extends Application {
         Platform.exit();
     }
 
-    class StageReadyEvent extends ApplicationEvent {
+    static class StageReadyEvent extends ApplicationEvent {
 
         public Stage getStage() {
-            return Stage.class.cast(getSource());
+            return (Stage) getSource();
         }
 
         public StageReadyEvent(Object source) {
