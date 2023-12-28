@@ -13,8 +13,6 @@ import javafx.scene.image.ImageView;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
 import org.slf4j.Logger;
 
@@ -85,8 +83,7 @@ public class UiController {
 
     private final Logger logger;
 
-    @Value("${conntest.pinglogs.path}")
-    Resource logFileName;
+    public static final String LOGFILENAME = "src/main/resources/pingLogs/ping.log";
 
     @Autowired
     public UiController(ConnTestService connTestService, Logger logger) {
@@ -156,7 +153,7 @@ public class UiController {
 
         buildTable();
 
-        try (BufferedReader br = new BufferedReader(new FileReader(logFileName + "/ping.log"))) {
+        try (BufferedReader br = new BufferedReader(new FileReader(LOGFILENAME))) {
             String line;
 
             while ((line = br.readLine()) != null) {
