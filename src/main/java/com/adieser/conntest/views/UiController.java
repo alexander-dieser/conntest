@@ -37,8 +37,6 @@ public class UiController {
     @FXML
     private Button maximizeRestoreButton;
     @FXML
-    private Button resizeButton;
-    @FXML
     public Button startButton;
     @FXML
     public Button stopButton;
@@ -80,9 +78,6 @@ public class UiController {
 
     @FXML
     private ProgressIndicator progressIndicator;
-
-    //private double xOffset = 0;
-    //private double yOffset = 0;
 
     public static final String COLUMN_NAME_DATE = "dateTime";
     public static final String COLUMN_NAME_TIME = "pingTime";
@@ -133,20 +128,9 @@ public class UiController {
         this.closeButton.setOnAction(event -> handleClose());
         this.minimizeButton.setOnAction(event -> handleMinimize());
         this.maximizeRestoreButton.setOnAction(event -> handleMaximizeRestore());
-        this.resizeButton.setOnAction(event -> handleResize());
     }
 
     public void start(Integer timechoice) {
-        /*Thread connectionThread = new Thread(() -> connTestService.testLocalISPInternet());
-        connectionThread.start();
-
-        try {
-            connectionThread.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-         */
         connTestService.testLocalISPInternet();
 
         List<String> ipAddress = getIps();
@@ -165,98 +149,6 @@ public class UiController {
         }
         connTestService.stopTests();
     }
-
-    public void buildTable(){
-        dateLocalColumn.setCellValueFactory(new PropertyValueFactory<>(COLUMN_NAME_DATE));
-        dateLocalColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getDateTime().format(DateTimeFormatter.ofPattern(DATE_TIME_PATTERN))));
-        pingLocalColumn.setCellValueFactory(new PropertyValueFactory<>(COLUMN_NAME_TIME));
-        /*
-        Platform.runLater(() -> {
-            try {
-                cl_ping_local.setCellFactory(column -> { return new TableCell<PingLog, Long>() {
-                        @Override
-                        protected void updateItem(Long item, boolean empty) {
-                            super.updateItem(item, empty);
-                            if (item == null || empty) {
-                                setText(null);
-                                setStyle("");
-                            } else {
-                                setText(String.valueOf(item));
-                                if (item == -1) {
-                                    setStyle("-fx-text-fill: red;");
-                                } else {
-                                    setStyle("");
-                                }
-                            }
-                        }
-                    };
-                });
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
-        */
-        dateIspColumn.setCellValueFactory(new PropertyValueFactory<>(COLUMN_NAME_DATE));
-        dateIspColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getDateTime().format(DateTimeFormatter.ofPattern(DATE_TIME_PATTERN))));
-        pingIspColumn.setCellValueFactory(new PropertyValueFactory<>(COLUMN_NAME_TIME));
-        /*
-        Platform.runLater(() ->{
-             try {
-                cl_ping_isp.setCellFactory(column -> { return new TableCell<PingLog, Long>() {
-                        @Override
-                        protected void updateItem(Long item, boolean empty) {
-                            super.updateItem(item, empty);
-                            if (item == null || empty) {
-                                setText(null);
-                                setStyle("");
-                            } else {
-                                setText(String.valueOf(item));
-                                if (item == -1) {
-                                    setStyle("-fx-text-fill: red;");
-                                } else {
-                                    setStyle("");
-                                }
-                            }
-                        }
-                };});
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
-        */
-        dateCloudColumn.setCellValueFactory(new PropertyValueFactory<>(COLUMN_NAME_DATE));
-        dateCloudColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getDateTime().format(DateTimeFormatter.ofPattern(DATE_TIME_PATTERN))));
-        pingCloudColumn.setCellValueFactory(new PropertyValueFactory<>(COLUMN_NAME_TIME));
-        /*
-        Platform.runLater(() -> {
-            try {
-                cl_ping_cloud.setCellFactory(column -> { return new TableCell<PingLog, Long>() {
-                    @Override
-                    protected void updateItem(Long item, boolean empty) {
-                        super.updateItem(item, empty);
-                        if (item == null || empty) {
-                            setText(null);
-                            setStyle("");
-                        } else {
-                            setText(String.valueOf(item));
-                            if (item == -1) {
-                                setStyle("-fx-text-fill: red;");
-                            } else {
-                                setStyle("");
-                            }
-                        }
-                    }
-                };
-                });
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
-        */
-
-
-    }
-
     public void readLog(List<String> ipAddress){
         LinkedList<PingLog> pingLogsIpLocal = new LinkedList<>();
         LinkedList<PingLog> pingLogsIpIsp = new LinkedList<>();
@@ -298,7 +190,21 @@ public class UiController {
 
     }
 
-    void loadData(LinkedList<PingLog> pingLogsIpLocal, LinkedList<PingLog> pingLogsIpIsp, LinkedList<PingLog> pingLogsIpCloud){
+    private void buildTable(){
+        dateLocalColumn.setCellValueFactory(new PropertyValueFactory<>(COLUMN_NAME_DATE));
+        dateLocalColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getDateTime().format(DateTimeFormatter.ofPattern(DATE_TIME_PATTERN))));
+        pingLocalColumn.setCellValueFactory(new PropertyValueFactory<>(COLUMN_NAME_TIME));
+
+        dateIspColumn.setCellValueFactory(new PropertyValueFactory<>(COLUMN_NAME_DATE));
+        dateIspColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getDateTime().format(DateTimeFormatter.ofPattern(DATE_TIME_PATTERN))));
+        pingIspColumn.setCellValueFactory(new PropertyValueFactory<>(COLUMN_NAME_TIME));
+
+        dateCloudColumn.setCellValueFactory(new PropertyValueFactory<>(COLUMN_NAME_DATE));
+        dateCloudColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getDateTime().format(DateTimeFormatter.ofPattern(DATE_TIME_PATTERN))));
+        pingCloudColumn.setCellValueFactory(new PropertyValueFactory<>(COLUMN_NAME_TIME));
+    }
+
+    private void loadData(LinkedList<PingLog> pingLogsIpLocal, LinkedList<PingLog> pingLogsIpIsp, LinkedList<PingLog> pingLogsIpCloud){
         for (PingLog pl : pingLogsIpLocal)
             if (pl != null) localTableView.getItems().add(pl);
         for (PingLog pl : pingLogsIpIsp){ if (pl != null) { ispTableView.getItems().add(pl);}}
@@ -309,7 +215,7 @@ public class UiController {
         return connTestService.getLocalAndISPIpAddresses();
     }
 
-    public void saveLogs(TableView<PingLog> tableView, TableColumn<PingLog, String> dateColumn, TableColumn<PingLog, Long> pingColumn) {
+    private void saveLogs(TableView<PingLog> tableView, TableColumn<PingLog, String> dateColumn, TableColumn<PingLog, Long> pingColumn) {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Guardar como");
         fileChooser.setInitialDirectory(new java.io.File(System.getProperty("user.home")));
@@ -377,37 +283,6 @@ public class UiController {
             maximizeRestorebutton1.setFitWidth(18);
             maximizeRestoreButton.setGraphic(maximizeRestorebutton1);
         }
-    }
-
-    private void handleResize() {
-        /* Stage stage = (Stage) button_resize.getScene().getWindow();
-
-        // Crear el nodo de redimensionamiento (en este caso, usaremos un rectángulo)
-        Rectangle resizeHandle = new Rectangle(10, 10);
-        resizeHandle.setCursor(Cursor.SE_RESIZE);
-
-        // Agregar el nodo de redimensionamiento al contenedor principal
-        StackPane stackPane = (StackPane) stage.getScene().getRoot();
-        stackPane.getChildren().add(resizeHandle);
-
-        // Manejar eventos de arrastre para redimensionar la ventana
-        resizeHandle.setOnMousePressed(event -> {
-            xOffset = event.getSceneX();
-            yOffset = event.getSceneY();
-        });
-
-        resizeHandle.setOnMouseDragged(event -> {
-            double deltaX = event.getScreenX() - xOffset;
-            double deltaY = event.getScreenY() - yOffset;
-
-            stage.setWidth(stage.getWidth() + deltaX);
-            stage.setHeight(stage.getHeight() + deltaY);
-
-            xOffset = event.getSceneX();
-            yOffset = event.getSceneY();
-        });
-
-         */
     }
 
 }

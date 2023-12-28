@@ -11,7 +11,6 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
 import org.slf4j.Logger;
-
 import java.io.IOException;
 
 @Component
@@ -65,7 +64,4 @@ public class StageListener implements ApplicationListener<JavafxApplication.Stag
             logger.error("Error loading Stage", e);
         }
     }
-
-
-
 }
