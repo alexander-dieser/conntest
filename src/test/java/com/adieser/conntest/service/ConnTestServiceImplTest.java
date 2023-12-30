@@ -18,8 +18,10 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Stream;
 
@@ -298,6 +300,26 @@ class ConnTestServiceImplTest {
         // assert
         verify(tracertProvider, times(1)).executeTracert();
         assertEquals(mockReader, reader);
+    }
+
+    @Test
+    void testGetIpAddressesFromActiveTests(){
+        // when
+        ConnTestServiceImpl underTest = spy(new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository));
+        List<String> ipAddresses = List.of("IP_1", "IP_2", "IP_3");
+        underTest.tests = ipAddresses.stream()
+                .map(ip -> new ConnTest(executorService, ip, logger, pingLogRepository))
+                .toList();
+
+        // then
+        List<String> result = underTest.getIpAddressesFromActiveTests();
+
+        // assert
+        // convert the lists to set to compare ignoring the ordering
+        Set<String> expected = new HashSet<>(ipAddresses);
+        Set<String> testResult = new HashSet<>(result);
+
+        assertEquals(expected, testResult);
     }
 
     static Stream<Boolean> areTestsRunningProvider() {
