@@ -37,7 +37,7 @@ public class ConnTestServiceImpl implements ConnTestService {
     /**
      * Tracert IP regex (Windows) for extracting the IP addresses from tracert output
      */
-    private static final String REGEX_PATTERN_TRACERT_WINDOWS = "(?<!\\[)(\\b(?:\\d{1,3}\\.){3}\\d{1,3}\\b)(?!])";
+    private static final String REGEX_PATTERN_TRACERT_WINDOWS = "(?<!\\[)(\\b(?:\\d{1,3}\\.){3}\\d{1,3}\\b)(?!])\\b(?<!8\\.8\\.8\\.8)";
 
     private final PingLogRepository pingLogRepository;
 
@@ -59,7 +59,7 @@ public class ConnTestServiceImpl implements ConnTestService {
 
             tests.forEach(Pingable::startPingSession);
         }else
-            logger.warn("Tests are already running");
+            tests.forEach(test -> logger.warn("Tests are already running (IP {})", test.getIpAddress()));
     }
 
     @Override
@@ -68,7 +68,7 @@ public class ConnTestServiceImpl implements ConnTestService {
             logger.warn("No tests to stop");
         else {
             tests.forEach(Pingable::stopPingSession);
-            threadPoolExecutor.shutdown();
+            tests = new ArrayList<>();
         }
     }
 
@@ -176,5 +176,15 @@ public class ConnTestServiceImpl implements ConnTestService {
      */
     Optional<BufferedReader> executeTracert() throws IOException {
         return tracertProvider.executeTracert();
+    }
+
+    /**
+     * Get the IP addresses from the active tests
+     * @return list of IP addresses
+     */
+    public List<String> getIpAddressesFromActiveTests(){
+        return tests.stream()
+                .map(ConnTest::getIpAddress)
+                .toList();
     }
 }
