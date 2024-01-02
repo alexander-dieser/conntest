@@ -85,6 +85,8 @@ public class UiController {
 
     public static final String LOGFILENAME = "src/main/resources/pingLogs/ping.log";
 
+    List<String> ipAddress;
+
     @Autowired
     public UiController(ConnTestService connTestService, Logger logger) {
         this.connTestService = connTestService;
@@ -129,8 +131,7 @@ public class UiController {
 
     public void start(Integer timechoice) {
         connTestService.testLocalISPInternet();
-
-        List<String> ipAddress = getIps();
+        ipAddress = connTestService.getIpAddressesFromActiveTests();
         progressIndicator.setVisible(false);
 
         executorService = Executors.newSingleThreadScheduledExecutor();
@@ -206,10 +207,6 @@ public class UiController {
             if (pl != null) localTableView.getItems().add(pl);
         for (PingLog pl : pingLogsIpIsp){ if (pl != null) { ispTableView.getItems().add(pl);}}
         for (PingLog pl : pingLogsIpCloud){ if (pl != null) { cloudTableView.getItems().add(pl);}}
-    }
-
-    public List<String> getIps() {
-        return connTestService.getLocalAndISPIpAddresses();
     }
 
     private void saveLogs(TableView<PingLog> tableView, TableColumn<PingLog, String> dateColumn, TableColumn<PingLog, Long> pingColumn) {

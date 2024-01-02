@@ -1,6 +1,6 @@
 package com.adieser.conntest.service;
 
-import com.adieser.conntest.controllers.responses.PingSessionResponseEntity;
+import com.adieser.conntest.controllers.responses.PingSessionExtract;
 import com.adieser.conntest.models.ConnTest;
 import com.adieser.conntest.models.PingLog;
 import com.adieser.conntest.models.PingLogRepository;
@@ -37,7 +37,7 @@ public class ConnTestServiceImpl implements ConnTestService {
     /**
      * Tracert IP regex (Windows) for extracting the IP addresses from tracert output
      */
-    private static final String REGEX_PATTERN_TRACERT_WINDOWS = "(?<!\\[)(\\b(?:\\d{1,3}\\.){3}\\d{1,3}\\b)(?!])";
+    private static final String REGEX_PATTERN_TRACERT_WINDOWS = "(?<!\\[)(\\b(?:\\d{1,3}\\.){3}\\d{1,3}\\b)(?!])\\b(?<!8\\.8\\.8\\.8)";
 
     private final PingLogRepository pingLogRepository;
 
@@ -59,7 +59,7 @@ public class ConnTestServiceImpl implements ConnTestService {
 
             tests.forEach(Pingable::startPingSession);
         }else
-            logger.warn("Tests are already running");
+            tests.forEach(test -> logger.warn("Tests are already running (IP {})", test.getIpAddress()));
     }
 
     @Override
@@ -68,52 +68,48 @@ public class ConnTestServiceImpl implements ConnTestService {
             logger.warn("No tests to stop");
         else {
             tests.forEach(Pingable::stopPingSession);
-            threadPoolExecutor.shutdown();
+            tests = new ArrayList<>();
         }
     }
 
     @Override
-    public List<PingSessionResponseEntity> getPings() {
-        List<PingSessionResponseEntity> pingResponses = new ArrayList<>();
-
+    public PingSessionExtract getPings() {
         List<PingLog> pingLogs = pingLogRepository.findAllPingLogs();
 
-        createResponse(pingResponses, pingLogs);
-
-        return pingResponses;
+        return createBasicResponse(pingLogs);
     }
 
     @Override
-    public List<PingSessionResponseEntity> getPingsByDateTimeRange(LocalDateTime start, LocalDateTime end) {
-        List<PingSessionResponseEntity> pingResponses = new ArrayList<>();
-
+    public PingSessionExtract getPingsByDateTimeRange(LocalDateTime start, LocalDateTime end) {
         List<PingLog> pingLogs = pingLogRepository.findPingLogsByDateTimeRange(start, end);
 
-        createResponse(pingResponses, pingLogs);
+        PingSessionExtract response = createBasicResponse(pingLogs);
+        response.setStartDate(start);
+        response.setEndDate(end);
 
-        return pingResponses;
+        return response;
     }
 
     @Override
-    public List<PingSessionResponseEntity> getPingsByIp(String ipAddress) {
-        List<PingSessionResponseEntity> pingResponses = new ArrayList<>();
-
+    public PingSessionExtract getPingsByIp(String ipAddress) {
         List<PingLog> pingLogs = pingLogRepository.findPingLogByIp(ipAddress);
 
-        createResponse(pingResponses, pingLogs);
+        PingSessionExtract response = createBasicResponse(pingLogs);
+        response.setIpAddress(ipAddress);
 
-        return pingResponses;
+        return response;
     }
 
     @Override
-    public List<PingSessionResponseEntity> getPingsByDateTimeRangeByIp(LocalDateTime start, LocalDateTime end, String ipAddress) {
-        List<PingSessionResponseEntity> pingResponses = new ArrayList<>();
-
+    public PingSessionExtract getPingsByDateTimeRangeByIp(LocalDateTime start, LocalDateTime end, String ipAddress) {
         List<PingLog> pingLogs = pingLogRepository.findPingLogsByDateTimeRangeByIp(start, end, ipAddress);
 
-        createResponse(pingResponses, pingLogs);
+        PingSessionExtract response = createBasicResponse(pingLogs);
+        response.setStartDate(start);
+        response.setEndDate(end);
+        response.setIpAddress(ipAddress);
 
-        return pingResponses;
+        return response;
     }
 
     @Override
@@ -127,17 +123,14 @@ public class ConnTestServiceImpl implements ConnTestService {
     }
 
     /**
-     * Create the ping session results formatted as {@link PingSessionResponseEntity}
-     * @param pingResponses List carrying the {@link PingSessionResponseEntity}
+     * Create the ping session results formatted as {@link PingSessionExtract}
      * @param pingLogs List of ping sessions results
      */
-    void createResponse(List<PingSessionResponseEntity> pingResponses, List<PingLog> pingLogs) {
-        pingResponses.add(
-                PingSessionResponseEntity.builder()
-                        .pingLogs(pingLogs)
-                        .amountOfPings(pingLogs.size())
-                        .build()
-        );
+    PingSessionExtract createBasicResponse(List<PingLog> pingLogs) {
+        return PingSessionExtract.builder()
+                .pingLogs(pingLogs)
+                .amountOfPings(pingLogs.size())
+                .build();
     }
 
     /**
@@ -146,8 +139,7 @@ public class ConnTestServiceImpl implements ConnTestService {
      *
      * @return List of IP addresses, containing the first (local gateway) and the second hop (ISP)
      */
-    @Override
-    public List<String> getLocalAndISPIpAddresses() {
+    List<String> getLocalAndISPIpAddresses() {
         List<String> ipAddresses = new ArrayList<>();
 
         try (BufferedReader reader = executeTracert()
@@ -184,5 +176,15 @@ public class ConnTestServiceImpl implements ConnTestService {
      */
     Optional<BufferedReader> executeTracert() throws IOException {
         return tracertProvider.executeTracert();
+    }
+
+    /**
+     * Get the IP addresses from the active tests
+     * @return list of IP addresses
+     */
+    public List<String> getIpAddressesFromActiveTests(){
+        return tests.stream()
+                .map(ConnTest::getIpAddress)
+                .toList();
     }
 }

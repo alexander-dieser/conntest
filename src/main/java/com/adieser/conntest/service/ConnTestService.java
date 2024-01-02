@@ -1,6 +1,6 @@
 package com.adieser.conntest.service;
 
-import com.adieser.conntest.controllers.responses.PingSessionResponseEntity;
+import com.adieser.conntest.controllers.responses.PingSessionExtract;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -22,33 +22,33 @@ public interface ConnTestService {
 
     /**
      * Retrieve all the ping logs
-     * @return List of ping results
+     * @return List of ping results and metadata {@link PingSessionExtract}
      */
-    List<PingSessionResponseEntity> getPings();
+    PingSessionExtract getPings();
 
     /**
      * Retrieve all the ping logs within a datetime range
      * @param start start date and time of the range
      * @param end end date in the range
-     * @return List of ping results
+     * @return List of ping results and metadata {@link PingSessionExtract}
      */
-    List<PingSessionResponseEntity> getPingsByDateTimeRange(LocalDateTime start, LocalDateTime end);
+    PingSessionExtract getPingsByDateTimeRange(LocalDateTime start, LocalDateTime end);
 
     /**
      * Retrieve all the ping logs filtered by IP
      * @param ipAddress IP address use to filter the results
-     * @return List of ping results
+     * @return List of ping results and metadata {@link PingSessionExtract}
      */
-    List<PingSessionResponseEntity> getPingsByIp(String ipAddress);
+    PingSessionExtract getPingsByIp(String ipAddress);
 
     /**
      * Retrieve all the ping logs within a datetime range filtered by IP
      * @param start start date and time of the range
      * @param end end date in the range
      * @param ipAddress IP address use to filter the results
-     * @return List of ping results
+     * @return List of ping results and metadata {@link PingSessionExtract}
      */
-    List<PingSessionResponseEntity> getPingsByDateTimeRangeByIp(LocalDateTime start, LocalDateTime end, String ipAddress);
+    PingSessionExtract getPingsByDateTimeRangeByIp(LocalDateTime start, LocalDateTime end, String ipAddress);
 
     /**
      * Get the average of lost pings within a list of pings filtered by IP
@@ -66,5 +66,6 @@ public interface ConnTestService {
      */
     BigDecimal getPingsLostAvgByDateTimeRangeByIp(LocalDateTime start, LocalDateTime end, String ipAddress);
 
-    List<String> getLocalAndISPIpAddresses();
+    List<String> getIpAddressesFromActiveTests();
+
 }

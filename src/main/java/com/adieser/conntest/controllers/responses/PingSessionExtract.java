@@ -1,9 +1,11 @@
 package com.adieser.conntest.controllers.responses;
 
 import com.adieser.conntest.models.PingLog;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;
 import lombok.Data;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -11,7 +13,11 @@ import java.util.List;
  */
 @Data
 @Builder
-public class PingSessionResponseEntity {
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class PingSessionExtract {
     private long amountOfPings;
+    private LocalDateTime startDate;
+    private LocalDateTime endDate;
+    private String ipAddress;
     private List<PingLog> pingLogs;
 }
