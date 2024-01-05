@@ -1,5 +1,6 @@
 package com.adieser.conntest.views;
 
+import com.adieser.conntest.controllers.responses.PingSessionExtract;
 import com.adieser.conntest.models.PingLog;
 import com.adieser.conntest.service.ConnTestService;
 import javafx.application.Platform;
@@ -17,9 +18,9 @@ import org.springframework.stereotype.Component;
 import org.slf4j.Logger;
 
 import java.io.*;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.LinkedList;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Executors;
@@ -83,8 +84,6 @@ public class UiController {
 
     private final Logger logger;
 
-    public static final String LOGFILENAME = "src/main/resources/pingLogs/ping.log";
-
     List<String> ipAddress;
 
     @Autowired
@@ -136,7 +135,7 @@ public class UiController {
 
         executorService = Executors.newSingleThreadScheduledExecutor();
         executorService.scheduleAtFixedRate(() -> {
-            readLog(ipAddress);
+            loadLogs(ipAddress);
             setAverageLost(ipAddress);
         }, 0, timechoice, TimeUnit.SECONDS);
     }
@@ -147,45 +146,16 @@ public class UiController {
         }
         connTestService.stopTests();
     }
-    public void readLog(List<String> ipAddress){
-        LinkedList<PingLog> pingLogsIpLocal = new LinkedList<>();
-        LinkedList<PingLog> pingLogsIpIsp = new LinkedList<>();
-        LinkedList<PingLog> pingLogsIpCloud = new LinkedList<>();
 
+    public void loadLogs(List<String> ipAddress) {
         buildTable();
 
-        try (BufferedReader br = new BufferedReader(new FileReader(LOGFILENAME))) {
-            String line;
-
-            while ((line = br.readLine()) != null) {
-                String[] parts  = line.split(",");
-
-                PingLog pingLog = new PingLog();
-
-                pingLog.setDateTime(LocalDateTime.parse(parts[0].trim(), DateTimeFormatter.ofPattern(DATE_TIME_PATTERN)));
-                pingLog.setIpAddress(parts[1].trim());
-                pingLog.setPingTime(Long.parseLong(parts[2].trim()));
-
-
-                if (Objects.equals(!ipAddress.isEmpty() ? ipAddress.get(0) : null, pingLog.getIpAddress())) {
-                    pingLogsIpLocal.addFirst(pingLog);
-                } else if (Objects.equals(ipAddress.size() > 1 ? ipAddress.get(1) : null, pingLog.getIpAddress())) {
-                    pingLogsIpIsp.addFirst(pingLog);
-                } else if (Objects.equals("8.8.8.8", pingLog.getIpAddress())) {
-                    pingLogsIpCloud.addFirst(pingLog);
-                }
-            }
-
-        } catch (IOException e) {
-            logger.error("Error reading logs", e);
-        }
-
         localTableView.getItems().clear();
+        addPingLogsToTableView(connTestService.getPingsByIp(ipAddress.get(0)), localTableView);
         ispTableView.getItems().clear();
+        addPingLogsToTableView(connTestService.getPingsByIp(ipAddress.get(1)), ispTableView);
         cloudTableView.getItems().clear();
-
-        loadData(pingLogsIpLocal, pingLogsIpIsp, pingLogsIpCloud);
-
+        addPingLogsToTableView(connTestService.getPingsByIp("8.8.8.8"), cloudTableView);
     }
 
     private void buildTable(){
@@ -202,16 +172,23 @@ public class UiController {
         pingCloudColumn.setCellValueFactory(new PropertyValueFactory<>(COLUMN_NAME_TIME));
     }
 
-    private void loadData(LinkedList<PingLog> pingLogsIpLocal, LinkedList<PingLog> pingLogsIpIsp, LinkedList<PingLog> pingLogsIpCloud){
-        for (PingLog pl : pingLogsIpLocal)
-            if (pl != null) localTableView.getItems().add(pl);
-        for (PingLog pl : pingLogsIpIsp){ if (pl != null) { ispTableView.getItems().add(pl);}}
-        for (PingLog pl : pingLogsIpCloud){ if (pl != null) { cloudTableView.getItems().add(pl);}}
+    private void addPingLogsToTableView(PingSessionExtract pingLogsIp, TableView<PingLog> tableView) {
+        if (pingLogsIp != null) {
+            List<PingLog> reversedPingLogs = new ArrayList<>(pingLogsIp.getPingLogs());
+            Collections.reverse(reversedPingLogs);
+
+            for (PingLog pingLog : reversedPingLogs) {
+                if (pingLog != null) {
+                    tableView.getItems().add(pingLog);
+                }
+            }
+        }
     }
+
 
     private void saveLogs(TableView<PingLog> tableView, TableColumn<PingLog, String> dateColumn, TableColumn<PingLog, Long> pingColumn) {
         FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Guardar como");
+        fileChooser.setTitle("Save as");
         fileChooser.setInitialDirectory(new java.io.File(System.getProperty("user.home")));
         fileChooser.setInitialFileName("pingrecord.log");
         fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Archivos de registro (*.log)", "*.log"));
@@ -240,7 +217,7 @@ public class UiController {
     }
 
     public void setAverageLost(List<String> ipAddress){
-        final String text = "Average lost pings:";
+        final String text = "Average lost pings: ";
         Platform.runLater(() -> {
             if (!ipAddress.isEmpty() && ipAddress.get(0) != null) {
                 labelLostAvg1.setText(text + connTestService.getPingsLostAvgByIp(ipAddress.get(0)));
