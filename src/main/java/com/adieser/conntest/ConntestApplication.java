@@ -1,7 +1,8 @@
 package com.adieser.conntest;
 
 import com.adieser.conntest.utils.NotIncludeInCodeCoverageGenerated;
-import org.springframework.boot.SpringApplication;
+import com.adieser.conntest.views.JavafxApplication;
+import javafx.application.Application;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @NotIncludeInCodeCoverageGenerated
@@ -9,7 +10,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class ConntestApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(ConntestApplication.class, args);
+		Application.launch(JavafxApplication.class, args);
 	}
 
 }

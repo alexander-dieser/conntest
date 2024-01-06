@@ -4,6 +4,7 @@ import com.adieser.conntest.controllers.responses.PingSessionExtract;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * Service for testing connections in parallel based on a ping tool
@@ -64,5 +65,7 @@ public interface ConnTestService {
      * @return average of pings lost
      */
     BigDecimal getPingsLostAvgByDateTimeRangeByIp(LocalDateTime start, LocalDateTime end, String ipAddress);
+
+    List<String> getIpAddressesFromActiveTests();
 
 }
