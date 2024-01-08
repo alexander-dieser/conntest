@@ -122,6 +122,13 @@ public class ConnTestServiceImpl implements ConnTestService {
         return pingLogRepository.findLostPingLogsAvgByDateTimeRangeByIp(start, end, ipAddress);
     }
 
+    @Override
+    public List<String> getIpAddressesFromActiveTests(){
+        return tests.stream()
+                .map(ConnTest::getIpAddress)
+                .toList();
+    }
+
     /**
      * Create the ping session results formatted as {@link PingSessionExtract}
      * @param pingLogs List of ping sessions results
@@ -178,13 +185,4 @@ public class ConnTestServiceImpl implements ConnTestService {
         return tracertProvider.executeTracert();
     }
 
-    /**
-     * Get the IP addresses from the active tests
-     * @return list of IP addresses
-     */
-    public List<String> getIpAddressesFromActiveTests(){
-        return tests.stream()
-                .map(ConnTest::getIpAddress)
-                .toList();
-    }
 }
