@@ -12,7 +12,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
 import org.slf4j.Logger;
 import java.io.IOException;
-@SuppressWarnings("unused")
+
 @Component
 public class StageListener implements ApplicationListener<JavafxApplication.StageReadyEvent> {
     private final Resource fxml;
@@ -22,7 +22,6 @@ public class StageListener implements ApplicationListener<JavafxApplication.Stag
     private double xOffset = 0;
     private double yOffset = 0;
 
-    @SuppressWarnings("unused")
     public StageListener(@Value("classpath:/ui.fxml") Resource fxml, ApplicationContext applicationContext, Logger logger) {
         this.fxml = fxml;
         this.applicationContext = applicationContext;

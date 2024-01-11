@@ -158,7 +158,7 @@ public class UiController {
     }
 
     /**
-     * Build tables and loads ping logs for each table view
+     * Builds tables and loads ping logs for each table view
      * @param ipAddress list of IP addresses
      */
     private void loadLogs(List<String> ipAddress) {
