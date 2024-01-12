@@ -17,12 +17,10 @@ import java.io.IOException;
 public class StageListener implements ApplicationListener<JavafxApplication.StageReadyEvent> {
     private final Resource fxml;
     private final ApplicationContext applicationContext;
+    private final Logger logger;
 
     private double xOffset = 0;
     private double yOffset = 0;
-
-    private final Logger logger;
-
 
     public StageListener(@Value("classpath:/ui.fxml") Resource fxml, ApplicationContext applicationContext, Logger logger) {
         this.fxml = fxml;
@@ -30,7 +28,10 @@ public class StageListener implements ApplicationListener<JavafxApplication.Stag
         this.logger = logger;
     }
 
-
+    /**
+     * Handles the StageReadyEvent by initializing the JavaFX Stage with the specified FXML file.
+     * @param stageReadyEvent StageReadyEvent indicating that the primary Stage is ready.
+     */
     @Override
     public void onApplicationEvent(JavafxApplication.StageReadyEvent stageReadyEvent) {
         try {
@@ -46,12 +47,10 @@ public class StageListener implements ApplicationListener<JavafxApplication.Stag
                 xOffset = event.getSceneX();
                 yOffset = event.getSceneY();
             });
-
             root.setOnMouseDragged(event -> {
                 stage.setX(event.getScreenX() - xOffset);
                 stage.setY(event.getScreenY() - yOffset);
             });
-
 
             stage.setScene(scene);
             stage.setMinWidth(800);
