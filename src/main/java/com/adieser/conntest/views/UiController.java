@@ -31,7 +31,7 @@ import java.util.concurrent.TimeUnit;
 @Component
 public class UiController {
     @FXML
-    private Button closeButton;
+    public Button closeButton;
     @FXML
     private Button minimizeButton;
     @FXML
@@ -40,6 +40,8 @@ public class UiController {
     private Button startButton;
     @FXML
     private Button stopButton;
+    @FXML
+    private ProgressIndicator progressIndicator;
     @FXML
     private ComboBox<Integer> timeChoiceBox;
     @FXML
@@ -72,23 +74,16 @@ public class UiController {
     private Button saveIspButton;
     @FXML
     private Button saveCloudButton;
-
-    private final ConnTestService connTestService;
+    public final ConnTestService connTestService;
     private ScheduledExecutorService executorService;
-
-    @FXML
-    private ProgressIndicator progressIndicator;
-
+    private final Logger logger;
     private static final String COLUMN_NAME_DATE = "dateTime";
     private static final String COLUMN_NAME_TIME = "pingTime";
     private static final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
-
-    private final Logger logger;
-
     List<String> ipAddress;
 
     @Autowired
-    private UiController(ConnTestService connTestService, Logger logger) {
+    public UiController(ConnTestService connTestService, Logger logger) {
         this.connTestService = connTestService;
         this.logger = logger;
     }
@@ -130,15 +125,13 @@ public class UiController {
     }
 
     /**
-     * Initiates a ping session, loads logs, and set the average of lost pings in a loop.
+     * Initiates a ping session and starts Scheduled Executor to load logs and set the average of lost pings in a loop.
      * @param timechoice the user's chosen time interval in seconds, with a default of 5 seconds.
      */
-    private void start(Integer timechoice) {
+    public void start(Integer timechoice) {
         connTestService.testLocalISPInternet();
         ipAddress = connTestService.getIpAddressesFromActiveTests();
-        progressIndicator.setVisible(false);
-        stopButton.setDisable(false);
-
+        updateVisualControls();
         executorService = Executors.newSingleThreadScheduledExecutor();
         executorService.scheduleAtFixedRate(() -> {
             loadLogs(ipAddress);
@@ -147,10 +140,18 @@ public class UiController {
     }
 
     /**
+     * Updates the visual controls by hiding the progress indicator and enabling the stop button.
+     */
+    public void updateVisualControls(){
+        progressIndicator.setVisible(false);
+        stopButton.setDisable(false);
+    }
+
+    /**
      * Shuts down the scheduled executor service and stops all tests.
      * The first one includes log loading and the set of average lost
      */
-    private void stop() {
+    public void stop() {
         if (executorService != null && !executorService.isShutdown()) {
             executorService.shutdownNow();
         }
