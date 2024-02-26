@@ -14,6 +14,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import lombok.Getter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.slf4j.Logger;
@@ -31,7 +32,7 @@ import java.util.concurrent.TimeUnit;
 @Component
 public class UiController {
     @FXML
-    public Button closeButton;
+    private Button closeButton;
     @FXML
     private Button minimizeButton;
     @FXML
@@ -75,17 +76,19 @@ public class UiController {
     @FXML
     private Button saveCloudButton;
     public final ConnTestService connTestService;
-    private ScheduledExecutorService executorService;
-    private final Logger logger;
+    @Getter
+    public ScheduledExecutorService executorService;
+    public final Logger logger;
     private static final String COLUMN_NAME_DATE = "dateTime";
     private static final String COLUMN_NAME_TIME = "pingTime";
     private static final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
     List<String> ipAddress;
 
     @Autowired
-    public UiController(ConnTestService connTestService, Logger logger) {
+    public UiController(ConnTestService connTestService, Logger logger, ScheduledExecutorService executorService) {
         this.connTestService = connTestService;
         this.logger = logger;
+        this.executorService = executorService;
     }
 
     /**
@@ -132,11 +135,19 @@ public class UiController {
         connTestService.testLocalISPInternet();
         ipAddress = connTestService.getIpAddressesFromActiveTests();
         updateVisualControls();
+        createExecutorService(timechoice);
+    }
+
+    void createExecutorService(Integer timechoice) {
         executorService = Executors.newSingleThreadScheduledExecutor();
         executorService.scheduleAtFixedRate(() -> {
             loadLogs(ipAddress);
             setAverageLost(ipAddress);
         }, 0, timechoice, TimeUnit.SECONDS);
+    }
+
+    public void setExecutorService(ScheduledExecutorService executorService) {
+        this.executorService = executorService;
     }
 
     /**
@@ -162,7 +173,7 @@ public class UiController {
      * Builds tables and loads ping logs for each table view
      * @param ipAddress list of IP addresses
      */
-    private void loadLogs(List<String> ipAddress) {
+    public void loadLogs(List<String> ipAddress) {
         buildTable(dateLocalColumn, pingLocalColumn);
         buildTable(dateIspColumn, pingIspColumn);
         buildTable(dateCloudColumn, pingCloudColumn);
@@ -261,7 +272,7 @@ public class UiController {
      * Sets the average of lost pings for each IP address to corresponding labels.
      * @param ipAddress list of IP addresses
      */
-    private void setAverageLost(List<String> ipAddress){
+    public void setAverageLost(List<String> ipAddress){
         final String text = "Average lost pings: ";
         Platform.runLater(() -> {
             if (!ipAddress.isEmpty() && ipAddress.get(0) != null) {
@@ -309,5 +320,4 @@ public class UiController {
             maximizeRestoreButton.setGraphic(maximizeRestorebutton1);
         }
     }
-
 }
