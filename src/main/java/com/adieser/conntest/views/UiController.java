@@ -14,7 +14,6 @@ import javafx.scene.image.ImageView;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import lombok.Getter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.slf4j.Logger;
@@ -76,8 +75,7 @@ public class UiController {
     @FXML
     private Button saveCloudButton;
     public final ConnTestService connTestService;
-    @Getter
-    public ScheduledExecutorService executorService;
+    private ScheduledExecutorService executorService;
     public final Logger logger;
     private static final String COLUMN_NAME_DATE = "dateTime";
     private static final String COLUMN_NAME_TIME = "pingTime";
@@ -135,19 +133,26 @@ public class UiController {
         connTestService.testLocalISPInternet();
         ipAddress = connTestService.getIpAddressesFromActiveTests();
         updateVisualControls();
-        createExecutorService(timechoice);
+        createExecutorService();
+        startExecutorService(timechoice);
     }
 
-    void createExecutorService(Integer timechoice) {
+    /**
+     * Creates a single-threaded scheduled executor.
+     */
+    void createExecutorService() {
         executorService = Executors.newSingleThreadScheduledExecutor();
+    }
+
+    /**
+     * Starts the executor service to load logs and set the average of lost pings.
+     * @param timechoice the user's chosen time interval in seconds, with a default of 5 seconds.
+     */
+    void startExecutorService(Integer timechoice){
         executorService.scheduleAtFixedRate(() -> {
             loadLogs(ipAddress);
             setAverageLost(ipAddress);
         }, 0, timechoice, TimeUnit.SECONDS);
-    }
-
-    public void setExecutorService(ScheduledExecutorService executorService) {
-        this.executorService = executorService;
     }
 
     /**
