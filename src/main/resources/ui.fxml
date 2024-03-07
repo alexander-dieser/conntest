@@ -114,17 +114,17 @@
         </HBox>
 
         <!-- TABLES TITLES -->
-        <Label prefHeight="20.0" prefWidth="194.0" styleClass="tabletitle" text="Pings to Local" GridPane.columnIndex="0" GridPane.rowIndex="1">
+        <Label fx:id="labelTable1" prefHeight="22.0" prefWidth="246.0" styleClass="tabletitle" text="Pings to Local" GridPane.columnIndex="0" GridPane.rowIndex="1">
             <GridPane.margin>
                 <Insets bottom="5.0" left="10.0" right="5.0" top="5.0" />
             </GridPane.margin>
         </Label>
-        <Label prefHeight="20.0" prefWidth="194.0" styleClass="tabletitle" text="Pings to Isp" GridPane.columnIndex="1" GridPane.rowIndex="1">
+        <Label fx:id="labelTable2" prefHeight="22.0" prefWidth="246.0" styleClass="tabletitle" text="Pings to Isp" GridPane.columnIndex="1" GridPane.rowIndex="1">
             <GridPane.margin>
                 <Insets left="10.0" right="5.0" />
             </GridPane.margin>
         </Label>
-        <Label prefHeight="20.0" prefWidth="194.0" styleClass="tabletitle" text="Pings to 8.8.8.8" GridPane.columnIndex="2" GridPane.rowIndex="1">
+        <Label fx:id="labelTable3" prefHeight="22.0" prefWidth="237.0" styleClass="tabletitle" text="Pings to the internet " GridPane.columnIndex="2" GridPane.rowIndex="1">
             <GridPane.margin>
                 <Insets left="10.0" right="5.0" />
             </GridPane.margin>
@@ -151,7 +151,7 @@
         <TableView fx:id="localTableView" focusTraversable="false" styleClass="table" GridPane.columnIndex="0" GridPane.halignment="CENTER" GridPane.rowIndex="3" GridPane.vgrow="SOMETIMES">
             <columns>
                 <TableColumn fx:id="dateLocalColumn" minWidth="120" text="Date" />
-                <TableColumn fx:id="pingLocalColumn" minWidth="70" text="Ping Time" />
+                <TableColumn fx:id="pingLocalColumn" minWidth="70" text="Ping Time (ms)" />
             </columns>
             <GridPane.margin>
                 <Insets left="10.0" right="10.0" />
@@ -167,7 +167,7 @@
         <TableView fx:id="ispTableView" focusTraversable="false" styleClass="table" GridPane.columnIndex="1" GridPane.rowIndex="3">
             <columns>
                 <TableColumn fx:id="dateIspColumn" minWidth="120" text="Date" />
-                <TableColumn fx:id="pingIspColumn" minWidth="70" text="Ping Time" />
+                <TableColumn fx:id="pingIspColumn" minWidth="70" text="Ping Time (ms)" />
             </columns>
             <GridPane.margin>
                 <Insets left="10.0" right="10.0" />
@@ -183,7 +183,7 @@
         <TableView fx:id="cloudTableView" focusTraversable="false" styleClass="table" GridPane.columnIndex="2" GridPane.rowIndex="3">
             <columns>
                 <TableColumn fx:id="dateCloudColumn" editable="false" minWidth="120" text="Date" />
-                <TableColumn fx:id="pingCloudColumn" editable="false" minWidth="70" text="Ping Time" />
+                <TableColumn fx:id="pingCloudColumn" editable="false" minWidth="70" text="Ping Time (ms)" />
             </columns>
             <GridPane.margin>
                 <Insets left="10.0" right="10.0" />

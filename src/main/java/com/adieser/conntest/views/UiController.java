@@ -12,6 +12,8 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,7 +43,15 @@ public class UiController {
     @FXML
     private Button stopButton;
     @FXML
+    private ProgressIndicator progressIndicator;
+    @FXML
     private ComboBox<Integer> timeChoiceBox;
+    @FXML
+    private Label labelTable1;
+    @FXML
+    private Label labelTable2;
+    @FXML
+    private Label labelTable3;
     @FXML
     private Label labelLostAvg1;
     @FXML
@@ -75,16 +85,10 @@ public class UiController {
 
     private final ConnTestService connTestService;
     private ScheduledExecutorService executorService;
-
-    @FXML
-    private ProgressIndicator progressIndicator;
-
+    private final Logger logger;
     private static final String COLUMN_NAME_DATE = "dateTime";
     private static final String COLUMN_NAME_TIME = "pingTime";
     private static final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
-
-    private final Logger logger;
-
     List<String> ipAddress;
 
     @Autowired
@@ -138,6 +142,7 @@ public class UiController {
         ipAddress = connTestService.getIpAddressesFromActiveTests();
         progressIndicator.setVisible(false);
         stopButton.setDisable(false);
+        setIPLabels(ipAddress);
 
         executorService = Executors.newSingleThreadScheduledExecutor();
         executorService.scheduleAtFixedRate(() -> {
@@ -191,16 +196,27 @@ public class UiController {
             @Override
             protected void updateItem(Long item, boolean empty) {
                 super.updateItem(item, empty);
-                if (item != null && item.equals(-1L)) {
-                    setTextFill(Color.RED);
-                } else {
-                    setTextFill(Color.BLACK);
-                }
+                setTextFill(getColorForItem(item));
                 setText(empty ? null : getString());
+                setFont(Font.font("", FontWeight.BOLD, 12));
             }
 
             private String getString() {
                 return getItem() == null ? "" : getItem().toString();
+            }
+
+            private Color getColorForItem(Long item) {
+                if (item == null || item.equals(-1L)) {
+                    return Color.RED;
+                } else if (item <= 20) {
+                    return Color.web("#2E8B57");
+                } else if (item >= 300 && item <= 1000) {
+                    return Color.web("#FFD700");
+                } else if (item >= 1000) {
+                    return Color.ORANGE;
+                }else {
+                    return Color.web("#4c4c4c");
+                }
             }
         });
     }
@@ -264,12 +280,28 @@ public class UiController {
         final String text = "Average lost pings: ";
         Platform.runLater(() -> {
             if (!ipAddress.isEmpty() && ipAddress.get(0) != null) {
-                labelLostAvg1.setText(text + connTestService.getPingsLostAvgByIp(ipAddress.get(0)));
+                labelLostAvg1.setText(text + connTestService.getPingsLostAvgByIp(ipAddress.get(0)) + "%");
             }
             if (ipAddress.size() > 1 && ipAddress.get(1) != null) {
-                labelLostAvg2.setText(text + connTestService.getPingsLostAvgByIp(ipAddress.get(1)));
+                labelLostAvg2.setText(text + connTestService.getPingsLostAvgByIp(ipAddress.get(1)) + "%");
             }
-            labelLostAvg3.setText(text + connTestService.getPingsLostAvgByIp("8.8.8.8"));
+            labelLostAvg3.setText(text + connTestService.getPingsLostAvgByIp("8.8.8.8") + "%");
+        });
+    }
+
+    /**
+     * Sets the average of lost pings for each IP address to corresponding labels.
+     * @param ipAddress list of IP addresses
+     */
+    public void setIPLabels(List<String> ipAddress){
+        Platform.runLater(() -> {
+            if (!ipAddress.isEmpty() && ipAddress.get(0) != null) {
+                labelTable1.setText("Pings to Local (" + ipAddress.get(0) + ")");
+            }
+            if (ipAddress.size() > 1 && ipAddress.get(1) != null) {
+                labelTable2.setText("Pings to Isp (" + ipAddress.get(1) + ")");
+            }
+            labelTable3.setText("Pings to the Internet (8.8.8.8)");
         });
     }
 
