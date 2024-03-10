@@ -12,6 +12,8 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,6 +46,12 @@ public class UiController {
     private ProgressIndicator progressIndicator;
     @FXML
     private ComboBox<Integer> timeChoiceBox;
+    @FXML
+    private Label labelTable1;
+    @FXML
+    private Label labelTable2;
+    @FXML
+    private Label labelTable3;
     @FXML
     private Label labelLostAvg1;
     @FXML
@@ -133,6 +141,7 @@ public class UiController {
         connTestService.testLocalISPInternet();
         ipAddress = connTestService.getIpAddressesFromActiveTests();
         updateVisualControls();
+        setIPLabels(ipAddress);
         createExecutorService();
         startExecutorService(timechoice);
     }
@@ -208,16 +217,27 @@ public class UiController {
             @Override
             protected void updateItem(Long item, boolean empty) {
                 super.updateItem(item, empty);
-                if (item != null && item.equals(-1L)) {
-                    setTextFill(Color.RED);
-                } else {
-                    setTextFill(Color.BLACK);
-                }
+                setTextFill(getColorForItem(item));
                 setText(empty ? null : getString());
+                setFont(Font.font("", FontWeight.BOLD, 12));
             }
 
             private String getString() {
                 return getItem() == null ? "" : getItem().toString();
+            }
+
+            private Color getColorForItem(Long item) {
+                if (item == null || item.equals(-1L)) {
+                    return Color.RED;
+                } else if (item <= 20) {
+                    return Color.web("#2E8B57");
+                } else if (item >= 300 && item <= 1000) {
+                    return Color.web("#FFD700");
+                } else if (item >= 1000) {
+                    return Color.ORANGE;
+                }else {
+                    return Color.web("#4c4c4c");
+                }
             }
         });
     }
@@ -281,12 +301,28 @@ public class UiController {
         final String text = "Average lost pings: ";
         Platform.runLater(() -> {
             if (!ipAddress.isEmpty() && ipAddress.get(0) != null) {
-                labelLostAvg1.setText(text + connTestService.getPingsLostAvgByIp(ipAddress.get(0)));
+                labelLostAvg1.setText(text + connTestService.getPingsLostAvgByIp(ipAddress.get(0)) + "%");
             }
             if (ipAddress.size() > 1 && ipAddress.get(1) != null) {
-                labelLostAvg2.setText(text + connTestService.getPingsLostAvgByIp(ipAddress.get(1)));
+                labelLostAvg2.setText(text + connTestService.getPingsLostAvgByIp(ipAddress.get(1)) + "%");
             }
-            labelLostAvg3.setText(text + connTestService.getPingsLostAvgByIp("8.8.8.8"));
+            labelLostAvg3.setText(text + connTestService.getPingsLostAvgByIp("8.8.8.8") + "%");
+        });
+    }
+
+    /**
+     * Sets the average of lost pings for each IP address to corresponding labels.
+     * @param ipAddress list of IP addresses
+     */
+    public void setIPLabels(List<String> ipAddress){
+        Platform.runLater(() -> {
+            if (!ipAddress.isEmpty() && ipAddress.get(0) != null) {
+                labelTable1.setText("Pings to Local (" + ipAddress.get(0) + ")");
+            }
+            if (ipAddress.size() > 1 && ipAddress.get(1) != null) {
+                labelTable2.setText("Pings to Isp (" + ipAddress.get(1) + ")");
+            }
+            labelTable3.setText("Pings to the Internet (8.8.8.8)");
         });
     }
 
@@ -325,4 +361,5 @@ public class UiController {
             maximizeRestoreButton.setGraphic(maximizeRestorebutton1);
         }
     }
+
 }

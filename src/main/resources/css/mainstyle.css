@@ -87,18 +87,18 @@
   -fx-padding: 6px 20px;
   -fx-border-width: 0;
   -fx-border-radius: 80px;
-  -fx-background-color: #eeebeb;
-  -fx-text-fill: #0000009d;
+  -fx-background-color: #095c8adb;
+  -fx-text-fill: #ffffff;
   -fx-font-weight: bold;
   -fx-font-size: 10px;
   -fx-transition: all 0.5s;
 }
 
 .savebutton:hover {
-  -fx-background-color: #d7d5d5;
-  -fx-effect: dropshadow(gaussian, #d7d5d5, 2, 0.04, 0, 0);
-  -fx-scale-x: 1.05;
-  -fx-scale-y: 1.05;
+  -fx-background-color: #095c8adb;
+  -fx-effect: dropshadow(gaussian, #095c8adb, 1, 0.04, 0, 0);
+  -fx-scale-x: 1.005;
+  -fx-scale-y: 1.005;
 }
 
 .resize-handle {
@@ -110,9 +110,3 @@
 .resize-handle:hover {
   -fx-border-color: dodgerblue;
 }
-
-
-
-
-
-
