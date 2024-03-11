@@ -107,7 +107,6 @@ public class UiController {
         this.startButton.setOnAction(actionEvent -> {
             startButton.setDisable(true);
             progressIndicator.setVisible(true);
-            timeChoiceBox.setDisable(true);
             Integer timechoice;
             if(timeChoiceBox.getValue() == null){
                 timechoice = 5;
@@ -123,7 +122,15 @@ public class UiController {
             progressIndicator.setVisible(false);
             this.stop();
             startButton.setDisable(false);
-            timeChoiceBox.setDisable(false);
+        });
+        this.timeChoiceBox.setOnAction(actionEvent -> {
+            if(startButton.isDisable()){
+                if (executorService != null && !executorService.isShutdown()) {
+                    executorService.shutdownNow();
+                }
+                createExecutorService();
+                startExecutorService(timeChoiceBox.getValue());
+            }
         });
         this.saveLocalButton.setOnAction(actionEvent -> saveLogs(localTableView, dateLocalColumn, pingLocalColumn));
         this.saveIspButton.setOnAction(actionEvent -> saveLogs(ispTableView, dateIspColumn, pingIspColumn));
