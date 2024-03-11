@@ -82,19 +82,19 @@ public class UiController {
     private Button saveIspButton;
     @FXML
     private Button saveCloudButton;
-
-    private final ConnTestService connTestService;
+    public final ConnTestService connTestService;
     private ScheduledExecutorService executorService;
-    private final Logger logger;
+    public final Logger logger;
     private static final String COLUMN_NAME_DATE = "dateTime";
     private static final String COLUMN_NAME_TIME = "pingTime";
     private static final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
     List<String> ipAddress;
 
     @Autowired
-    private UiController(ConnTestService connTestService, Logger logger) {
+    public UiController(ConnTestService connTestService, Logger logger, ScheduledExecutorService executorService) {
         this.connTestService = connTestService;
         this.logger = logger;
+        this.executorService = executorService;
     }
 
     /**
@@ -134,17 +134,30 @@ public class UiController {
     }
 
     /**
-     * Initiates a ping session, loads logs, and set the average of lost pings in a loop.
+     * Initiates a ping session and starts Scheduled Executor to load logs and set the average of lost pings in a loop.
      * @param timechoice the user's chosen time interval in seconds, with a default of 5 seconds.
      */
-    private void start(Integer timechoice) {
+    public void start(Integer timechoice) {
         connTestService.testLocalISPInternet();
         ipAddress = connTestService.getIpAddressesFromActiveTests();
-        progressIndicator.setVisible(false);
-        stopButton.setDisable(false);
+        updateVisualControls();
         setIPLabels(ipAddress);
+        createExecutorService();
+        startExecutorService(timechoice);
+    }
 
+    /**
+     * Creates a single-threaded scheduled executor.
+     */
+    void createExecutorService() {
         executorService = Executors.newSingleThreadScheduledExecutor();
+    }
+
+    /**
+     * Starts the executor service to load logs and set the average of lost pings.
+     * @param timechoice the user's chosen time interval in seconds, with a default of 5 seconds.
+     */
+    void startExecutorService(Integer timechoice){
         executorService.scheduleAtFixedRate(() -> {
             loadLogs(ipAddress);
             setAverageLost(ipAddress);
@@ -152,10 +165,18 @@ public class UiController {
     }
 
     /**
+     * Updates the visual controls by hiding the progress indicator and enabling the stop button.
+     */
+    public void updateVisualControls(){
+        progressIndicator.setVisible(false);
+        stopButton.setDisable(false);
+    }
+
+    /**
      * Shuts down the scheduled executor service and stops all tests.
      * The first one includes log loading and the set of average lost
      */
-    private void stop() {
+    public void stop() {
         if (executorService != null && !executorService.isShutdown()) {
             executorService.shutdownNow();
         }
@@ -166,7 +187,7 @@ public class UiController {
      * Builds tables and loads ping logs for each table view
      * @param ipAddress list of IP addresses
      */
-    private void loadLogs(List<String> ipAddress) {
+    public void loadLogs(List<String> ipAddress) {
         buildTable(dateLocalColumn, pingLocalColumn);
         buildTable(dateIspColumn, pingIspColumn);
         buildTable(dateCloudColumn, pingCloudColumn);
@@ -276,7 +297,7 @@ public class UiController {
      * Sets the average of lost pings for each IP address to corresponding labels.
      * @param ipAddress list of IP addresses
      */
-    private void setAverageLost(List<String> ipAddress){
+    public void setAverageLost(List<String> ipAddress){
         final String text = "Average lost pings: ";
         Platform.runLater(() -> {
             if (!ipAddress.isEmpty() && ipAddress.get(0) != null) {
