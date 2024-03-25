@@ -25,6 +25,7 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Stream;
 
+import static com.adieser.utils.PingLogUtils.CLOUD_IP_ADDRESS;
 import static com.adieser.utils.PingLogUtils.DEFAULT_LOG_DATE_TIME;
 import static com.adieser.utils.PingLogUtils.DEFAULT_PING_TIME;
 import static com.adieser.utils.PingLogUtils.ISP_IP_ADDRESS;
@@ -55,28 +56,61 @@ class ConnTestServiceImplTest {
     @Mock
     TracertProvider tracertProvider;
 
-    @ParameterizedTest
-    @MethodSource("areTestsRunningProvider")
-    void testTestLocalISPInternet(boolean areTestRunning) {
+    @Test
+    void testTestLocalISPInternet() {
         // when
         ConnTestServiceImpl underTest = spy(new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository));
         List<String> localAndISPIpAddresses = new ArrayList<>(Arrays.asList(LOCAL_IP_ADDRESS, ISP_IP_ADDRESS));
         List<ConnTest> mockConnTests = List.of(mock(ConnTest.class),mock(ConnTest.class),mock(ConnTest.class));
 
-        if(areTestRunning)
-            underTest.tests = mockConnTests;
-        else{
-            when(underTest.getConnTestsFromIpAddresses(localAndISPIpAddresses)).thenReturn(mockConnTests);
-            doReturn(localAndISPIpAddresses).when(underTest).getLocalAndISPIpAddresses();
-        }
+        when(underTest.getConnTestsFromIpAddresses(localAndISPIpAddresses)).thenReturn(mockConnTests);
+        doReturn(localAndISPIpAddresses).when(underTest).getLocalAndISPIpAddresses();
 
         // then
         underTest.testLocalISPInternet();
 
         // assert
-        if(areTestRunning)
-            verify(logger, times(1)).warn("Tests are already running");
-        else{
+        localAndISPIpAddresses.add(CLOUD_IP_ADDRESS);
+        underTest.tests.forEach(mockConnTest ->
+                verify(underTest, times(1)).testCustomIps(localAndISPIpAddresses)
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("areTestsRunningProvider")
+    void testTestCustomIps(boolean areTestRunning) {
+        // when
+        String ip1 = "1.1.1.1";
+        String ip2 = "2.2.2.2";
+        String ip3 = "3.3.3.3";
+
+        ConnTestServiceImpl underTest = spy(new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository));
+        List<String> ipAddresses = new ArrayList<>(Arrays.asList(ip1, ip2, ip3));
+
+        ConnTest localConnMock = mock(ConnTest.class);
+        ConnTest ispConnMock = mock(ConnTest.class);
+        ConnTest cloudConnMock = mock(ConnTest.class);
+
+        List<ConnTest> mockConnTests = List.of(localConnMock,ispConnMock,cloudConnMock);
+
+        if(areTestRunning){
+            when(localConnMock.getIpAddress()).thenReturn(ip1);
+            when(ispConnMock.getIpAddress()).thenReturn(ip2);
+            when(cloudConnMock.getIpAddress()).thenReturn(ip3);
+
+            underTest.tests = mockConnTests;
+        }else
+            when(underTest.getConnTestsFromIpAddresses(ipAddresses)).thenReturn(mockConnTests);
+
+        // then
+        underTest.testCustomIps(ipAddresses);
+
+        // assert
+        if(areTestRunning) {
+            verify(logger, times(1)).warn("Tests are already running (IP {})", ip1);
+            verify(logger, times(1)).warn("Tests are already running (IP {})", ip2);
+            verify(logger, times(1)).warn("Tests are already running (IP {})", ip3);
+        } else{
             underTest.tests.forEach(mockConnTest ->
                     verify(mockConnTest, times(1)).startPingSession()
             );

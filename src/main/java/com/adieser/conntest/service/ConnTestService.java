@@ -16,6 +16,12 @@ public interface ConnTestService {
     void testLocalISPInternet();
 
     /**
+     * Trigger a 3 custom Ip addresses in parallel
+     * @param ipAddresses ip addresses to test connection to
+     */
+    void testCustomIps(List<String> ipAddresses);
+
+    /**
      * Stop all the threads running ping sessions
      */
     void stopTests();
@@ -71,5 +77,4 @@ public interface ConnTestService {
      * @return list of IP addresses
      */
     List<String> getIpAddressesFromActiveTests();
-
 }

@@ -6,6 +6,7 @@ import com.adieser.conntest.controllers.responses.PingSessionExtract;
 import com.adieser.conntest.models.PingLog;
 import com.adieser.conntest.service.ConnTestService;
 import com.adieser.conntest.utils.HATEOASLinkRelValueTemplates;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -25,6 +26,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Stream;
 
+import static com.adieser.conntest.controllers.responses.ErrorResponse.MAX_IP_ADDRESSES_EXCEEDED;
 import static com.adieser.utils.PingLogUtils.DEFAULT_LOG_DATE_TIME;
 import static com.adieser.utils.PingLogUtils.DEFAULT_PING_TIME;
 import static com.adieser.utils.PingLogUtils.LOCAL_IP_ADDRESS;
@@ -63,6 +65,35 @@ class ConnTestControllerIntegrationTest {
 
         // assert
         verify(connTestService, times(1)).testLocalISPInternet();
+    }
+
+    @ParameterizedTest
+    @MethodSource("ipAddressesProvider")
+    void testCustomIps(List<String> ipAddresses) throws Exception {
+        // when
+        String requestBody = new ObjectMapper().writeValueAsString(ipAddresses);
+
+        // then
+        ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.post("/test-custom-ips")
+                .content(requestBody)
+                .contentType(MediaType.APPLICATION_JSON)
+        );
+
+        // assert
+        if(ipAddresses.size() < 4){
+            resultActions
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$._links.stopTestSession.href")
+                            .value(linkTo(methodOn(ConnTestController.class)
+                                    .stopTests()).toString()));
+
+            verify(connTestService, times(1)).testCustomIps(ipAddresses);
+        } else{
+            resultActions
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.errorCode").value(1))
+                    .andExpect(jsonPath("$.errorMessage").value(MAX_IP_ADDRESSES_EXCEEDED.getErrorMessage()));
+        }
     }
 
     @Test
@@ -278,6 +309,13 @@ class ConnTestControllerIntegrationTest {
         return Stream.of(
                 getEmptyResponse(),
                 getDefaultResponse()
+        );
+    }
+
+    static Stream<List<String>> ipAddressesProvider() {
+        return Stream.of(
+                List.of("1.1.1.1", "2.2.2.2", "3.3.3.3"),
+                List.of("1.1.1.1", "2.2.2.2", "3.3.3.3", "4.4.4.4")
         );
     }
 

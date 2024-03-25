@@ -11,10 +11,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
+import static com.adieser.conntest.controllers.responses.ErrorResponse.MAX_IP_ADDRESSES_EXCEEDED;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
@@ -47,6 +50,24 @@ public class ConnTestController {
                 .withRel(HATEOASLinkRelValueTemplates.STOP_TEST_SESSION));
 
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    /**
+     * Trigger up to 3 custom ip addresses ping sessions to test connection
+     */
+    @PostMapping(value = "/test-custom-ips", produces = {"application/json"})
+    public ResponseEntity<Object> testCustomIps(@RequestBody List<String> ipAddresses) {
+        HttpStatus httpStatus = HttpStatus.OK;
+
+        if(ipAddresses.size() > 3)
+            return ResponseEntity.badRequest().body(MAX_IP_ADDRESSES_EXCEEDED);
+
+        connTestService.testCustomIps(ipAddresses);
+        PingTestResponse pingResponse = new PingTestResponse();
+        pingResponse.add(linkTo(methodOn(ConnTestController.class).stopTests())
+                .withRel(HATEOASLinkRelValueTemplates.STOP_TEST_SESSION));
+
+        return new ResponseEntity<>(pingResponse, httpStatus);
     }
 
     /**
