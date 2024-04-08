@@ -98,7 +98,8 @@ class ConnTestTest {
         // then
         Thread thread = new Thread(underTestSpy::pingSession);
         thread.start();
-        Thread.sleep(300); // give time to start the thread before interrupting it
+        while(!underTestSpy.running)
+            Thread.sleep(50); // give time to start the thread before interrupting it
         thread.interrupt();
 
         // assert

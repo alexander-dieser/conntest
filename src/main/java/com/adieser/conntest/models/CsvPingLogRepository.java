@@ -208,8 +208,8 @@ public class CsvPingLogRepository implements PingLogRepository {
     protected Stream<PingLog> getPingLogsByDateTimeRangeStream(Stream<PingLog> st, LocalDateTime start, LocalDateTime end){
         return st
                 .filter(pingLog ->
-                        (pingLog.getDateTime().isAfter(start) || pingLog.getDateTime().isEqual(start))
-                                && (pingLog.getDateTime().isBefore(end) || pingLog.getDateTime().isEqual(end))
+                        (pingLog.getDateTime().isAfter(start) && pingLog.getDateTime().isBefore(end))
+                        || pingLog.getDateTime().isEqual(start) || pingLog.getDateTime().isEqual(end)
                 );
     }
 }
