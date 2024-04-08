@@ -137,7 +137,7 @@ class ConnTestServiceImplTest {
             mockConnTests.forEach(mockConnTest ->
                     verify(mockConnTest, times(1)).stopPingSession()
             );
-            verify(executorService, times(1)).shutdown();
+            assertTrue(underTest.tests.isEmpty());
         }
     }
 

@@ -358,6 +358,16 @@ class CsvPingLogRepositoryTest {
                         LocalDateTime.of(2023, 10, 6, 0, 0, 0),
                         LocalDateTime.of(2023, 10, 6, 0, 0, 50),
                         true),
+                Arguments.of(
+                        LocalDateTime.of(2023, 10, 6, 0, 0, 0),
+                        LocalDateTime.of(2023, 10, 6, 0, 0, 0),
+                        LocalDateTime.of(2023, 10, 6, 0, 0, 50),
+                        true),
+                Arguments.of(
+                        LocalDateTime.of(2023, 10, 6, 0, 0, 50),
+                        LocalDateTime.of(2023, 10, 6, 0, 0, 0),
+                        LocalDateTime.of(2023, 10, 6, 0, 0, 50),
+                        true),
                 // EMPTY DATE RANGE
                 Arguments.of(
                         LocalDateTime.of(2023, 10, 6, 0, 0, 30),

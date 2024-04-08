@@ -18,7 +18,7 @@ public class ConnTest implements Pingable {
     protected static final int TIMEOUT = 3000;
     public static final String PING_SESSION_INTERRUPTED_MSG = "Ping session was interrupted";
     private final ExecutorService threadPoolExecutor;
-    protected boolean running = true;
+    protected boolean running = false;
     private final Logger logger;
     private final PingLogRepository pingLogRepository;
 
@@ -50,6 +50,7 @@ public class ConnTest implements Pingable {
      * Each ping is triggered once per second
      */
     void pingSession() {
+        running = true;
         try {
             while(running) {
                 long ping = ping();
