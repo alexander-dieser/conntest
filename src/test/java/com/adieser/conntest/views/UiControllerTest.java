@@ -29,24 +29,26 @@ class UiControllerTest {
         List<String> mockIpAddressList = List.of("192.168.1.1", "192.168.1.2", "8.8.8.8");
         when(connTestService.getIpAddressesFromActiveTests()).thenReturn(mockIpAddressList);
         doNothing().when(underTestSpy).updateVisualControls();
+        doNothing().when(underTestSpy).setIPLabels();
 
         // then
-        underTestSpy.start(5);
+        underTestSpy.start();
 
         // assert
         verify(connTestService, times(1)).testLocalISPInternet();
         verify(connTestService, times(1)).getIpAddressesFromActiveTests();
         verify(underTestSpy, times(1)).updateVisualControls();
+        verify(underTestSpy, times(1)).setIPLabels();
         verify(underTestSpy, times(1)).startExecutorService(any());
     }
 
     @Test
     void executorServiceTest(){
         // when
-        UiController underTest = new UiController(connTestService, logger, executorService);
+        UiController underTestSpy = spy(new UiController(connTestService, logger, executorService));
 
         // then
-        underTest.startExecutorService(1);
+        underTestSpy.startExecutorService(1);
 
         // assert
         verify(executorService, atLeastOnce()).scheduleAtFixedRate(

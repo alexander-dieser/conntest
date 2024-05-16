@@ -21,6 +21,7 @@ import org.springframework.stereotype.Component;
 import org.slf4j.Logger;
 
 import java.io.*;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -46,6 +47,9 @@ public class UiController {
     private ProgressIndicator progressIndicator;
     @FXML
     private ComboBox<Integer> timeChoiceBox;
+    Integer timechoice = 5;
+    @FXML
+    private CheckBox dayFilterBox;
     @FXML
     private Label labelTable1;
     @FXML
@@ -76,6 +80,9 @@ public class UiController {
     private TableColumn<PingLog, String> dateCloudColumn;
     @FXML
     private TableColumn<PingLog, Long> pingCloudColumn;
+    private static final String COLUMN_NAME_DATE = "dateTime";
+    private static final String COLUMN_NAME_TIME = "pingTime";
+    private static final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
     @FXML
     private Button saveLocalButton;
     @FXML
@@ -85,9 +92,6 @@ public class UiController {
     public final ConnTestService connTestService;
     private ScheduledExecutorService executorService;
     public final Logger logger;
-    private static final String COLUMN_NAME_DATE = "dateTime";
-    private static final String COLUMN_NAME_TIME = "pingTime";
-    private static final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
     List<String> ipAddress;
 
     @Autowired
@@ -107,13 +111,11 @@ public class UiController {
         this.startButton.setOnAction(actionEvent -> {
             startButton.setDisable(true);
             progressIndicator.setVisible(true);
-            Integer timechoice;
-            if(timeChoiceBox.getValue() == null){
-                timechoice = 5;
-            }else {
+            dayFilterBox.setDisable(true);
+            if(timeChoiceBox.getValue() != null){
                 timechoice = timeChoiceBox.getValue();
             }
-            Thread startThread = new Thread(() -> start(timechoice));
+            Thread startThread = new Thread(this::start);
             startThread.start();
 
         });
@@ -122,14 +124,16 @@ public class UiController {
             progressIndicator.setVisible(false);
             this.stop();
             startButton.setDisable(false);
+            dayFilterBox.setDisable(false);
         });
         this.timeChoiceBox.setOnAction(actionEvent -> {
             if(startButton.isDisable()){
                 if (executorService != null && !executorService.isShutdown()) {
                     executorService.shutdownNow();
                 }
+                timechoice = timeChoiceBox.getValue();
                 createExecutorService();
-                startExecutorService(timeChoiceBox.getValue());
+                startExecutorService(timechoice);
             }
         });
         this.saveLocalButton.setOnAction(actionEvent -> saveLogs(localTableView, dateLocalColumn, pingLocalColumn));
@@ -142,13 +146,12 @@ public class UiController {
 
     /**
      * Initiates a ping session and starts Scheduled Executor to load logs and set the average of lost pings in a loop.
-     * @param timechoice the user's chosen time interval in seconds, with a default of 5 seconds.
      */
-    public void start(Integer timechoice) {
+    public void start() {
         connTestService.testLocalISPInternet();
         ipAddress = connTestService.getIpAddressesFromActiveTests();
         updateVisualControls();
-        setIPLabels(ipAddress);
+        setIPLabels();
         createExecutorService();
         startExecutorService(timechoice);
     }
@@ -162,12 +165,11 @@ public class UiController {
 
     /**
      * Starts the executor service to load logs and set the average of lost pings.
-     * @param timechoice the user's chosen time interval in seconds, with a default of 5 seconds.
-     */
+     * */
     void startExecutorService(Integer timechoice){
         executorService.scheduleAtFixedRate(() -> {
-            loadLogs(ipAddress);
-            setAverageLost(ipAddress);
+            loadLogs();
+            setAverageLost();
         }, 0, timechoice, TimeUnit.SECONDS);
     }
 
@@ -192,16 +194,31 @@ public class UiController {
 
     /**
      * Builds tables and loads ping logs for each table view
-     * @param ipAddress list of IP addresses
      */
-    public void loadLogs(List<String> ipAddress) {
+    public void loadLogs() {
         buildTable(dateLocalColumn, pingLocalColumn);
         buildTable(dateIspColumn, pingIspColumn);
         buildTable(dateCloudColumn, pingCloudColumn);
 
-        addPingLogsToTableView(connTestService.getPingsByIp(ipAddress.get(0)), localTableView);
-        addPingLogsToTableView(connTestService.getPingsByIp(ipAddress.get(1)), ispTableView);
-        addPingLogsToTableView(connTestService.getPingsByIp("8.8.8.8"), cloudTableView);
+        LocalDateTime currentDayStartTime = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0);
+        LocalDateTime currentDayEndTime = LocalDateTime.now().withHour(23).withMinute(59).withSecond(59).withNano(999999999);
+
+        for (int i = 0; i < Math.min(ipAddress.size(), 3); i++) {
+            String ip = ipAddress.get(i);
+            TableView<PingLog> tableView = switch (i) {
+                case 0 -> localTableView;
+                case 1 -> ispTableView;
+                case 2 -> cloudTableView;
+                default -> null;
+            };
+            if (tableView != null && ip != null) {
+                if (dayFilterBox.isSelected()) {
+                    addPingLogsToTableView(connTestService.getPingsByDateTimeRangeByIp(currentDayStartTime, currentDayEndTime, ip), tableView);
+                } else {
+                    addPingLogsToTableView(connTestService.getPingsByIp(ip), tableView);
+                }
+            }
+        }
     }
 
     /**
@@ -302,26 +319,36 @@ public class UiController {
 
     /**
      * Sets the average of lost pings for each IP address to corresponding labels.
-     * @param ipAddress list of IP addresses
      */
-    public void setAverageLost(List<String> ipAddress){
+    public void setAverageLost() {
         final String text = "Average lost pings: ";
+        LocalDateTime currentDayStartTime = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0);
+        LocalDateTime currentDayEndTime = LocalDateTime.now().withHour(23).withMinute(59).withSecond(59).withNano(999999999);
         Platform.runLater(() -> {
-            if (!ipAddress.isEmpty() && ipAddress.get(0) != null) {
-                labelLostAvg1.setText(text + connTestService.getPingsLostAvgByIp(ipAddress.get(0)) + "%");
+            for (int i = 0; i < Math.min(ipAddress.size(), 3); i++) {
+                if (ipAddress.get(i) != null) {
+                    Label label = switch (i) {
+                        case 0 -> labelLostAvg1;
+                        case 1 -> labelLostAvg2;
+                        case 2 -> labelLostAvg3;
+                        default -> null;
+                    };
+                    if (label != null) {
+                        if (dayFilterBox.isSelected()) {
+                            label.setText(text + connTestService.getPingsLostAvgByDateTimeRangeByIp(currentDayStartTime, currentDayEndTime, ipAddress.get(i)) + "%");
+                        } else {
+                            label.setText(text + connTestService.getPingsLostAvgByIp(ipAddress.get(i)) + "%");
+                        }
+                    }
+                }
             }
-            if (ipAddress.size() > 1 && ipAddress.get(1) != null) {
-                labelLostAvg2.setText(text + connTestService.getPingsLostAvgByIp(ipAddress.get(1)) + "%");
-            }
-            labelLostAvg3.setText(text + connTestService.getPingsLostAvgByIp("8.8.8.8") + "%");
         });
     }
 
     /**
      * Sets the average of lost pings for each IP address to corresponding labels.
-     * @param ipAddress list of IP addresses
      */
-    public void setIPLabels(List<String> ipAddress){
+    public void setIPLabels(){
         Platform.runLater(() -> {
             if (!ipAddress.isEmpty() && ipAddress.get(0) != null) {
                 labelTable1.setText("Pings to Local (" + ipAddress.get(0) + ")");

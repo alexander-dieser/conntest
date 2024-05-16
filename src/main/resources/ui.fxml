@@ -99,19 +99,32 @@
             <Insets bottom="25.0" left="15.0" right="15.0" top="15.0" />
         </VBox.margin>
 
-        <!-- TIME CHOICE BOX -->
-        <HBox alignment="CENTER_LEFT" prefHeight="30.0" prefWidth="190.0" styleClass="combo-box" GridPane.columnIndex="0" GridPane.rowIndex="0">
-            <GridPane.margin>
-                <Insets bottom="10.0" left="10.0" />
-            </GridPane.margin>
-            <Label text="Refresh time: ">
-                <HBox.margin>
-                    <Insets right="5.0" />
-                </HBox.margin>
-            </Label>
-            <ComboBox fx:id="timeChoiceBox" promptText="5" style="-fx-background-color: transparent;" HBox.hgrow="SOMETIMES" />
-            <Label text="  s" />
-        </HBox>
+        <!-- GP 0 0 -->
+        <VBox prefHeight="72.0" prefWidth="269.0">
+            <!-- TIME CHOICE BOX -->
+            <HBox alignment="CENTER_LEFT" prefHeight="30.0" prefWidth="190.0" styleClass="combo-box">
+                <Label text="Refresh time: ">
+                    <HBox.margin>
+                        <Insets right="5.0" />
+                    </HBox.margin>
+                </Label>
+                <ComboBox fx:id="timeChoiceBox" promptText="5" style="-fx-background-color: transparent;" HBox.hgrow="SOMETIMES" />
+                <Label text="  s" />
+            </HBox>
+
+            <Label text="Filters: ">
+            <opaqueInsets>
+               <Insets />
+            </opaqueInsets>
+            <VBox.margin>
+               <Insets bottom="5.0" />
+            </VBox.margin></Label>
+
+            <!-- FILTERS -->
+            <HBox prefHeight="100.0" prefWidth="200.0">
+                <CheckBox fx:id="dayFilterBox" mnemonicParsing="false" text=" Current day only" />
+            </HBox>
+        </VBox>
 
         <!-- TABLES TITLES -->
         <Label fx:id="labelTable1" prefHeight="22.0" prefWidth="246.0" styleClass="tabletitle" text="Pings to Local" GridPane.columnIndex="0" GridPane.rowIndex="1">
