@@ -136,6 +136,10 @@ public class UiController {
                 startExecutorService(timechoice);
             }
         });
+        this.dayFilterBox.setOnAction(actionEvent -> {
+            loadLogs();
+            setAverageLost();
+        });
         this.saveLocalButton.setOnAction(actionEvent -> saveLogs(localTableView, dateLocalColumn, pingLocalColumn));
         this.saveIspButton.setOnAction(actionEvent -> saveLogs(ispTableView, dateIspColumn, pingIspColumn));
         this.saveCloudButton.setOnAction(actionEvent -> saveLogs(cloudTableView, dateCloudColumn, pingCloudColumn));
