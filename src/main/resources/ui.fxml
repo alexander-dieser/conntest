@@ -123,6 +123,7 @@
             <!-- FILTERS -->
             <HBox prefHeight="100.0" prefWidth="200.0">
                 <CheckBox fx:id="dayFilterBox" mnemonicParsing="false" text=" Current day only" />
+                <CheckBox fx:id="tieRowsBox" mnemonicParsing="false" text=" Tie rows" />
             </HBox>
         </VBox>
 

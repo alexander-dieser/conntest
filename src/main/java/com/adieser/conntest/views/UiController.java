@@ -23,10 +23,7 @@ import org.slf4j.Logger;
 import java.io.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -50,6 +47,9 @@ public class UiController {
     Integer timechoice = 5;
     @FXML
     private CheckBox dayFilterBox;
+    @FXML
+    private CheckBox tieRowsBox;
+    private ScrollManager scrollManager;
     @FXML
     private Label labelTable1;
     @FXML
@@ -89,10 +89,12 @@ public class UiController {
     private Button saveIspButton;
     @FXML
     private Button saveCloudButton;
+
     public final ConnTestService connTestService;
     private ScheduledExecutorService executorService;
     public final Logger logger;
     List<String> ipAddress;
+
 
     @Autowired
     public UiController(ConnTestService connTestService, Logger logger, ScheduledExecutorService executorService) {
@@ -137,8 +139,21 @@ public class UiController {
             }
         });
         this.dayFilterBox.setOnAction(actionEvent -> {
-            loadLogs();
-            setAverageLost();
+            if (!localTableView.getItems().isEmpty()){
+                loadLogs();
+                setAverageLost();
+            }
+        });
+        this.tieRowsBox.setOnAction(actionEvent -> {
+            if (!localTableView.getItems().isEmpty()) {
+                loadLogs();
+                scrollManager = new ScrollManager();
+                if (tieRowsBox.isSelected()) {
+                    scrollManager.addScrollListener(localTableView, ispTableView, cloudTableView);
+                }else{
+                    scrollManager.removeScrollListener();
+                }
+            }
         });
         this.saveLocalButton.setOnAction(actionEvent -> saveLogs(localTableView, dateLocalColumn, pingLocalColumn));
         this.saveIspButton.setOnAction(actionEvent -> saveLogs(ispTableView, dateIspColumn, pingIspColumn));
@@ -147,6 +162,7 @@ public class UiController {
         this.minimizeButton.setOnAction(event -> handleMinimize());
         this.maximizeRestoreButton.setOnAction(event -> handleMaximizeRestore());
     }
+
 
     /**
      * Initiates a ping session and starts Scheduled Executor to load logs and set the average of lost pings in a loop.
