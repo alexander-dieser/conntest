@@ -50,8 +50,8 @@ class WindowsTracertProviderImplTest {
             Runtime mockRuntime = mock(Runtime.class);
             Process mockProcess = mock(Process.class);
             when(mockProcess.getInputStream()) .thenReturn(mock(InputStream.class));
+            doReturn(mockProcess).when(mockRuntime).exec(anyString());
 
-            when(mockRuntime.exec(anyString())).thenReturn(mockProcess);
             runtime.when(Runtime::getRuntime).thenReturn(mockRuntime);
         }
 
