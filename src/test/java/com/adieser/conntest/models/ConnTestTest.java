@@ -94,13 +94,15 @@ class ConnTestTest {
     void testPingSessionInterruptedException() throws InterruptedException {
         // when
         ConnTest underTestSpy = spy(new ConnTest(executorService, LOCAL_IP_ADDRESS, logger, pingLogRepository));
+        doReturn(DEFAULT_PING_TIME).when(underTestSpy).ping();
+        doNothing().when(pingLogRepository).savePingLog(any());
 
         // then
         Thread thread = new Thread(underTestSpy::pingSession);
         thread.start();
-        while(!underTestSpy.running)
-            Thread.sleep(50); // give time to start the thread before interrupting it
         thread.interrupt();
+
+        Thread.sleep(50); // Give time to the interruption to finish until verifying the result
 
         // assert
         verify(logger, times(1)).warn(PING_SESSION_INTERRUPTED_MSG);
