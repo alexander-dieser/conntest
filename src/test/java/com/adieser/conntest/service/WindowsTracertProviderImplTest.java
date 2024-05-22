@@ -49,15 +49,15 @@ class WindowsTracertProviderImplTest {
         try (MockedStatic<Runtime> runtime = Mockito.mockStatic(Runtime.class)) {
             Runtime mockRuntime = mock(Runtime.class);
             Process mockProcess = mock(Process.class);
+            runtime.when(Runtime::getRuntime).thenReturn(mockRuntime);
+
             when(mockProcess.getInputStream()) .thenReturn(mock(InputStream.class));
             doReturn(mockProcess).when(mockRuntime).exec(anyString());
 
-            runtime.when(Runtime::getRuntime).thenReturn(mockRuntime);
+            WindowsTracertProviderImpl underTest = spy(new WindowsTracertProviderImpl());
+            Optional<BufferedReader> bufferedReader = underTest.executeTracert();
+
+            assertTrue(bufferedReader.isPresent());
         }
-
-        WindowsTracertProviderImpl underTest = spy(new WindowsTracertProviderImpl());
-        Optional<BufferedReader> bufferedReader = underTest.executeTracert();
-
-        assertTrue(bufferedReader.isPresent());
     }
 }
