@@ -20,6 +20,8 @@ pipeline{
                 dir("conntest"){
                     sh "mvn clean install"
                 }
+
+                jacoco buildOverBuild: true, sourceInclusionPattern: '**/*.java'
             }
         }
         stage("Test"){
@@ -29,5 +31,6 @@ pipeline{
                 }
             }
         }
+
     }
 }
