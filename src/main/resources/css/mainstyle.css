@@ -110,3 +110,21 @@
 .resize-handle:hover {
   -fx-border-color: dodgerblue;
 }
+
+/* Check Box style */
+.check-box .box {
+  -fx-background-color: white;
+  -fx-border-color:  #9E9E9E;
+  -fx-border-radius: 5;
+}
+.check-box .mark {
+  -fx-shape: "M1.73,12.91 8.1,19.28 22.79,4.59 22.79,1.59 8.1,16.28 1.73,9.91";
+}
+.check-box:selected .mark {
+  -fx-background-color: white;
+}
+.check-box:selected .box {
+  -fx-background-color:  #095C8A;
+  -fx-border-color:  #095C8A;
+  -fx-border-radius: 5;
+}
