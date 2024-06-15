@@ -16,7 +16,7 @@ public interface PingLogRepository {
      * Persist a ping
      * @param data ping to be persisted
      */
-    void savePingLog(PingLog data);
+    void savePingLog(PingLog data) throws InterruptedException;
 
     /**
      * Retrieve all pings by IP address

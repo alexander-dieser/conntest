@@ -227,12 +227,16 @@ class CsvPingLogRepositoryIntegrationTest{
      * Save ping using the repository method
      */
     private void savePingLog(CsvPingLogRepository csvPingLogRepository) {
-        csvPingLogRepository.savePingLog(PingLog.builder()
-                .dateTime(DEFAULT_LOG_DATE_TIME)
-                .ipAddress(LOCAL_IP_ADDRESS)
-                .pingTime(DEFAULT_PING_TIME)
-                .build()
-        );
+        try {
+            csvPingLogRepository.savePingLog(PingLog.builder()
+                    .dateTime(DEFAULT_LOG_DATE_TIME)
+                    .ipAddress(LOCAL_IP_ADDRESS)
+                    .pingTime(DEFAULT_PING_TIME)
+                    .build()
+            );
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**

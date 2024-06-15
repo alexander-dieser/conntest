@@ -47,7 +47,7 @@ public class CsvPingLogRepository implements PingLogRepository {
     }
 
     @Override
-    public void savePingLog(PingLog pingLog) {
+    public void savePingLog(PingLog pingLog) throws InterruptedException {
         try (Writer writer  = getFileWriter()) {
             CSVWriter csvWriter = getCsvWriter(writer);
             StatefulBeanToCsv<PingLog> sbc = getStatefulBeanToCsv(csvWriter);
@@ -55,6 +55,7 @@ public class CsvPingLogRepository implements PingLogRepository {
             sbc.write(pingLog);
         } catch (IOException | CsvRequiredFieldEmptyException | CsvDataTypeMismatchException e) {
             logger.error(SAVE_PING_ERROR_MSG, e);
+            throw new InterruptedException(SAVE_PING_ERROR_MSG);
         }
     }
 
