@@ -58,7 +58,8 @@ class CsvPingLogRepositoryTest {
      */
     @ParameterizedTest
     @MethodSource("successPingLogProvider")
-    void testSavePingLogSuccess(PingLog pingLog) throws CsvRequiredFieldEmptyException, CsvDataTypeMismatchException, IOException {
+    void testSavePingLogSuccess(PingLog pingLog)
+            throws CsvRequiredFieldEmptyException, CsvDataTypeMismatchException, IOException, InterruptedException {
         // when
         CsvPingLogRepository underTestSpy = spy(new CsvPingLogRepository("test", logger));
 
@@ -79,7 +80,7 @@ class CsvPingLogRepositoryTest {
      * Método: Proporciona un PingLog válido y una ruta de archivo incorrecta, y asegúrate de que se maneje la excepción correctamente.
      */
     @Test
-    void testSavePingLogInvalidPath() {
+    void testSavePingLogInvalidPath() throws InterruptedException {
         // when
         PingLog mockPingLog = mock(PingLog.class);
         CsvPingLogRepository underTestSpy = spy(new CsvPingLogRepository("FileNotFound", logger));
@@ -97,7 +98,7 @@ class CsvPingLogRepositoryTest {
      * Método: Configura un escenario donde se provoque una excepción de tipo IOException al intentar escribir en el archivo.
      */
     @Test
-    void testSavePingLogIOException() throws IOException {
+    void testSavePingLogIOException() throws IOException, InterruptedException {
         // when
         PingLog mockPingLog = mock(PingLog.class);
         CsvPingLogRepository underTestSpy = spy(new CsvPingLogRepository("test", logger));
@@ -118,7 +119,7 @@ class CsvPingLogRepositoryTest {
      */
     @ParameterizedTest
     @MethodSource("statefulBeanToCsvExceptionsProvider")
-    void testSavePingLogStatefulBeanToCsvExceptions(Class<? extends Throwable> clazz) throws IOException, CsvRequiredFieldEmptyException, CsvDataTypeMismatchException {
+    void testSavePingLogStatefulBeanToCsvExceptions(Class<? extends Throwable> clazz) throws IOException, CsvRequiredFieldEmptyException, CsvDataTypeMismatchException, InterruptedException {
         // when
         PingLog mockPingLog = mock(PingLog.class);
         CsvPingLogRepository underTestSpy = spy(new CsvPingLogRepository("test", logger));
