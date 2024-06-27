@@ -32,10 +32,12 @@ import static com.adieser.utils.PingLogUtils.ISP_IP_ADDRESS;
 import static com.adieser.utils.PingLogUtils.LOCAL_IP_ADDRESS;
 import static com.adieser.utils.PingLogUtils.getDefaultPingLog;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
@@ -143,7 +145,7 @@ class ConnTestServiceImplTest {
 
     @ParameterizedTest
     @MethodSource("pingLogsProvider")
-    void testGetPings(List<PingLog> pingLogs) {
+    void testGetPings(List<PingLog> pingLogs) throws IOException {
         // when
         ConnTestServiceImpl underTest = new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository);
         doReturn(pingLogs).when(pingLogRepository).findAllPingLogs();
@@ -155,9 +157,19 @@ class ConnTestServiceImplTest {
         assertPingSessionResponseEntities(pingLogs, pings);
     }
 
+    @Test
+    void testGetPingsIOException() throws IOException {
+        // when
+        ConnTestServiceImpl underTest = new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository);
+        doThrow(IOException.class).when(pingLogRepository).findAllPingLogs();
+
+        // then assert
+        assertThrows(IOException.class, underTest::getPings);
+    }
+
     @ParameterizedTest
     @MethodSource("pingLogsProvider")
-    void testGetPingsByDateTimeRange(List<PingLog> pingLogs) {
+    void testGetPingsByDateTimeRange(List<PingLog> pingLogs) throws IOException {
         // when
         ConnTestServiceImpl underTest =new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository);
         doReturn(pingLogs).when(pingLogRepository).findPingLogsByDateTimeRange(START, END);
@@ -172,9 +184,19 @@ class ConnTestServiceImplTest {
         assertPingSessionResponseEntities(pingLogs, pings);
     }
 
+    @Test
+    void testGetPingsByDateTimeRangeIOException() throws IOException {
+        // when
+        ConnTestServiceImpl underTest = new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository);
+        doThrow(IOException.class).when(pingLogRepository).findPingLogsByDateTimeRange(START, END);
+
+        // then assert
+        assertThrows(IOException.class, () -> underTest.getPingsByDateTimeRange(START,END));
+    }
+
     @ParameterizedTest
     @MethodSource("pingLogsProvider")
-    void testGetPingsByIp(List<PingLog> pingLogs) {
+    void testGetPingsByIp(List<PingLog> pingLogs) throws IOException {
         // when
         ConnTestServiceImpl underTest = new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository);
         doReturn(pingLogs).when(pingLogRepository).findPingLogByIp(LOCAL_IP_ADDRESS);
@@ -186,9 +208,19 @@ class ConnTestServiceImplTest {
         assertPingSessionResponseEntities(pingLogs, pings);
     }
 
+    @Test
+    void testGetPingsByIpIOException() throws IOException {
+        // when
+        ConnTestServiceImpl underTest = new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository);
+        doThrow(IOException.class).when(pingLogRepository).findPingLogByIp(LOCAL_IP_ADDRESS);
+
+        // then assert
+        assertThrows(IOException.class, () -> underTest.getPingsByIp(LOCAL_IP_ADDRESS));
+    }
+
     @ParameterizedTest
     @MethodSource("pingLogsProvider")
-    void testGetPingsByDateTimeRangeByIp(List<PingLog> pingLogs) {
+    void testGetPingsByDateTimeRangeByIp(List<PingLog> pingLogs) throws IOException {
         // when
         ConnTestServiceImpl underTest = new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository);
         doReturn(pingLogs).when(pingLogRepository).findPingLogsByDateTimeRangeByIp(
@@ -209,7 +241,17 @@ class ConnTestServiceImplTest {
     }
 
     @Test
-    void testGetPingsLostAvgByIp() {
+    void testGetPingsByDateTimeRangeByIpIOException() throws IOException {
+        // when
+        ConnTestServiceImpl underTest = new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository);
+        doThrow(IOException.class).when(pingLogRepository).findPingLogsByDateTimeRangeByIp(START,END,LOCAL_IP_ADDRESS);
+
+        // then assert
+        assertThrows(IOException.class, () -> underTest.getPingsByDateTimeRangeByIp(START,END,LOCAL_IP_ADDRESS));
+    }
+
+    @Test
+    void testGetPingsLostAvgByIp() throws IOException {
         // when
         ConnTestServiceImpl underTest = new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository);
         BigDecimal avg = new BigDecimal("0.2");
@@ -223,7 +265,17 @@ class ConnTestServiceImplTest {
     }
 
     @Test
-    void testGetPingsLostAvgByDateTimeRangeByIp() {
+    void testGetPingsLostAvgByIpIOException() throws IOException {
+        // when
+        ConnTestServiceImpl underTest = new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository);
+        doThrow(IOException.class).when(pingLogRepository).findLostPingLogsAvgByIP(LOCAL_IP_ADDRESS);
+
+        // then assert
+        assertThrows(IOException.class, () -> underTest.getPingsLostAvgByIp(LOCAL_IP_ADDRESS));
+    }
+
+    @Test
+    void testGetPingsLostAvgByDateTimeRangeByIp() throws IOException {
         // when
         ConnTestServiceImpl underTest = new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository);
         BigDecimal avg = new BigDecimal("0.2");
@@ -242,6 +294,20 @@ class ConnTestServiceImplTest {
 
         // assert
         assertEquals(avg, resultAvg);
+    }
+
+    @Test
+    void testGetPingsLostAvgByDateTimeRangeByIpIOException() throws IOException {
+        // when
+        ConnTestServiceImpl underTest = new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository);
+        doThrow(IOException.class).when(pingLogRepository).findLostPingLogsAvgByDateTimeRangeByIp(START,
+                END,
+                LOCAL_IP_ADDRESS);
+
+        // then assert
+        assertThrows(IOException.class, () -> underTest.getPingsLostAvgByDateTimeRangeByIp(START,
+                END,
+                LOCAL_IP_ADDRESS));
     }
 
     @Test

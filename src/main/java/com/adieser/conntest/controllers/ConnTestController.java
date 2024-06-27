@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -103,7 +104,7 @@ public class ConnTestController {
     @ApiResponse(responseCode = "200", description = "a list of pings along with the total count.")
     @GetMapping("/pings")
     @Operation(summary = "Get all pings")
-    public ResponseEntity<PingSessionExtract> getPings() {
+    public ResponseEntity<PingSessionExtract> getPings() throws IOException {
         HttpStatus httpStatus = HttpStatus.OK;
         PingSessionExtract pings = connTestService.getPings();
 
@@ -132,7 +133,7 @@ public class ConnTestController {
             @Parameter(
                     description = "End date in the range",
                     required = true)
-            @PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime end) {
+            @PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime end) throws IOException {
         HttpStatus httpStatus = HttpStatus.OK;
         PingSessionExtract pings = connTestService.getPingsByDateTimeRange(start, end);
 
@@ -156,7 +157,7 @@ public class ConnTestController {
             @Parameter(
                     description = "IP address used to filter the results",
                     required = true)
-            @PathVariable String ipAddress) {
+            @PathVariable String ipAddress) throws IOException {
         HttpStatus httpStatus = HttpStatus.OK;
         PingSessionExtract pings = connTestService.getPingsByIp(ipAddress);
 
@@ -190,7 +191,7 @@ public class ConnTestController {
             @Parameter(
                     description = "End date in the range",
                     required = true)
-            @PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime end) {
+            @PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime end) throws IOException {
         HttpStatus httpStatus = HttpStatus.OK;
         PingSessionExtract pings = connTestService.getPingsByDateTimeRangeByIp(start, end, ipAddress);
 
@@ -214,7 +215,7 @@ public class ConnTestController {
             @Parameter(
                     description = "IP address used to filter the results",
                     required = true)
-            @PathVariable String ipAddress) {
+            @PathVariable String ipAddress) throws IOException {
 
         AverageResponse averageResult = AverageResponse.builder()
                 .ipAddress(ipAddress)
@@ -254,7 +255,7 @@ public class ConnTestController {
             @Parameter(
                     description = "End date in the range",
                     required = true)
-            @PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime end) {
+            @PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime end) throws IOException {
 
         AverageResponse averageResult = AverageResponse.builder()
                 .ipAddress(ipAddress)
@@ -278,18 +279,26 @@ public class ConnTestController {
             LocalDateTime roof = ping.getDateTime().plusMinutes(30);
             String ipAddress = ping.getIpAddress();
 
-            ping.add(
-                    linkTo(methodOn(ConnTestController.class).getPingsByIp(ipAddress))
-                            .withRel(HATEOASLinkRelValueTemplates.GET_BY_IP.formatted(ipAddress)),
-                    linkTo(methodOn(ConnTestController.class).getPingsByDateTimeRange(floor, roof))
-                            .withRel(HATEOASLinkRelValueTemplates.GET_30_MINS_NEIGHBORHOOD),
-                    linkTo(methodOn(ConnTestController.class).getPingsByDateTimeRangeByIp(ipAddress, floor, roof))
-                            .withRel(HATEOASLinkRelValueTemplates.GET_30_MINS_NEIGHBORHOOD_BY_IP.formatted(ipAddress)),
-                    linkTo(methodOn(ConnTestController.class).getPingsLostAvgByIp(ping.getIpAddress()))
-                            .withRel(HATEOASLinkRelValueTemplates.GET_LOST_AVG_BY_IP.formatted(ipAddress)),
-                    linkTo(methodOn(ConnTestController.class).getPingsLostAvgByDateTimeRangeByIp(ipAddress, floor, roof))
-                            .withRel(HATEOASLinkRelValueTemplates.GET_30_MINS_NEIGHBORHOOD_LOST_AVG_BY_IP.formatted(ipAddress))
-            );
+            try {
+                ping.add(
+                        linkTo(methodOn(ConnTestController.class).getPingsByIp(ipAddress))
+                                .withRel(HATEOASLinkRelValueTemplates.GET_BY_IP.formatted(ipAddress)),
+                        linkTo(methodOn(ConnTestController.class).getPingsByDateTimeRange(floor, roof))
+                                .withRel(HATEOASLinkRelValueTemplates.GET_30_MINS_NEIGHBORHOOD),
+                        linkTo(methodOn(ConnTestController.class).getPingsByDateTimeRangeByIp(ipAddress, floor, roof))
+                                .withRel(HATEOASLinkRelValueTemplates.GET_30_MINS_NEIGHBORHOOD_BY_IP.formatted(ipAddress)),
+                        linkTo(methodOn(ConnTestController.class).getPingsLostAvgByIp(ping.getIpAddress()))
+                                .withRel(HATEOASLinkRelValueTemplates.GET_LOST_AVG_BY_IP.formatted(ipAddress)),
+                        linkTo(methodOn(ConnTestController.class).getPingsLostAvgByDateTimeRangeByIp(ipAddress, floor, roof))
+                                .withRel(HATEOASLinkRelValueTemplates.GET_30_MINS_NEIGHBORHOOD_LOST_AVG_BY_IP.formatted(ipAddress))
+                );
+            } catch (IOException ignored){
+                /*
+                    dummy exception thrown by the methods in the HATEOAS links, methods that are never executed
+                    in that code block, they serve only as reference to the links
+                */
+            }
+
         });
     }
 }

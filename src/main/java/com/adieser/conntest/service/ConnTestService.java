@@ -2,6 +2,7 @@ package com.adieser.conntest.service;
 
 import com.adieser.conntest.controllers.responses.PingSessionExtract;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -30,7 +31,7 @@ public interface ConnTestService {
      * Retrieve all the ping logs
      * @return List of ping results and metadata {@link PingSessionExtract}
      */
-    PingSessionExtract getPings();
+    PingSessionExtract getPings() throws IOException;
 
     /**
      * Retrieve all the ping logs within a datetime range
@@ -38,14 +39,14 @@ public interface ConnTestService {
      * @param end end date in the range
      * @return List of ping results and metadata {@link PingSessionExtract}
      */
-    PingSessionExtract getPingsByDateTimeRange(LocalDateTime start, LocalDateTime end);
+    PingSessionExtract getPingsByDateTimeRange(LocalDateTime start, LocalDateTime end) throws IOException;
 
     /**
      * Retrieve all the ping logs filtered by IP
      * @param ipAddress IP address use to filter the results
      * @return List of ping results and metadata {@link PingSessionExtract}
      */
-    PingSessionExtract getPingsByIp(String ipAddress);
+    PingSessionExtract getPingsByIp(String ipAddress) throws IOException;
 
     /**
      * Retrieve all the ping logs within a datetime range filtered by IP
@@ -54,14 +55,14 @@ public interface ConnTestService {
      * @param ipAddress IP address use to filter the results
      * @return List of ping results and metadata {@link PingSessionExtract}
      */
-    PingSessionExtract getPingsByDateTimeRangeByIp(LocalDateTime start, LocalDateTime end, String ipAddress);
+    PingSessionExtract getPingsByDateTimeRangeByIp(LocalDateTime start, LocalDateTime end, String ipAddress) throws IOException;
 
     /**
      * Get the average of lost pings within a list of pings filtered by IP
      * @param ipAddress IP address use to filter the results
      * @return average of pings lost
      */
-    BigDecimal getPingsLostAvgByIp(String ipAddress);
+    BigDecimal getPingsLostAvgByIp(String ipAddress) throws IOException;
 
     /**
      * Get the average of lost pings within a list of pings within a datetime range filtered by IP
@@ -70,7 +71,7 @@ public interface ConnTestService {
      * @param ipAddress IP address use to filter the results
      * @return average of pings lost
      */
-    BigDecimal getPingsLostAvgByDateTimeRangeByIp(LocalDateTime start, LocalDateTime end, String ipAddress);
+    BigDecimal getPingsLostAvgByDateTimeRangeByIp(LocalDateTime start, LocalDateTime end, String ipAddress) throws IOException;
 
     /**
      * Get the IP addresses from the active tests

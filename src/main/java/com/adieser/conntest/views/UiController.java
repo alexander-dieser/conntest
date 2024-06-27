@@ -136,7 +136,11 @@ public class UiController {
         });
         this.dayFilterBox.setOnAction(actionEvent -> {
             for (int i = 0; i < Math.min(ipAddress.size(), 3); i++) {
-                loadLogs(ipAddress.get(i), tablesList.get(i));
+                try {
+                    loadLogs(ipAddress.get(i), tablesList.get(i));
+                } catch (IOException e) {
+                    logger.error(e.getMessage());
+                }
                 setAverageLost(ipAddress.get(i), labelsList.get(i));
             }
         });
@@ -174,7 +178,11 @@ public class UiController {
     void startExecutorService(Integer timechoice){
         executorService.scheduleAtFixedRate(() -> {
             for (int i = 0; i < Math.min(ipAddress.size(), 3); i++) {
-                loadLogs(ipAddress.get(i), tablesList.get(i));
+                try {
+                    loadLogs(ipAddress.get(i), tablesList.get(i));
+                } catch (IOException e) {
+                    logger.error(e.getMessage());
+                }
                 setAverageLost(ipAddress.get(i), labelsList.get(i));
             }
         }, 0, timechoice, TimeUnit.SECONDS);
@@ -277,7 +285,7 @@ public class UiController {
     /**
      * Loads ping logs for each table view
      */
-    public void loadLogs(String ip, TableView<PingLog> table) {
+    public void loadLogs(String ip, TableView<PingLog> table) throws IOException {
         if (!dayFilterBox.isSelected()) {
             addPingLogsToTableView(connTestService.getPingsByIp(ip),table);
         } else {
@@ -308,12 +316,16 @@ public class UiController {
     public void setAverageLost(String ip, Label label) {
         final String text = "Average lost pings: ";
         Platform.runLater(() -> {
-            if (!dayFilterBox.isSelected()) {
-                label.setText(text + connTestService.getPingsLostAvgByIp(ip) + "%");
-            } else {
-                LocalDateTime currentDayStartTime = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0);
-                LocalDateTime currentDayEndTime = LocalDateTime.now().withHour(23).withMinute(59).withSecond(59).withNano(999999999);
-                label.setText(text + connTestService.getPingsLostAvgByDateTimeRangeByIp(currentDayStartTime, currentDayEndTime, ip) + "%");
+            try {
+                if (!dayFilterBox.isSelected()) {
+                    label.setText(text + connTestService.getPingsLostAvgByIp(ip) + "%");
+                } else {
+                    LocalDateTime currentDayStartTime = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0);
+                    LocalDateTime currentDayEndTime = LocalDateTime.now().withHour(23).withMinute(59).withSecond(59).withNano(999999999);
+                    label.setText(text + connTestService.getPingsLostAvgByDateTimeRangeByIp(currentDayStartTime, currentDayEndTime, ip) + "%");
+                }
+            } catch (IOException e) {
+                logger.error(e.getMessage());
             }
         });
     }
