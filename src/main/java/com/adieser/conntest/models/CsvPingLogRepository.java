@@ -36,7 +36,6 @@ import java.util.stream.Stream;
 public class CsvPingLogRepository implements PingLogRepository {
     public static final String SAVE_PING_ERROR_MSG = "Save Ping error";
     public static final String PING_LOG_NAME = "ping.log";
-    public static final String PARSE_ERROR = "Parse error";
     private final String path;
 
     private final Logger logger;
@@ -78,30 +77,30 @@ public class CsvPingLogRepository implements PingLogRepository {
     }
 
     @Override
-    public List<PingLog> findAllPingLogs() {
+    public List<PingLog> findAllPingLogs() throws IOException {
        return readAll();
     }
 
     @Override
-    public List<PingLog> findPingLogByIp(String ipAddress) {
+    public List<PingLog> findPingLogByIp(String ipAddress) throws IOException {
         return getPingLogsByIpStream(readAll().stream(), ipAddress)
                 .toList();
     }
 
     @Override
-    public List<PingLog> findPingLogsByDateTimeRange(LocalDateTime start, LocalDateTime end) {
+    public List<PingLog> findPingLogsByDateTimeRange(LocalDateTime start, LocalDateTime end) throws IOException {
         return getPingLogsByDateTimeRangeStream(readAll().stream(), start, end)
                 .toList();
     }
 
     @Override
-    public List<PingLog> findPingLogsByDateTimeRangeByIp(LocalDateTime start, LocalDateTime end, String ipAddress) {
+    public List<PingLog> findPingLogsByDateTimeRangeByIp(LocalDateTime start, LocalDateTime end, String ipAddress) throws IOException {
         return getPingLogsByDateTimeRangeByIpStream(readAll().stream(), start, end, ipAddress)
                 .toList();
     }
 
     @Override
-    public BigDecimal findLostPingLogsAvgByIP(String ipAddress) {
+    public BigDecimal findLostPingLogsAvgByIP(String ipAddress) throws IOException {
 
         List<PingLog> pingLogsByIp = getPingLogsByIpStream(readAll().stream(), ipAddress).toList();
 
@@ -118,7 +117,7 @@ public class CsvPingLogRepository implements PingLogRepository {
     }
 
     @Override
-    public BigDecimal findLostPingLogsAvgByDateTimeRangeByIp(LocalDateTime start, LocalDateTime end, String ipAddress) {
+    public BigDecimal findLostPingLogsAvgByDateTimeRangeByIp(LocalDateTime start, LocalDateTime end, String ipAddress) throws IOException {
         List<PingLog> pingLogsInDateTimeRange = getPingLogsByDateTimeRangeByIpStream(readAll().stream(), start, end, ipAddress)
                 .toList();
 
@@ -138,16 +137,11 @@ public class CsvPingLogRepository implements PingLogRepository {
      * Retrieve all the pings from the CSV file
      * @return List of pings
      */
-    protected List<PingLog> readAll(){
-        try (Reader reader = getReader()) {
-            CsvToBean<PingLog> cb = getCsvToBean(reader);
+    protected List<PingLog> readAll() throws IOException {
+        Reader reader = getReader();
+        CsvToBean<PingLog> cb = getCsvToBean(reader);
 
-            return cb.parse();
-        } catch (IOException e) {
-            logger.error(PARSE_ERROR, e);
-        }
-
-        return List.of();
+        return cb.parse();
     }
 
     BufferedReader getReader() throws IOException {
