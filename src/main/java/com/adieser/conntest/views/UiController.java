@@ -71,7 +71,7 @@ public class UiController {
     }
 
     /**
-     * Initializes UI components and sets up event handlers.
+     * Initializes UI components and sets up event handlers
      */
     @FXML
     private void initialize() {
