@@ -34,3 +34,5 @@ build/
 /logs/
 /src/main/resources/pingLogs/
 /db.mv.db
+/ngrok-v3-stable-windows-amd64/README.txt
+/ngrok-v3-stable-windows-amd64/ngrok.exe

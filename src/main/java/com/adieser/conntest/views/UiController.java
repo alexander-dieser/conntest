@@ -101,6 +101,7 @@ public class UiController {
             }
         });
         this.dayFilterBox.setOnAction(actionEvent -> { if(ipAddress != null) Platform.runLater(this::updateTables); });
+
         this.closeButton.setOnAction(event -> handleClose());
         this.minimizeButton.setOnAction(event -> handleMinimize());
         this.maximizeRestoreButton.setOnAction(event -> handleMaximizeRestore());
@@ -270,7 +271,7 @@ public class UiController {
     /**
      * Loads ping logs for each table view
      */
-    public void loadLogs(String ip, TableView<PingLog> table) {
+    public void loadLogs(String ip, TableView<PingLog> table) throws IOException {
         if (!dayFilterBox.isSelected()) {
             addPingLogsToTableView(connTestService.getPingsByIp(ip),table);
         } else {

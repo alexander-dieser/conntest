@@ -2,6 +2,7 @@ package com.adieser.conntest.models;
 
 import org.springframework.stereotype.Repository;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -23,13 +24,13 @@ public interface PingLogRepository {
      * @param ipAddress IP address to filter the pings
      * @return List of pings
      */
-    List<PingLog> findPingLogByIp(String ipAddress);
+    List<PingLog> findPingLogByIp(String ipAddress) throws IOException;
 
     /**
      * Retrieve all pings in the database
      * @return List of pings
      */
-    List<PingLog> findAllPingLogs();
+    List<PingLog> findAllPingLogs() throws IOException;
 
     /**
      * Retrieve all pings within a datetime range
@@ -37,7 +38,7 @@ public interface PingLogRepository {
      * @param end end date in the range
      * @return List of pings
      */
-    List<PingLog> findPingLogsByDateTimeRange(LocalDateTime start, LocalDateTime end);
+    List<PingLog> findPingLogsByDateTimeRange(LocalDateTime start, LocalDateTime end) throws IOException;
 
     /**
      * Retrieve all pings within a datetime range filtered by IP address
@@ -46,14 +47,14 @@ public interface PingLogRepository {
      * @param ipAddress IP address to filter the pings
      * @return List of pings
      */
-    List<PingLog> findPingLogsByDateTimeRangeByIp(LocalDateTime start, LocalDateTime end, String ipAddress);
+    List<PingLog> findPingLogsByDateTimeRangeByIp(LocalDateTime start, LocalDateTime end, String ipAddress) throws IOException;
 
     /**
      * Calculate and retrieve the average of lost pings within a list of pings filtered by IP address
      * @param ipAddress IP address use to filter the results
      * @return average of lost pings
      */
-    BigDecimal findLostPingLogsAvgByIP(String ipAddress);
+    BigDecimal findLostPingLogsAvgByIP(String ipAddress) throws IOException;
 
     /** Calculate and retrieve the average of lost pings within a list of pings within a datetime range filtered
      * by IP address
@@ -62,6 +63,6 @@ public interface PingLogRepository {
      * @param ipAddress IP address use to filter the results
      * @return average of lost pings
      */
-    BigDecimal findLostPingLogsAvgByDateTimeRangeByIp(LocalDateTime start, LocalDateTime end, String ipAddress);
+    BigDecimal findLostPingLogsAvgByDateTimeRangeByIp(LocalDateTime start, LocalDateTime end, String ipAddress) throws IOException;
 
 }

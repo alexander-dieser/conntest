@@ -20,6 +20,7 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -32,6 +33,8 @@ import static com.adieser.utils.PingLogUtils.DEFAULT_PING_TIME;
 import static com.adieser.utils.PingLogUtils.LOCAL_IP_ADDRESS;
 import static com.adieser.utils.PingLogUtils.getDefaultPingLog;
 import static org.hamcrest.Matchers.hasSize;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -125,6 +128,18 @@ class ConnTestControllerIntegrationTest {
         verify(connTestService, times(1)).getPings();
     }
 
+    @Test
+    void testGetPingsIOException() throws Exception {
+        // when
+        when(connTestService.getPings()).thenThrow(IOException.class);
+        MockHttpServletRequestBuilder requestBuilder = get("/pings");
+
+        // then assert
+        mockMvc.perform(requestBuilder)
+                .andExpect(status().is5xxServerError())
+                .andExpect(content().string("Internal Server Error"));
+    }
+
     @ParameterizedTest
     @MethodSource("responseProvider")
     void getPingsByDateTimeRange(PingSessionExtract pings) throws Exception {
@@ -144,6 +159,20 @@ class ConnTestControllerIntegrationTest {
         verify(connTestService, times(1)).getPingsByDateTimeRange(START, END);
     }
 
+    @Test
+    void testGetPingsByDateTimeRangeIOException() throws Exception {
+        // when
+        when(connTestService.getPingsByDateTimeRange(any(), any())).thenThrow(IOException.class);
+        MockHttpServletRequestBuilder requestBuilder = get("/pings/{start}/{end}",
+                START.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
+                END.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+
+        // then assert
+        mockMvc.perform(requestBuilder)
+                .andExpect(status().is5xxServerError())
+                .andExpect(content().string("Internal Server Error"));
+    }
+
     @ParameterizedTest
     @MethodSource("responseProvider")
     void getPingsByIp(PingSessionExtract pings) throws Exception {
@@ -159,6 +188,18 @@ class ConnTestControllerIntegrationTest {
             AssertHATEOASLinks(resultActions, pings.getPingLogs().get(0));
 
         verify(connTestService, times(1)).getPingsByIp(LOCAL_IP_ADDRESS);
+    }
+
+    @Test
+    void testGetPingsByIpIOException() throws Exception {
+        // when
+        when(connTestService.getPingsByIp(LOCAL_IP_ADDRESS)).thenThrow(IOException.class);
+        MockHttpServletRequestBuilder requestBuilder = get("/pings/{ipAddress}", LOCAL_IP_ADDRESS);
+
+        // then assert
+        mockMvc.perform(requestBuilder)
+                .andExpect(status().is5xxServerError())
+                .andExpect(content().string("Internal Server Error"));
     }
 
     @ParameterizedTest
@@ -182,6 +223,21 @@ class ConnTestControllerIntegrationTest {
     }
 
     @Test
+    void testGetPingsByDateTimeRangeByIpIOException() throws Exception {
+        // when
+        when(connTestService.getPingsByDateTimeRangeByIp(any(), any(), anyString())).thenThrow(IOException.class);
+        MockHttpServletRequestBuilder requestBuilder = get("/pings/{ipAddress}/{start}/{end}",
+                LOCAL_IP_ADDRESS,
+                START.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
+                END.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+
+        // then assert
+        mockMvc.perform(requestBuilder)
+                .andExpect(status().is5xxServerError())
+                .andExpect(content().string("Internal Server Error"));
+    }
+
+    @Test
     void getPingsLostAvgByIp() throws Exception {
         // when
         when(connTestService.getPingsLostAvgByIp(LOCAL_IP_ADDRESS))
@@ -202,6 +258,18 @@ class ConnTestControllerIntegrationTest {
 
         assertAverage(resultActions);
         verify(connTestService, times(1)).getPingsLostAvgByIp(LOCAL_IP_ADDRESS);
+    }
+
+    @Test
+    void testGetPingsLostAvgByIpIOException() throws Exception {
+        // when
+        when(connTestService.getPingsLostAvgByIp(LOCAL_IP_ADDRESS)).thenThrow(IOException.class);
+        MockHttpServletRequestBuilder requestBuilder = get("/pings/{ipAddress}/avg", LOCAL_IP_ADDRESS);
+
+        // then assert
+        mockMvc.perform(requestBuilder)
+                .andExpect(status().is5xxServerError())
+                .andExpect(content().string("Internal Server Error"));
     }
 
     @Test
@@ -229,6 +297,21 @@ class ConnTestControllerIntegrationTest {
 
         verify(connTestService, times(1))
                 .getPingsLostAvgByDateTimeRangeByIp(START, END, LOCAL_IP_ADDRESS);
+    }
+
+    @Test
+    void testGetPingsLostAvgByDateTimeRangeByIp() throws Exception {
+        // when
+        when(connTestService.getPingsLostAvgByDateTimeRangeByIp(any(), any(), anyString())).thenThrow(IOException.class);
+        MockHttpServletRequestBuilder requestBuilder = get("/pings/{ipAddress}/avg/{start}/{end}",
+                LOCAL_IP_ADDRESS,
+                START.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
+                END.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+
+        // then assert
+        mockMvc.perform(requestBuilder)
+                .andExpect(status().is5xxServerError())
+                .andExpect(content().string("Internal Server Error"));
     }
 
     private ResultActions performRequestAndBasicAssertPingLogControllerResponse(MockHttpServletRequestBuilder requestBuilder,

@@ -76,14 +76,14 @@ public class ConnTestServiceImpl implements ConnTestService {
     }
 
     @Override
-    public PingSessionExtract getPings() {
+    public PingSessionExtract getPings() throws IOException {
         List<PingLog> pingLogs = pingLogRepository.findAllPingLogs();
 
         return createBasicResponse(pingLogs);
     }
 
     @Override
-    public PingSessionExtract getPingsByDateTimeRange(LocalDateTime start, LocalDateTime end) {
+    public PingSessionExtract getPingsByDateTimeRange(LocalDateTime start, LocalDateTime end) throws IOException {
         List<PingLog> pingLogs = pingLogRepository.findPingLogsByDateTimeRange(start, end);
 
         PingSessionExtract response = createBasicResponse(pingLogs);
@@ -94,7 +94,7 @@ public class ConnTestServiceImpl implements ConnTestService {
     }
 
     @Override
-    public PingSessionExtract getPingsByIp(String ipAddress) {
+    public PingSessionExtract getPingsByIp(String ipAddress) throws IOException {
         List<PingLog> pingLogs = pingLogRepository.findPingLogByIp(ipAddress);
 
         PingSessionExtract response = createBasicResponse(pingLogs);
@@ -104,7 +104,7 @@ public class ConnTestServiceImpl implements ConnTestService {
     }
 
     @Override
-    public PingSessionExtract getPingsByDateTimeRangeByIp(LocalDateTime start, LocalDateTime end, String ipAddress) {
+    public PingSessionExtract getPingsByDateTimeRangeByIp(LocalDateTime start, LocalDateTime end, String ipAddress) throws IOException {
         List<PingLog> pingLogs = pingLogRepository.findPingLogsByDateTimeRangeByIp(start, end, ipAddress);
 
         PingSessionExtract response = createBasicResponse(pingLogs);
@@ -116,12 +116,12 @@ public class ConnTestServiceImpl implements ConnTestService {
     }
 
     @Override
-    public BigDecimal getPingsLostAvgByIp(String ipAddress) {
+    public BigDecimal getPingsLostAvgByIp(String ipAddress) throws IOException {
         return pingLogRepository.findLostPingLogsAvgByIP(ipAddress);
     }
 
     @Override
-    public BigDecimal getPingsLostAvgByDateTimeRangeByIp(LocalDateTime start, LocalDateTime end, String ipAddress) {
+    public BigDecimal getPingsLostAvgByDateTimeRangeByIp(LocalDateTime start, LocalDateTime end, String ipAddress) throws IOException {
         return pingLogRepository.findLostPingLogsAvgByDateTimeRangeByIp(start, end, ipAddress);
     }
 
