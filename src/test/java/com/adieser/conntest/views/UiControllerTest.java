@@ -29,7 +29,7 @@ class UiControllerTest {
         List<String> mockIpAddressList = List.of("192.168.1.1", "192.168.1.2", "8.8.8.8");
         when(connTestService.getIpAddressesFromActiveTests()).thenReturn(mockIpAddressList);
         doNothing().when(underTestSpy).updateVisualControls();
-        doNothing().when(underTestSpy).setIPLabels();
+        doNothing().when(underTestSpy).setTables();
 
         // then
         underTestSpy.start();
@@ -38,7 +38,7 @@ class UiControllerTest {
         verify(connTestService, times(1)).testLocalISPInternet();
         verify(connTestService, times(1)).getIpAddressesFromActiveTests();
         verify(underTestSpy, times(1)).updateVisualControls();
-        verify(underTestSpy, times(1)).setIPLabels();
+        verify(underTestSpy, times(1)).setTables();
         verify(underTestSpy, times(1)).startExecutorService(any());
     }
 
@@ -63,13 +63,61 @@ class UiControllerTest {
     void stopTest() {
         //when
         UiController underTest = new UiController(connTestService, logger, executorService);
-        when(executorService.isShutdown()).thenReturn(false);
 
         // then
         underTest.stop();
 
         // assert
         verify(connTestService, times(1)).stopTests();
+    }
+
+    @Test
+    void stopExecutorServiceTest() {
+        // Case 1: executorService is null and is shutdown
+        //when
+        UiController underTest = new UiController(connTestService, logger, null);
+
+        //then
+        underTest.stopExecutorService();
+
+        // assert
+        verify(executorService, never()).shutdownNow();
+
+        // Case 2: executorService is not null and is shutdown
+        //when
+        reset(executorService);
+        underTest = new UiController(connTestService, logger, executorService);
+        when(executorService.isShutdown()).thenReturn(true);
+
+        // then
+        underTest.stopExecutorService();
+
+        // assert
+        verify(executorService, never()).shutdownNow();
+
+        // Case 3: executorService is not null and is not shutdown
+        //when
+        reset(executorService);
+        when(executorService.isShutdown()).thenReturn(false);
+        
+        //then
+        underTest.stopExecutorService();
+
+        // assert
+        verify(executorService, times(1)).shutdownNow();
+
+
+    }
+
+    @Test
+    void stopExecutorServiceTest2() {
+        //when
+        UiController underTest = new UiController(connTestService, logger, executorService);
+
+        // then
+        underTest.stopExecutorService();
+
+        // assert
         verify(executorService, times(1)).shutdownNow();
     }
 }
