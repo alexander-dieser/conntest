@@ -151,9 +151,13 @@ public class UiController {
      * Load logs and set the average of lost pings for each table.
      * */
     void updateTables(){
-        for (int i = 0; i < Math.min(ipAddress.size(), 3); i++) {
-            loadLogs(ipAddress.get(i), tablesViewList.get(i));
-            setAverageLost(ipAddress.get(i), averageLostLabelsList.get(i));
+        try {
+            for (int i = 0; i < Math.min(ipAddress.size(), 3); i++) {
+                loadLogs(ipAddress.get(i), tablesViewList.get(i));
+                setAverageLost(ipAddress.get(i), averageLostLabelsList.get(i));
+            }
+        }catch(IOException E){
+            stop();
         }
     }
 
@@ -299,7 +303,7 @@ public class UiController {
     /**
      * Sets the average of lost pings for each IP address to corresponding labels.
      */
-    public void setAverageLost(String ip, Label label) {
+    public void setAverageLost(String ip, Label label) throws IOException {
         final String text = "Average lost pings: ";
             if (!dayFilterBox.isSelected()) {
                 label.setText(text + connTestService.getPingsLostAvgByIp(ip) + "%");
