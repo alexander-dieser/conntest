@@ -76,14 +76,22 @@
 .loader {
   -fx-progress-color: #FFF7D6;}
 
-/* Table title style */
-.tabletitle{
+/* Texts styles */
+.h2-label{
   -fx-font-size: 15px;
   -fx-font-weight: bold;
+  -fx-alignment: CENTER_LEFT;
+  -fx-min-height: 30px;
+}
+
+.h3-label {
+  -fx-font-size: 14px;
+  -fx-min-height: 30px;
+  -fx-alignment: CENTER_LEFT;
 }
 
 /* Save buttons style */
-.savebutton {
+.save-button{
   -fx-padding: 6px 20px;
   -fx-border-width: 0;
   -fx-border-radius: 80px;
@@ -92,9 +100,11 @@
   -fx-font-weight: bold;
   -fx-font-size: 10px;
   -fx-transition: all 0.5s;
+  -fx-margin: 10px;
+  -fx-alignment: CENTER_RIGHT;
 }
 
-.savebutton:hover {
+.save-button:hover {
   -fx-background-color: #095c8adb;
   -fx-effect: dropshadow(gaussian, #095c8adb, 1, 0.04, 0, 0);
   -fx-scale-x: 1.005;
@@ -127,4 +137,46 @@
   -fx-background-color:  #095C8A;
   -fx-border-color:  #095C8A;
   -fx-border-radius: 5;
+}
+
+/* Descrption labels style */
+.description-header-label {
+  -fx-font-size: 15px;
+  -fx-font-weight: bold;
+  -fx-text-fill: #555555c5;
+}
+
+.description-section-header {
+  -fx-font-size: 14px;
+  -fx-font-weight: bold;
+  -fx-text-fill: #555555c5;
+}
+
+.description-content-label {
+  -fx-font-size: 14px;
+  -fx-text-fill: #666666cb;
+  -fx-wrap-text: true;
+}
+
+#descriptionScroll {
+  -fx-background-color: white;
+  -fx-padding: 10px 10px 10px 10px;
+}
+
+#descriptionScroll .track {
+  -fx-background-color: white;
+}
+
+#descriptionScroll .track-background {
+  -fx-background-color: white;
+}
+
+#descriptionScroll .thumb {
+  -fx-background-color: #acababb6;
+}
+
+#descriptionScroll .increment-button,
+#descriptionScroll .decrement-button {
+  -fx-opacity: 0;
+  -fx-padding: 2;
 }
