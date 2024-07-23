@@ -157,7 +157,7 @@ public class UiController {
                 setAverageLost(ipAddress.get(i), averageLostLabelsList.get(i));
             }
         }catch(IOException E){
-            stop();
+            stopExecutorService();
         }
     }
 
