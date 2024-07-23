@@ -5,7 +5,7 @@
 <?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
 
-<VBox alignment="TOP_CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" stylesheets="@/css/mainstyle.css, @/css/comboboxstyle.css, @/css/tablestyle.css" xmlns="http://javafx.com/javafx/11.0.14-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.adieser.conntest.views.UiController">
+<VBox alignment="TOP_CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="700.0" stylesheets="@/css/mainstyle.css, @/css/comboboxstyle.css, @/css/tablestyle.css" xmlns="http://javafx.com/javafx/11.0.14-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.adieser.conntest.views.UiController">
     <HBox alignment="CENTER_RIGHT" prefHeight="28.0" styleClass="tittlebar">
         <Button fx:id="minimizeButton">
             <HBox.margin>
@@ -73,159 +73,91 @@
 
             <!-- LOADER -->
             <ProgressIndicator fx:id="progressIndicator" maxHeight="45.0" maxWidth="45.0" styleClass="loader" visible="false" HBox.hgrow="NEVER">
-                <HBox.margin>
-                    <Insets top="2.0" />
-                </HBox.margin>
+                <HBox.margin><Insets top="2.0" /></HBox.margin>
             </ProgressIndicator>
 
         </HBox>
+      <VBox.margin>
+         <Insets />
+      </VBox.margin>
     </GridPane>
 
+
     <!-- SECOND DIVISION -->
-    <GridPane alignment="TOP_CENTER" maxWidth="1000" prefHeight="650">
+    <GridPane alignment="TOP_CENTER">
         <columnConstraints>
-            <ColumnConstraints hgrow="SOMETIMES" />
-            <ColumnConstraints hgrow="SOMETIMES" />
             <ColumnConstraints hgrow="SOMETIMES" />
         </columnConstraints>
         <rowConstraints>
             <RowConstraints vgrow="NEVER" />
-            <RowConstraints vgrow="NEVER" />
-            <RowConstraints vgrow="NEVER" />
-            <RowConstraints prefHeight="270" vgrow="ALWAYS" />
-            <RowConstraints vgrow="NEVER" />
+            <RowConstraints maxHeight="420" vgrow="ALWAYS" />
         </rowConstraints>
-        <VBox.margin>
-            <Insets bottom="25.0" left="15.0" right="15.0" top="15.0" />
-        </VBox.margin>
+        <!-- 0  0 -->
+        <VBox prefWidth="269.0" styleClass="h3-label" GridPane.columnIndex="0" GridPane.rowIndex="0">
+            <Label style="-fx-font-size: 16px; -fx-font-weight: bold;" text="Configurations">
 
-        <!-- GP 0 0 -->
-        <VBox prefHeight="72.0" prefWidth="269.0">
+            </Label>
             <!-- TIME CHOICE BOX -->
             <HBox alignment="CENTER_LEFT" prefHeight="30.0" prefWidth="190.0" styleClass="combo-box">
-                <Label text="Refresh time: ">
-                    <HBox.margin>
-                        <Insets right="5.0" />
-                    </HBox.margin>
-                </Label>
+                <Label text="Refresh time: "><HBox.margin><Insets right="5.0" /></HBox.margin></Label>
                 <ComboBox fx:id="timeChoiceBox" promptText="5" style="-fx-background-color: transparent;" HBox.hgrow="SOMETIMES" />
                 <Label text="  s" />
             </HBox>
-
-            <Label text="Filters: ">
-            <opaqueInsets>
-               <Insets />
-            </opaqueInsets>
-            <VBox.margin>
-               <Insets bottom="5.0" />
-            </VBox.margin></Label>
-
             <!-- FILTERS -->
-            <HBox prefHeight="100.0" prefWidth="200.0">
+            <Label text="Filters: "><VBox.margin><Insets bottom="5.0" /></VBox.margin></Label>
+            <HBox prefHeight="26.0" prefWidth="1000.0">
                 <CheckBox fx:id="dayFilterBox" mnemonicParsing="false" text=" Current day only" />
                 <CheckBox fx:id="tieRowsBox" mnemonicParsing="false" text=" Tie rows" />
             </HBox>
+         <padding>
+            <Insets left="15.0" />
+         </padding>
         </VBox>
 
-        <!-- TABLES TITLES -->
-        <Label fx:id="labelTable1" prefHeight="22.0" prefWidth="246.0" styleClass="tabletitle" text="Pings to Local" GridPane.columnIndex="0" GridPane.rowIndex="1">
-            <GridPane.margin>
-                <Insets bottom="5.0" left="10.0" right="5.0" top="5.0" />
-            </GridPane.margin>
-        </Label>
-        <Label fx:id="labelTable2" prefHeight="22.0" prefWidth="246.0" styleClass="tabletitle" text="Pings to Isp" GridPane.columnIndex="1" GridPane.rowIndex="1">
-            <GridPane.margin>
-                <Insets left="10.0" right="5.0" />
-            </GridPane.margin>
-        </Label>
-        <Label fx:id="labelTable3" prefHeight="22.0" prefWidth="237.0" styleClass="tabletitle" text="Pings to the internet " GridPane.columnIndex="2" GridPane.rowIndex="1">
-            <GridPane.margin>
-                <Insets left="10.0" right="5.0" />
-            </GridPane.margin>
-        </Label>
+        <!-- 0  1 -->
+        <!-- Description and Tables -->
+        <HBox fx:id="tablesHBox" alignment="TOP_CENTER" prefHeight="420.0" prefWidth="1000.0" GridPane.columnIndex="0" GridPane.rowIndex="1" HBox.hgrow="ALWAYS">
+            <ScrollPane id="descriptionScroll" fitToWidth="true">
+                <VBox spacing="6" style="-fx-background-color: white;  -fx-border-color: transparent; -fx-background-radius: 7px 7px 7px 7px;">
+                    <Label styleClass="description-header-label" text="ConnTest Application User Manual" />
+                    <Label styleClass="description-content-label" text="Welcome to the ConnTest Application! This application is designed to help you test and monitor the connectivity to various IP addresses by performing ping tests. The application automatically discovers the hops to local, ISP, and Google IP addresses, and displays the results in a user-friendly interface." wrapText="true" />
 
-        <!-- AVERAGE LOST  -->
-        <Label fx:id="labelLostAvg1" prefHeight="20.0" prefWidth="194.0" text="Average lost pings:" GridPane.columnIndex="0" GridPane.rowIndex="2">
-            <GridPane.margin>
-                <Insets bottom="5.0" left="10.0" right="5.0" top="5.0" />
-            </GridPane.margin>
-        </Label>
-        <Label fx:id="labelLostAvg2" prefHeight="20.0" prefWidth="194.0" text="Average lost pings:" GridPane.columnIndex="1" GridPane.rowIndex="2">
-            <GridPane.margin>
-                <Insets left="10.0" right="5.0" />
-            </GridPane.margin>
-        </Label>
-        <Label fx:id="labelLostAvg3" prefHeight="20.0" prefWidth="194.0" text="Average lost pings:" GridPane.columnIndex="2" GridPane.rowIndex="2">
-            <GridPane.margin>
-                <Insets left="10.0" right="5.0" />
-            </GridPane.margin>
-        </Label>
+                    <Label styleClass="description-section-header" text="Starting the Test" />
+                    <Label styleClass="description-content-label" text="To begin the test, click the Start button on the main interface. The application will initiate the process of discovering the IP hops to your local network, ISP, and Google." wrapText="true" />
 
-        <!-- TABLES  -->
-        <TableView fx:id="localTableView" focusTraversable="false" styleClass="table" GridPane.columnIndex="0" GridPane.halignment="CENTER" GridPane.rowIndex="3" GridPane.vgrow="SOMETIMES">
-            <columns>
-                <TableColumn fx:id="dateLocalColumn" minWidth="120" text="Date" />
-                <TableColumn fx:id="pingLocalColumn" minWidth="70" text="Ping Time (ms)" />
-            </columns>
-            <GridPane.margin>
-                <Insets left="10.0" right="10.0" />
-            </GridPane.margin>
-            <columnResizePolicy>
-                <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
-            </columnResizePolicy>
-            <placeholder>
-                <Label text="No data available" />
-            </placeholder>
-        </TableView>
+                    <Label styleClass="description-section-header" text="Automatic IP Discovery" />
+                    <Label styleClass="description-content-label" text="The application will automatically discover the IP hops for Local, ISP, and Google IP addresses. This process will take a few moments." wrapText="true" />
 
-        <TableView fx:id="ispTableView" focusTraversable="false" styleClass="table" GridPane.columnIndex="1" GridPane.rowIndex="3">
-            <columns>
-                <TableColumn fx:id="dateIspColumn" minWidth="120" text="Date" />
-                <TableColumn fx:id="pingIspColumn" minWidth="70" text="Ping Time (ms)" />
-            </columns>
-            <GridPane.margin>
-                <Insets left="10.0" right="10.0" />
-            </GridPane.margin>
-            <columnResizePolicy>
-                <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
-            </columnResizePolicy>
-            <placeholder>
-                <Label text="No data available" />
-            </placeholder>
-        </TableView>
+                    <Label styleClass="description-section-header" text="Viewing Ping Results" />
+                    <Label styleClass="description-content-label" text="Once the IPs are discovered, the application will display the ping results in tables. Each one corresponds to an IP address. The columns in the tables include:" wrapText="true" />
+                    <Label styleClass="description-content-label" text=" - Date: The date and time the ping was performed." wrapText="true" />
+                    <Label styleClass="description-content-label" text=" - Latency: The time it took for the ping to travel to the IP address and back, measured in milliseconds (ms). If a ping times out, it will be indicated with a value of -1 in the latency column" wrapText="true" />
 
-        <TableView fx:id="cloudTableView" focusTraversable="false" styleClass="table" GridPane.columnIndex="2" GridPane.rowIndex="3">
-            <columns>
-                <TableColumn fx:id="dateCloudColumn" editable="false" minWidth="120" text="Date" />
-                <TableColumn fx:id="pingCloudColumn" editable="false" minWidth="70" text="Ping Time (ms)" />
-            </columns>
-            <GridPane.margin>
-                <Insets left="10.0" right="10.0" />
-            </GridPane.margin>
-            <columnResizePolicy>
-                <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
-            </columnResizePolicy>
-            <placeholder>
-                <Label text="No data available" />
-            </placeholder>
-        </TableView>
+                    <Label styleClass="description-section-header" text="Understanding the Interface" />
+                    <Label styleClass="description-content-label" text=" - Start Button: Initiates the ping test." wrapText="true" />
+                    <Label styleClass="description-content-label" text=" - Stop Button: Stops the ongoing ping test." wrapText="true" />
+                    <Label styleClass="description-content-label" text=" - Time Choice Box: Allows you to select the interval for performing pings." wrapText="true" />
+                    <Label styleClass="description-content-label" text=" - Day Filter Box: Enables filtering of results by day." wrapText="true" />
+                    <Label styleClass="description-content-label" text=" - Save Button: Save the displayed ping results to a log file." wrapText="true" />
 
-        <!-- SAVES BUTTONS -->
-        <Button fx:id="saveLocalButton" styleClass="savebutton" text="Save" GridPane.columnIndex="0" GridPane.halignment="RIGHT" GridPane.rowIndex="4">
+                    <Label styleClass="description-section-header" text="Troubleshooting" />
+                    <Label styleClass="description-content-label" text="No Results Displayed: Ensure that your network connection is active. If the problem persists, try restarting the application." wrapText="true" />
+                    <Label styleClass="description-content-label" text="Application Freezes: If the application becomes unresponsive, try closing and reopening it. Ensure that your system meets the required specifications for running the application." wrapText="true" />
+
+                    <Label styleClass="description-section-header" text="Thank you for using the ConnTest Application." wrapText="true" />
+                </VBox>
+            </ScrollPane>
             <GridPane.margin>
-                <Insets right="5.0" top="15.0" />
+                <Insets top="5.0" />
             </GridPane.margin>
-        </Button>
-        <Button fx:id="saveIspButton" styleClass="savebutton" text="Save" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="4">
-            <GridPane.margin>
-                <Insets right="5.0" top="15.0" />
-            </GridPane.margin>
-        </Button>
-        <Button fx:id="saveCloudButton" styleClass="savebutton" text="Save" GridPane.columnIndex="2" GridPane.halignment="RIGHT" GridPane.rowIndex="4">
-            <GridPane.margin>
-                <Insets right="5.0" top="15.0" />
-            </GridPane.margin>
-        </Button>
+        </HBox>
+
+
+      <VBox.margin>
+         <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+      </VBox.margin>
     </GridPane>
+
+
 
 </VBox>

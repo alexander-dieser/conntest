@@ -5,6 +5,10 @@ import com.adieser.conntest.controllers.responses.PingSessionExtract;
 import com.adieser.conntest.controllers.responses.PingTestResponse;
 import com.adieser.conntest.service.ConnTestService;
 import com.adieser.conntest.utils.HATEOASLinkRelValueTemplates;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +18,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -30,6 +35,7 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
     default content-type: application/hal+json in the responses
  */
 @RestController
+@Tag(name = "Ping", description = "Ping endpoints")
 public class ConnTestController {
 
     private final ConnTestService connTestService;
@@ -42,6 +48,7 @@ public class ConnTestController {
      * Trigger 3 ping sessions to test connection against local gateway, the next hop, and the cloud (Google's 8.8.8.8)
      */
     @PostMapping(value = "/test-local-isp-cloud", produces = {"application/json"})
+    @Operation(summary = "Test connection to local ISP, next hop, and cloud (Google's 8.8.8.8)")
     public ResponseEntity<PingTestResponse> testLocalIspCloud() {
         connTestService.testLocalISPInternet();
 
@@ -56,7 +63,12 @@ public class ConnTestController {
      * Trigger up to 3 custom ip addresses ping sessions to test connection
      */
     @PostMapping(value = "/test-custom-ips", produces = {"application/json"})
-    public ResponseEntity<Object> testCustomIps(@RequestBody List<String> ipAddresses) {
+    @Operation(summary = "Test connection to custom IP addresses")
+    public ResponseEntity<Object> testCustomIps(
+            @Parameter(
+                    description = "IP addresses to ping",
+                    required = true)
+            @RequestBody List<String> ipAddresses) {
         HttpStatus httpStatus = HttpStatus.OK;
 
         if(ipAddresses.size() > 3)
@@ -74,6 +86,7 @@ public class ConnTestController {
      * stop all the test sessions
      */
     @PostMapping(value = "/stop-tests", produces={"application/json"})
+    @Operation(summary = "Stop all the test sessions")
     public ResponseEntity<PingTestResponse> stopTests() {
         connTestService.stopTests();
 
@@ -88,8 +101,10 @@ public class ConnTestController {
      * Get all pings
      * @return If successful it returns a list of pings along with the total count
      */
+    @ApiResponse(responseCode = "200", description = "a list of pings along with the total count.")
     @GetMapping("/pings")
-    public ResponseEntity<PingSessionExtract> getPings() {
+    @Operation(summary = "Get all pings")
+    public ResponseEntity<PingSessionExtract> getPings() throws IOException {
         HttpStatus httpStatus = HttpStatus.OK;
         PingSessionExtract pings = connTestService.getPings();
 
@@ -107,10 +122,18 @@ public class ConnTestController {
      * @param end End date in the range
      * @return If successful it returns a list of pings along with the total count
      */
+    @ApiResponse(responseCode = "200", description = "a list of pings along with the total count.")
     @GetMapping("/pings/{start}/{end}")
+    @Operation(summary = "Get all the pings within a datetime range")
     public ResponseEntity<PingSessionExtract> getPingsByDateTimeRange(
+            @Parameter(
+                    description = "Start date and time of the range",
+                    required = true)
             @PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime start,
-            @PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime end) {
+            @Parameter(
+                    description = "End date in the range",
+                    required = true)
+            @PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime end) throws IOException {
         HttpStatus httpStatus = HttpStatus.OK;
         PingSessionExtract pings = connTestService.getPingsByDateTimeRange(start, end);
 
@@ -127,8 +150,14 @@ public class ConnTestController {
      * @param ipAddress IP address used to filter the results
      * @return If successful it returns a list of pings along with the total count
      */
+    @ApiResponse(responseCode = "200", description = "a list of pings along with the total count.")
     @GetMapping("/pings/{ipAddress}")
-    public ResponseEntity<PingSessionExtract> getPingsByIp(@PathVariable String ipAddress) {
+    @Operation(summary = "Get all the pings filtered by IP")
+    public ResponseEntity<PingSessionExtract> getPingsByIp(
+            @Parameter(
+                    description = "IP address used to filter the results",
+                    required = true)
+            @PathVariable String ipAddress) throws IOException {
         HttpStatus httpStatus = HttpStatus.OK;
         PingSessionExtract pings = connTestService.getPingsByIp(ipAddress);
 
@@ -147,11 +176,22 @@ public class ConnTestController {
      * @param end End date in the range
      * @return If successful it returns a list of pings along with the total count
      */
+    @ApiResponse(responseCode = "200", description = "a list of pings along with the total count.")
     @GetMapping("/pings/{ipAddress}/{start}/{end}")
+    @Operation(summary = "Get all the pings within a datetime range filtered by IP")
     public ResponseEntity<PingSessionExtract> getPingsByDateTimeRangeByIp(
+            @Parameter(
+                    description = "IP address used to filter the results",
+                    required = true)
             @PathVariable String ipAddress,
+            @Parameter(
+                    description = "Start date and time of the range",
+                    required = true)
             @PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime start,
-            @PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime end) {
+            @Parameter(
+                    description = "End date in the range",
+                    required = true)
+            @PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime end) throws IOException {
         HttpStatus httpStatus = HttpStatus.OK;
         PingSessionExtract pings = connTestService.getPingsByDateTimeRangeByIp(start, end, ipAddress);
 
@@ -168,8 +208,14 @@ public class ConnTestController {
      * @param ipAddress IP address used to filter the results
      * @return If successful it returns a number representing the average of lost pings
      */
+    @ApiResponse(responseCode = "200", description = "a number representing the average of lost pings.")
     @GetMapping(value = "/pings/{ipAddress}/avg", produces = {"application/json"})
-    public ResponseEntity<AverageResponse> getPingsLostAvgByIp(@PathVariable String ipAddress) {
+    @Operation(summary = "Get the average of lost pings within a list of pings filtered by IP")
+    public ResponseEntity<AverageResponse> getPingsLostAvgByIp(
+            @Parameter(
+                    description = "IP address used to filter the results",
+                    required = true)
+            @PathVariable String ipAddress) throws IOException {
 
         AverageResponse averageResult = AverageResponse.builder()
                 .ipAddress(ipAddress)
@@ -194,11 +240,22 @@ public class ConnTestController {
      * @param end End date in the range
      * @return If successful it returns a number representing the average of lost pings
      */
+    @ApiResponse(responseCode = "200", description = "a number representing the average of lost pings.")
     @GetMapping(value = "/pings/{ipAddress}/avg/{start}/{end}", produces = {"application/json"})
+    @Operation(summary = "Get the average of lost pings within a datetime range filtered by IP")
     public ResponseEntity<AverageResponse> getPingsLostAvgByDateTimeRangeByIp(
+            @Parameter(
+                    description = "IP address used to filter the results",
+                    required = true)
             @PathVariable String ipAddress,
+            @Parameter(
+                    description = "Start date and time of the range",
+                    required = true)
             @PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime start,
-            @PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime end) {
+            @Parameter(
+                    description = "End date in the range",
+                    required = true)
+            @PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime end) throws IOException {
 
         AverageResponse averageResult = AverageResponse.builder()
                 .ipAddress(ipAddress)
@@ -222,18 +279,26 @@ public class ConnTestController {
             LocalDateTime roof = ping.getDateTime().plusMinutes(30);
             String ipAddress = ping.getIpAddress();
 
-            ping.add(
-                    linkTo(methodOn(ConnTestController.class).getPingsByIp(ipAddress))
-                            .withRel(HATEOASLinkRelValueTemplates.GET_BY_IP.formatted(ipAddress)),
-                    linkTo(methodOn(ConnTestController.class).getPingsByDateTimeRange(floor, roof))
-                            .withRel(HATEOASLinkRelValueTemplates.GET_30_MINS_NEIGHBORHOOD),
-                    linkTo(methodOn(ConnTestController.class).getPingsByDateTimeRangeByIp(ipAddress, floor, roof))
-                            .withRel(HATEOASLinkRelValueTemplates.GET_30_MINS_NEIGHBORHOOD_BY_IP.formatted(ipAddress)),
-                    linkTo(methodOn(ConnTestController.class).getPingsLostAvgByIp(ping.getIpAddress()))
-                            .withRel(HATEOASLinkRelValueTemplates.GET_LOST_AVG_BY_IP.formatted(ipAddress)),
-                    linkTo(methodOn(ConnTestController.class).getPingsLostAvgByDateTimeRangeByIp(ipAddress, floor, roof))
-                            .withRel(HATEOASLinkRelValueTemplates.GET_30_MINS_NEIGHBORHOOD_LOST_AVG_BY_IP.formatted(ipAddress))
-            );
+            try {
+                ping.add(
+                        linkTo(methodOn(ConnTestController.class).getPingsByIp(ipAddress))
+                                .withRel(HATEOASLinkRelValueTemplates.GET_BY_IP.formatted(ipAddress)),
+                        linkTo(methodOn(ConnTestController.class).getPingsByDateTimeRange(floor, roof))
+                                .withRel(HATEOASLinkRelValueTemplates.GET_30_MINS_NEIGHBORHOOD),
+                        linkTo(methodOn(ConnTestController.class).getPingsByDateTimeRangeByIp(ipAddress, floor, roof))
+                                .withRel(HATEOASLinkRelValueTemplates.GET_30_MINS_NEIGHBORHOOD_BY_IP.formatted(ipAddress)),
+                        linkTo(methodOn(ConnTestController.class).getPingsLostAvgByIp(ping.getIpAddress()))
+                                .withRel(HATEOASLinkRelValueTemplates.GET_LOST_AVG_BY_IP.formatted(ipAddress)),
+                        linkTo(methodOn(ConnTestController.class).getPingsLostAvgByDateTimeRangeByIp(ipAddress, floor, roof))
+                                .withRel(HATEOASLinkRelValueTemplates.GET_30_MINS_NEIGHBORHOOD_LOST_AVG_BY_IP.formatted(ipAddress))
+                );
+            } catch (IOException ignored){
+                /*
+                    dummy exception thrown by the methods in the HATEOAS links, methods that are never executed
+                    in that code block, they serve only as reference to the links
+                */
+            }
+
         });
     }
 }

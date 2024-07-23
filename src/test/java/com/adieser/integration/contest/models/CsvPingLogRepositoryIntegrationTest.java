@@ -33,6 +33,7 @@ import static com.adieser.utils.PingLogUtils.DEFAULT_PING_TIME;
 import static com.adieser.utils.PingLogUtils.LOCAL_IP_ADDRESS;
 import static com.adieser.utils.PingLogUtils.getDefaultPingLog;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -49,7 +50,7 @@ class CsvPingLogRepositoryIntegrationTest{
             LoggerFactory.getLogger("testLogger"));
 
     @Test
-    void testPingLogFile() throws IOException {
+    void testPingLogFile() throws IOException, InterruptedException {
 
         savePingLog(csvPingLogRepository);
 
@@ -60,7 +61,7 @@ class CsvPingLogRepositoryIntegrationTest{
     }
 
     @Test
-    void testPingLogFileAppend() throws IOException {
+    void testPingLogFileAppend() throws IOException, InterruptedException {
         savePingLog(csvPingLogRepository);
         savePingLog(csvPingLogRepository);
 
@@ -70,7 +71,7 @@ class CsvPingLogRepositoryIntegrationTest{
     }
 
     @Test
-    void testMissingPingLogFile() throws IOException {
+    void testMissingPingLogFile() throws IOException, InterruptedException {
         //Make sure the pingLog.log does not exist
         Files.deleteIfExists(Paths.get(PINGLOGS_DIR + "/" + PING_LOG_NAME));
 
@@ -86,8 +87,7 @@ class CsvPingLogRepositoryIntegrationTest{
                 "wrong/path/to/pingLogs",
                 testLogger);
 
-        savePingLog(csvPingLogRepository);
-
+        assertThrows(InterruptedException.class, () -> savePingLog(csvPingLogRepository));
         verify(testLogger,
                 times(1)).error(eq(CsvPingLogRepository.SAVE_PING_ERROR_MSG),
                 any(FileNotFoundException.class)
@@ -226,7 +226,7 @@ class CsvPingLogRepositoryIntegrationTest{
     /**
      * Save ping using the repository method
      */
-    private void savePingLog(CsvPingLogRepository csvPingLogRepository) {
+    private void savePingLog(CsvPingLogRepository csvPingLogRepository) throws InterruptedException {
         csvPingLogRepository.savePingLog(PingLog.builder()
                 .dateTime(DEFAULT_LOG_DATE_TIME)
                 .ipAddress(LOCAL_IP_ADDRESS)

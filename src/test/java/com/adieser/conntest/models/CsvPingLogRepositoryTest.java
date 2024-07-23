@@ -26,6 +26,7 @@ import static com.adieser.utils.PingLogUtils.CLOUD_IP_ADDRESS;
 import static com.adieser.utils.PingLogUtils.LOCAL_IP_ADDRESS;
 import static com.adieser.utils.PingLogUtils.getDefaultPingLog;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -58,7 +59,8 @@ class CsvPingLogRepositoryTest {
      */
     @ParameterizedTest
     @MethodSource("successPingLogProvider")
-    void testSavePingLogSuccess(PingLog pingLog) throws CsvRequiredFieldEmptyException, CsvDataTypeMismatchException, IOException {
+    void testSavePingLogSuccess(PingLog pingLog)
+            throws CsvRequiredFieldEmptyException, CsvDataTypeMismatchException, IOException, InterruptedException {
         // when
         CsvPingLogRepository underTestSpy = spy(new CsvPingLogRepository("test", logger));
 
@@ -84,10 +86,8 @@ class CsvPingLogRepositoryTest {
         PingLog mockPingLog = mock(PingLog.class);
         CsvPingLogRepository underTestSpy = spy(new CsvPingLogRepository("FileNotFound", logger));
 
-        // then
-        underTestSpy.savePingLog(mockPingLog);
-
-        // assert
+        // then assert
+        assertThrows(InterruptedException.class, () -> underTestSpy.savePingLog(mockPingLog));
         verify(logger, times(1)).error(eq(CsvPingLogRepository.SAVE_PING_ERROR_MSG), any(FileNotFoundException.class));
     }
 
@@ -104,10 +104,8 @@ class CsvPingLogRepositoryTest {
 
         doThrow(new IOException()).when(underTestSpy).getFileWriter();
 
-        // then
-        underTestSpy.savePingLog(mockPingLog);
-
-        // assert
+        // then assert
+        assertThrows(InterruptedException.class, () -> underTestSpy.savePingLog(mockPingLog));
         verify(logger, times(1)).error(eq(CsvPingLogRepository.SAVE_PING_ERROR_MSG), any(IOException.class));
     }
 
@@ -127,10 +125,8 @@ class CsvPingLogRepositoryTest {
         doThrow(clazz).when(sbcMock).write(mockPingLog);
         when(underTestSpy.getStatefulBeanToCsv(cvsFileWriterMock)).thenReturn(sbcMock);
 
-        // then
-        underTestSpy.savePingLog(mockPingLog);
-
         // assert
+        assertThrows(InterruptedException.class, () -> underTestSpy.savePingLog(mockPingLog));
         verify(logger, times(1)).error(eq(CsvPingLogRepository.SAVE_PING_ERROR_MSG), any(clazz));
     }
 
@@ -166,12 +162,8 @@ class CsvPingLogRepositoryTest {
         CsvPingLogRepository underTestSpy = spy(new CsvPingLogRepository("test", logger));
         doThrow(IOException.class).when(underTestSpy).getReader();
 
-        // then
-        List<PingLog> pingLogsResult = underTestSpy.readAll();
-
-        // assert
-        assertTrue(pingLogsResult.isEmpty());
-        verify(logger, times(1)).error(eq(CsvPingLogRepository.PARSE_ERROR), any(IOException.class));
+        // then assert
+        assertThrows(IOException.class, underTestSpy::readAll);
     }
 
     @ParameterizedTest

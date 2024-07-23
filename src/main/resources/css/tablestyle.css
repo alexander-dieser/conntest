@@ -1,3 +1,20 @@
+/* Tables hbox style */
+.tablesHBox {
+    -fx-alignment: center;
+    -fx-background-color: white;
+    -fx-border-color: white;
+}
+
+/* Table and labels vbox style */
+.table-vbox {
+    -fx-min-width: 250px;
+    -fx-pref-width: 550px;
+    -fx-padding: 0px 10px 10px 0px;
+    -fx-min-width: 250px;
+    -fx-max-width: 350px;
+    -fx-margin: 250px 0px 0px 0px;
+}
+
 /* Table view style */
 .table {
     -fx-border-collapse: collapse;
@@ -5,6 +22,13 @@
     -fx-border-width: 0;
     -fx-background-color: #e8e8e8f4;
     -fx-background-radius: 7px 7px 7px 7px;
+    -fx-spacing: 20px;
+    -fx-margin: 10px 10px 10px 10px;
+    -fx-alignment: center;
+
+    -fx-pref-width: 100%;
+    -fx-min-height: 270px;
+
 }
 
 .table .column-header-background .filler {
@@ -31,7 +55,7 @@
 }
 
 .table .table-cell {
-    -fx-alignment: center-left;
+    -fx-alignment: center;
     -fx-border-color: transparent;
     -fx-padding: 7px;
     -fx-mouse-transparent: true;
