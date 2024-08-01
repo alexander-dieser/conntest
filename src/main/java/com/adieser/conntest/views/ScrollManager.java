@@ -1,50 +1,55 @@
 package com.adieser.conntest.views;
 
+import javafx.beans.value.ChangeListener;
 import javafx.geometry.Orientation;
 import javafx.scene.Node;
 import javafx.scene.control.ScrollBar;
 import javafx.scene.control.TableView;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 public class ScrollManager {
-    private ScrollBar localVerticalScrollBar;
-    private ScrollBar ispVerticalScrollBar;
-    private ScrollBar cloudVerticalScrollBar;
+    private final List<ScrollBar> verticalScrollBars = new ArrayList<>();
+    private final ChangeListener<Number> scrollListener = (observable, oldValue, newValue) -> syncVerticalScroll(newValue.doubleValue());
 
-    public void addScrollListener(TableView<?> localTableView, TableView<?> ispTableView, TableView<?> cloudTableView) {
-        this.localVerticalScrollBar = findScrollBar(localTableView);
-        this.ispVerticalScrollBar = findScrollBar(ispTableView);
-        this.cloudVerticalScrollBar = findScrollBar(cloudTableView);
+    public void addScrollListener(TableView<?> tableView) {
+        ScrollBar scrollBar = findScrollBar(tableView);
+        if (scrollBar != null && !verticalScrollBars.contains(scrollBar)) {
+            verticalScrollBars.add(scrollBar);
+            scrollBar.valueProperty().addListener(scrollListener);
+        }
+    }
 
-        localVerticalScrollBar.valueProperty().addListener((observable, oldValue, newValue) -> syncVerticalScroll(localVerticalScrollBar.getValue()));
-        ispVerticalScrollBar.valueProperty().addListener((observable, oldValue, newValue) -> syncVerticalScroll(ispVerticalScrollBar.getValue()));
-        cloudVerticalScrollBar.valueProperty().addListener((observable, oldValue, newValue) -> syncVerticalScroll(cloudVerticalScrollBar.getValue()));
+    public void removeScrollListener(TableView<?> tableView) {
+        ScrollBar scrollBar = findScrollBar(tableView);
+        if (scrollBar != null && verticalScrollBars.contains(scrollBar)) {
+            scrollBar.valueProperty().removeListener(scrollListener);
+            verticalScrollBars.remove(scrollBar);
+        }
     }
 
     private ScrollBar findScrollBar(TableView<?> tableView) {
-        ScrollBar result = null;
         Set<Node> nodes = tableView.lookupAll(".scroll-bar");
         for (Node node : nodes) {
-            if (node instanceof ScrollBar scrollBar && scrollBar.getOrientation() == Orientation.VERTICAL && !tableView.getItems().isEmpty()) {
-                    result = scrollBar;
-                    break;
-                }
-
+            if (node instanceof ScrollBar scrollBar && scrollBar.getOrientation() == Orientation.VERTICAL) {
+                return scrollBar;
+            }
         }
-        return result;
+        return null;
     }
 
-    private void syncVerticalScroll(double newValue) {
-        localVerticalScrollBar.setValue(newValue);
-        ispVerticalScrollBar.setValue(newValue);
-        cloudVerticalScrollBar.setValue(newValue);
+    void syncVerticalScroll(double newValue) {
+        for (ScrollBar scrollBar : verticalScrollBars) {
+            scrollBar.setValue(newValue);
+        }
     }
 
-    public void removeScrollListener() {
-        localVerticalScrollBar.valueProperty().removeListener((observable, oldValue, newValue) -> syncVerticalScroll(localVerticalScrollBar.getValue()));
-        ispVerticalScrollBar.valueProperty().removeListener((observable, oldValue, newValue) -> syncVerticalScroll(ispVerticalScrollBar.getValue()));
-        cloudVerticalScrollBar.valueProperty().removeListener((observable, oldValue, newValue) -> syncVerticalScroll(cloudVerticalScrollBar.getValue()));
+    public void removeAllScrollListeners() {
+        for (ScrollBar scrollBar : verticalScrollBars) {
+            scrollBar.valueProperty().removeListener(scrollListener);
+        }
+        verticalScrollBars.clear();
     }
-
 }

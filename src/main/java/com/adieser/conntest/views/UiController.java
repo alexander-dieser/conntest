@@ -58,7 +58,7 @@ public class UiController {
     private CheckBox dayFilterBox;
     @FXML
     private CheckBox tieRowsBox;
-    private ScrollManager scrollManager;
+    private final ScrollManager scrollManager = new ScrollManager();
     @FXML
     private HBox tablesHBox;
 
@@ -94,6 +94,7 @@ public class UiController {
             this.stop();
             startButton.setDisable(false);
             dayFilterBox.setDisable(false);
+            tieRowsBox.setDisable(false);
         });
         this.timeChoiceBox.setOnAction(actionEvent -> {
             if(startButton.isDisable()){
@@ -104,15 +105,13 @@ public class UiController {
             }
         });
         this.dayFilterBox.setOnAction(actionEvent -> { if(ipAddress != null) Platform.runLater(this::updateTables); });
-        ;
         this.tieRowsBox.setOnAction(actionEvent -> {
-            if (!localTableView.getItems().isEmpty()) {
-                loadLogs();
-                scrollManager = new ScrollManager();
+            if(ipAddress != null) {
                 if (tieRowsBox.isSelected()) {
-                    scrollManager.addScrollListener(localTableView, ispTableView, cloudTableView);
-                }else{
-                    scrollManager.removeScrollListener();
+                    tablesViewList.forEach(scrollManager::addScrollListener);
+                    Platform.runLater(this::updateTables);
+                } else {
+                    tablesViewList.forEach(scrollManager::removeScrollListener);
                 }
             }
         });
@@ -174,6 +173,7 @@ public class UiController {
             stop();
         }
     }
+
 
     /**
      * Shuts down the scheduled executor service and stops all tests.
@@ -337,12 +337,12 @@ public class UiController {
     private void saveLogs(TableView<PingLog> tableView, TableColumn<PingLog, String> dateColumn, TableColumn<PingLog, Long> pingColumn) {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Save as");
-        fileChooser.setInitialDirectory(new java.io.File(System.getProperty("user.home")));
+        fileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
         fileChooser.setInitialFileName("pingrecord.log");
         fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Archivos de registro (*.log)", "*.log"));
 
         Stage stage = new Stage();
-        java.io.File file = fileChooser.showSaveDialog(stage);
+        File file = fileChooser.showSaveDialog(stage);
 
         if (file != null) {
             try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {

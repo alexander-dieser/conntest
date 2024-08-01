@@ -126,6 +126,9 @@
   -fx-background-color: white;
   -fx-border-color:  #9E9E9E;
   -fx-border-radius: 5;
+  -fx-pref-height: 17px;
+  -fx-pref-width: 17px;
+
 }
 .check-box .mark {
   -fx-shape: "M1.73,12.91 8.1,19.28 22.79,4.59 22.79,1.59 8.1,16.28 1.73,9.91";
@@ -144,18 +147,21 @@
   -fx-font-size: 15px;
   -fx-font-weight: bold;
   -fx-text-fill: #555555c5;
+  -fx-font-style: italic;
 }
 
 .description-section-header {
   -fx-font-size: 14px;
   -fx-font-weight: bold;
   -fx-text-fill: #555555c5;
+  -fx-font-style: italic;
 }
 
 .description-content-label {
   -fx-font-size: 14px;
   -fx-text-fill: #666666cb;
   -fx-wrap-text: true;
+  -fx-font-style: italic;
 }
 
 #descriptionScroll {
