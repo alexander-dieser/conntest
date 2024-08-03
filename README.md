@@ -11,4 +11,7 @@ Run `mvn clean package` command and use the shaded version to create the executa
 NOTE: Before executing the following command, make sure the jar used as input is located in a different directory other than the working directory. [+Info](https://stackoverflow.com/questions/64741275/jpackage-type-app-image-creates-infinite-recursive-directories)
 
 Ex:
-`jpackage --input C:\contest --name ConTest --main-jar conntest.jar --type app-image` 
+`jpackage --input C:\contest --name ConTest --main-jar conntest.jar --type app-image`
+
+### CI - Jenkins vs GitHub Actions
+Both technologies have been implemented. But only GitHub Actions is being use, since Jenkins requires a dedicated server
