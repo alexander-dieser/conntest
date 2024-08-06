@@ -160,7 +160,7 @@
 
 #descriptionScroll {
   -fx-background-color: white;
-  -fx-padding: 10px 10px 10px 10px;
+  -fx-padding: 10px 10px 0px 10px;
 }
 
 #descriptionScroll .track {

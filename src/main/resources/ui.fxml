@@ -5,7 +5,7 @@
 <?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
 
-<VBox alignment="TOP_CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="700.0" stylesheets="@/css/mainstyle.css, @/css/comboboxstyle.css, @/css/tablestyle.css" xmlns="http://javafx.com/javafx/11.0.14-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.adieser.conntest.views.UiController">
+<VBox alignment="TOP_CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="800.0" stylesheets="@/css/mainstyle.css, @/css/comboboxstyle.css, @/css/tablestyle.css" xmlns="http://javafx.com/javafx/11.0.14-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.adieser.conntest.views.UiController">
     <HBox alignment="CENTER_RIGHT" prefHeight="28.0" styleClass="tittlebar">
         <Button fx:id="minimizeButton">
             <HBox.margin>
@@ -48,7 +48,7 @@
             <RowConstraints vgrow="SOMETIMES" />
         </rowConstraints>
         <padding>
-            <Insets bottom="30.0" />
+            <Insets bottom="20.0" />
         </padding>
         <!-- TITLE -->
         <Label prefWidth="200.0" styleClass="title" text="ConnTest" GridPane.halignment="RIGHT" GridPane.valignment="CENTER">
@@ -61,12 +61,12 @@
             <!-- START AND STOP BUTTONS -->
             <Button fx:id="startButton" alignment="CENTER" contentDisplay="CENTER" styleClass="mainbutton" text="Start analysis">
                 <HBox.margin>
-                    <Insets left="40.0" right="15.0" />
+                    <Insets left="40.0" right="15.0" top="10.0" />
                 </HBox.margin>
             </Button>
             <Button fx:id="stopButton" styleClass="mainbutton" text="Stop analysis">
                 <HBox.margin>
-                    <Insets right="10.0" />
+                    <Insets right="10.0" top="10.0" />
                 </HBox.margin>
             </Button>
 
@@ -115,9 +115,9 @@
 
         <!-- 0  1 -->
         <!-- Description and Tables -->
-        <HBox fx:id="tablesHBox" alignment="TOP_CENTER" prefHeight="420.0" prefWidth="1000.0" GridPane.columnIndex="0" GridPane.rowIndex="1" HBox.hgrow="ALWAYS">
+        <HBox fx:id="tablesHBox" alignment="TOP_CENTER" prefHeight="600.0" prefWidth="1000.0" GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.vgrow="ALWAYS" HBox.hgrow="ALWAYS">
             <ScrollPane id="descriptionScroll" fitToWidth="true">
-                <VBox spacing="6" style="-fx-background-color: white;  -fx-border-color: transparent; -fx-background-radius: 7px 7px 7px 7px;">
+                <VBox spacing="6" style="-fx-background-color: white;  -fx-border-color: transparent; -fx-background-radius: 7px 7px 7px 7px;" VBox.vgrow="ALWAYS">
                     <Label styleClass="description-header-label" text="ConnTest Application User Manual" />
                     <Label styleClass="description-content-label" text="Welcome to the ConnTest Application! This application is designed to help you test and monitor the connectivity to various IP addresses by performing ping tests. The application automatically discovers the hops to local, ISP, and Google IP addresses, and displays the results in a user-friendly interface." wrapText="true" />
 
@@ -147,13 +147,13 @@
                 </VBox>
             </ScrollPane>
             <GridPane.margin>
-                <Insets top="5.0" />
+                <Insets top="15.0" />
             </GridPane.margin>
         </HBox>
 
 
       <VBox.margin>
-         <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+         <Insets left="20.0" right="20.0" top="20.0" />
       </VBox.margin>
     </GridPane>
 
