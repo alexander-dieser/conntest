@@ -59,6 +59,7 @@ public class UiController {
     @FXML
     private HBox tablesHBox;
 
+    private final List<Label> pingCountLabelsList = new ArrayList<>();
     private final List<Label> averageLostLabelsList = new ArrayList<>();
     private final List<TableView<PingLog>> tablesViewList = new ArrayList<>();
 
@@ -155,6 +156,7 @@ public class UiController {
             for (int i = 0; i < Math.min(ipAddress.size(), 3); i++) {
                 loadLogs(ipAddress.get(i), tablesViewList.get(i));
                 setAverageLost(ipAddress.get(i), averageLostLabelsList.get(i));
+                setPingCount(tablesViewList.get(i), pingCountLabelsList.get(i));
             }
         }catch(IOException e){
             stopExecutorService();
@@ -199,6 +201,9 @@ public class UiController {
         Label titleLabel = new Label("Pings to " + ip);
         titleLabel.getStyleClass().add("h2-label");
 
+        Label pingCountLabel = new Label("Ping count: ");
+        pingCountLabel.getStyleClass().add("h3-label");
+
         Label averageLostLabel = new Label("Average lost pings: ");
         averageLostLabel.getStyleClass().add("h3-label");
 
@@ -224,10 +229,11 @@ public class UiController {
         saveButton.getStyleClass().add("save-button");
 
         //VBox setup
-        VBox tableVBox = new VBox(titleLabel, averageLostLabel, table, saveButton);
+        VBox tableVBox = new VBox(titleLabel, pingCountLabel, averageLostLabel, table, saveButton);
         tableVBox.getStyleClass().add("table-vbox");
-        VBox.setMargin(saveButton, new Insets(10));
+        VBox.setMargin(saveButton, new Insets(10,0,0,0));
 
+        pingCountLabelsList.add(pingCountLabel);
         averageLostLabelsList.add(averageLostLabel);
         tablesViewList.add(table);
         Platform.runLater(() -> tablesHBox.getChildren().add(tableVBox));
@@ -312,6 +318,14 @@ public class UiController {
                 LocalDateTime currentDayEndTime = LocalDateTime.now().withHour(23).withMinute(59).withSecond(59).withNano(999999999);
                 label.setText(text + connTestService.getPingsLostAvgByDateTimeRangeByIp(currentDayStartTime, currentDayEndTime, ip) + "%");
             }
+    }
+
+    /**
+     * Sets the ping count for each IP address to corresponding labels.
+     */
+    public void setPingCount(TableView<PingLog> tableView, Label label) {
+        final String text = "Ping count: ";
+        label.setText(text + tableView.getItems().size());
     }
 
     /**

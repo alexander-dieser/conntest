@@ -9,8 +9,7 @@
 .table-vbox {
     -fx-min-width: 250px;
     -fx-pref-width: 550px;
-    -fx-padding: 0px 10px 10px 0px;
-    -fx-min-width: 250px;
+    -fx-padding: 0px 10px 0px 10px;
     -fx-max-width: 350px;
     -fx-margin: 250px 0px 0px 0px;
 }
@@ -23,11 +22,11 @@
     -fx-background-color: #e8e8e8f4;
     -fx-background-radius: 7px 7px 7px 7px;
     -fx-spacing: 20px;
-    -fx-margin: 10px 10px 10px 10px;
+    -fx-margin: 10px 10px 0px 10px;
     -fx-alignment: center;
 
     -fx-pref-width: 100%;
-    -fx-min-height: 270px;
+    -fx-min-height: 300px;
 
 }
 
