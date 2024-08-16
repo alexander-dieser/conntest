@@ -335,7 +335,7 @@ public class UiController {
     }
 
     /**
-     * Sets the ping count for each IP address to corresponding labels.
+     * Sets the ping count for each IP address to corresponding labels
      */
     public void setPingCount(TableView<PingLog> tableView, Label label) {
         final String text = "Ping count: ";
