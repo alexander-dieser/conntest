@@ -40,7 +40,7 @@ public class StageListener implements ApplicationListener<JavafxApplication.Stag
             fxmlLoader.setControllerFactory(applicationContext::getBean);
             Parent root = fxmlLoader.load();
 
-            Scene scene = new Scene(root, 1000, 700);
+            Scene scene = new Scene(root, 1000, 720);
 
             // Handle drag event
             root.setOnMousePressed(event -> {
@@ -54,7 +54,7 @@ public class StageListener implements ApplicationListener<JavafxApplication.Stag
 
             stage.setScene(scene);
             stage.setMinWidth(800);
-            stage.setMinHeight(600);
+            stage.setMinHeight(650);
             stage.setTitle("ConnTest");
             stage.getIcons().add(new Image("image/logo.png"));
 
