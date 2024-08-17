@@ -15,3 +15,10 @@ Ex:
 
 ### CI - Jenkins vs GitHub Actions
 Both technologies have been implemented. But only GitHub Actions is being use, since Jenkins requires a dedicated server
+
+### Ping simulator
+A ping simulato has been implemented, it can be enabled by setting the following property:
+`conntest.simulator = disabled`
+
+The simulator only works upon ip address 8.8.8.8. It simulates lost packages based on a random number.
+Tha simulator class is **PingSimulator.java**
