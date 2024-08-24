@@ -71,7 +71,7 @@ class ConnTestTest {
         // when
         ConnTest underTestSpy = spy(new ConnTest(executorService, LOCAL_IP_ADDRESS, logger, pingLogRepository, pingUtils));
         doReturn(DEFAULT_PING_TIME).when(underTestSpy).ping();
-        when(underTestSpy.buildPingLog(DEFAULT_PING_TIME)).thenReturn(defaultPingLog);
+        when(underTestSpy.buildPingLog()).thenReturn(defaultPingLog);
         doNothing().when(pingLogRepository).savePingLog(any());
 
         // then
