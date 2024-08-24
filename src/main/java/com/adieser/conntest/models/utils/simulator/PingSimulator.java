@@ -20,15 +20,17 @@ public class PingSimulator implements Reachable {
     public boolean isReachable(String ip) {
         boolean isReachable = true;
         try {
+            int randomNum = ThreadLocalRandom.current().nextInt(101);
             if(ip.equals("8.8.8.8")) {
-                int randomNum = ThreadLocalRandom.current().nextInt(101);
                 if (randomNum < 40) {
                     Thread.sleep(3000);
                     isReachable = false;
-                }else
+                }else if (randomNum < 60)
+                    Thread.sleep(1000 + randomNum * 3L);
+                else
                     Thread.sleep(randomNum);
             }else
-                Thread.sleep(20);
+                Thread.sleep(randomNum);
 
         } catch (Exception e) {
             logger.error("Error", e);

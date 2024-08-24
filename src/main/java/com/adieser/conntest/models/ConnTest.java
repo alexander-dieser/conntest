@@ -46,16 +46,25 @@ public class ConnTest implements Pingable {
 
     /**
      * Ping task running in a loop only stoppable by changing the value of {@code running} variable to false.
-     * Each ping is triggered once per second
+     * Each ping is triggered once per second if the ping takes less than 1 second
      */
     void pingSession() {
         running = true;
         try {
             while(running) {
-                long ping = ping();
-                pingLogRepository.savePingLog(buildPingLog(ping));
+                long startTime = System.currentTimeMillis();
 
-                Thread.sleep(1000);
+                PingLog ping = buildPingLog();
+                long pingTime = ping();
+                ping.setPingTime(pingTime);
+
+                pingLogRepository.savePingLog(ping);
+                long elapsedTime = System.currentTimeMillis() - startTime;
+
+                long sleepTime = 1000 - elapsedTime;
+
+                if (sleepTime > 0)
+                    Thread.sleep(sleepTime); // sleep only if the ping took less than 1 second
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -63,11 +72,10 @@ public class ConnTest implements Pingable {
         }
     }
 
-    PingLog buildPingLog(long ping) {
+    PingLog buildPingLog() {
         return PingLog.builder()
                 .dateTime(LocalDateTime.now())
                 .ipAddress(ipAddress)
-                .pingTime(ping)
                 .build();
     }
 
