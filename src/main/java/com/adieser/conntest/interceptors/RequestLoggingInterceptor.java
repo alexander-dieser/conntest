@@ -7,6 +7,11 @@ import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
+/**
+ * This class implements the HandlerInterceptor interface and is responsible for logging incoming requests.
+ * It intercepts the request before it is handled by the controller and logs the request details, including
+ * the session ID (last 10 characters), HTTP method, request URI, and query parameters.
+ */
 @Component
 public class RequestLoggingInterceptor implements HandlerInterceptor {
 
@@ -20,6 +25,7 @@ public class RequestLoggingInterceptor implements HandlerInterceptor {
     public boolean preHandle(HttpServletRequest request,
                              @NonNull HttpServletResponse response,
                              @NonNull Object handler){
+
         String sessionIdLast10 = request.getSession().getId().substring(
                 request.getSession().getId().length() - 10
         );

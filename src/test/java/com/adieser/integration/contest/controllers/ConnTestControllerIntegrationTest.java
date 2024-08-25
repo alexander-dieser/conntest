@@ -6,6 +6,7 @@ import com.adieser.conntest.controllers.responses.PingSessionExtract;
 import com.adieser.conntest.models.PingLog;
 import com.adieser.conntest.service.ConnTestService;
 import com.adieser.conntest.utils.HATEOASLinkRelValueTemplates;
+import com.adieser.utils.TestUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -28,10 +29,10 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import static com.adieser.conntest.controllers.responses.ErrorResponse.MAX_IP_ADDRESSES_EXCEEDED;
-import static com.adieser.utils.PingLogUtils.DEFAULT_LOG_DATE_TIME;
-import static com.adieser.utils.PingLogUtils.DEFAULT_PING_TIME;
-import static com.adieser.utils.PingLogUtils.LOCAL_IP_ADDRESS;
-import static com.adieser.utils.PingLogUtils.getDefaultPingLog;
+import static com.adieser.utils.TestUtils.DEFAULT_LOG_DATE_TIME;
+import static com.adieser.utils.TestUtils.DEFAULT_PING_TIME;
+import static com.adieser.utils.TestUtils.LOCAL_IP_ADDRESS;
+import static com.adieser.utils.TestUtils.getDefaultPingLog;
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -40,7 +41,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -59,8 +59,13 @@ class ConnTestControllerIntegrationTest {
 
     @Test
     void testLocalIspCloud() throws Exception {
+        // when
+        MockHttpServletRequestBuilder requestBuilder = TestUtils.addCustomSessionId(
+                MockMvcRequestBuilders.post("/test-local-isp-cloud")
+        );
+
         // then
-        mockMvc.perform(MockMvcRequestBuilders.post("/test-local-isp-cloud"))
+        mockMvc.perform(requestBuilder)
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$._links.stopTestSession.href")
                         .value(linkTo(methodOn(ConnTestController.class)
@@ -76,8 +81,12 @@ class ConnTestControllerIntegrationTest {
         // when
         String requestBody = new ObjectMapper().writeValueAsString(ipAddresses);
 
+        MockHttpServletRequestBuilder requestBuilder = TestUtils.addCustomSessionId(
+                MockMvcRequestBuilders.post("/test-custom-ips")
+        );
+
         // then
-        ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders.post("/test-custom-ips")
+        ResultActions resultActions = mockMvc.perform(requestBuilder
                 .content(requestBody)
                 .contentType(MediaType.APPLICATION_JSON)
         );
@@ -101,8 +110,13 @@ class ConnTestControllerIntegrationTest {
 
     @Test
     void stopTests() throws Exception {
+        // when
+        MockHttpServletRequestBuilder requestBuilder = TestUtils.addCustomSessionId(
+                MockMvcRequestBuilders.post("/stop-tests")
+        );
+
         // then
-        mockMvc.perform(MockMvcRequestBuilders.post("/stop-tests"))
+        mockMvc.perform(requestBuilder)
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$._links.startTestSession.href")
                         .value(linkTo(methodOn(ConnTestController.class)
@@ -119,7 +133,9 @@ class ConnTestControllerIntegrationTest {
         when(connTestService.getPings()).thenReturn(pings);
 
         // then assert
-        MockHttpServletRequestBuilder requestBuilder = get("/pings");
+        MockHttpServletRequestBuilder requestBuilder = TestUtils.addCustomSessionId(
+                MockMvcRequestBuilders.get("/pings")
+        );
 
         ResultActions resultActions = performRequestAndBasicAssertPingLogControllerResponse(requestBuilder, pings);
         if(!pings.getPingLogs().isEmpty())
@@ -132,7 +148,9 @@ class ConnTestControllerIntegrationTest {
     void testGetPingsIOException() throws Exception {
         // when
         when(connTestService.getPings()).thenThrow(IOException.class);
-        MockHttpServletRequestBuilder requestBuilder = get("/pings");
+        MockHttpServletRequestBuilder requestBuilder = TestUtils.addCustomSessionId(
+                MockMvcRequestBuilders.get("/pings")
+        );
 
         // then assert
         mockMvc.perform(requestBuilder)
@@ -147,11 +165,13 @@ class ConnTestControllerIntegrationTest {
         when(connTestService.getPingsByDateTimeRange(START, END))
                 .thenReturn(pings);
 
-        // then assert
-        MockHttpServletRequestBuilder requestBuilder = get("/pings/{start}/{end}",
-                START.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
-                END.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+        MockHttpServletRequestBuilder requestBuilder = TestUtils.addCustomSessionId(
+                MockMvcRequestBuilders.get("/pings/{start}/{end}",
+                        START.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
+                        END.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
+        );
 
+        // then assert
         ResultActions resultActions = performRequestAndBasicAssertPingLogControllerResponse(requestBuilder, pings);
         if(!pings.getPingLogs().isEmpty())
             AssertHATEOASLinks(resultActions, pings.getPingLogs().get(0));
@@ -163,9 +183,12 @@ class ConnTestControllerIntegrationTest {
     void testGetPingsByDateTimeRangeIOException() throws Exception {
         // when
         when(connTestService.getPingsByDateTimeRange(any(), any())).thenThrow(IOException.class);
-        MockHttpServletRequestBuilder requestBuilder = get("/pings/{start}/{end}",
-                START.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
-                END.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+
+        MockHttpServletRequestBuilder requestBuilder = TestUtils.addCustomSessionId(
+                MockMvcRequestBuilders.get("/pings/{start}/{end}",
+                        START.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
+                        END.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
+        );
 
         // then assert
         mockMvc.perform(requestBuilder)
@@ -180,9 +203,11 @@ class ConnTestControllerIntegrationTest {
         when(connTestService.getPingsByIp(LOCAL_IP_ADDRESS))
                 .thenReturn(pings);
 
-        // then assert
-        MockHttpServletRequestBuilder requestBuilder = get("/pings/{ipAddress}", LOCAL_IP_ADDRESS);
+        MockHttpServletRequestBuilder requestBuilder = TestUtils.addCustomSessionId(
+                MockMvcRequestBuilders.get("/pings/{ipAddress}", LOCAL_IP_ADDRESS)
+        );
 
+        // then assert
         ResultActions resultActions = performRequestAndBasicAssertPingLogControllerResponse(requestBuilder, pings);
         if(!pings.getPingLogs().isEmpty())
             AssertHATEOASLinks(resultActions, pings.getPingLogs().get(0));
@@ -194,7 +219,10 @@ class ConnTestControllerIntegrationTest {
     void testGetPingsByIpIOException() throws Exception {
         // when
         when(connTestService.getPingsByIp(LOCAL_IP_ADDRESS)).thenThrow(IOException.class);
-        MockHttpServletRequestBuilder requestBuilder = get("/pings/{ipAddress}", LOCAL_IP_ADDRESS);
+
+        MockHttpServletRequestBuilder requestBuilder = TestUtils.addCustomSessionId(
+                MockMvcRequestBuilders.get("/pings/{ipAddress}", LOCAL_IP_ADDRESS)
+        );
 
         // then assert
         mockMvc.perform(requestBuilder)
@@ -209,12 +237,14 @@ class ConnTestControllerIntegrationTest {
         when(connTestService.getPingsByDateTimeRangeByIp(START, END, LOCAL_IP_ADDRESS))
                 .thenReturn(pings);
 
-        // then assert
-        MockHttpServletRequestBuilder requestBuilder = get("/pings/{ipAddress}/{start}/{end}",
-                LOCAL_IP_ADDRESS,
-                START.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
-                END.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+        MockHttpServletRequestBuilder requestBuilder = TestUtils.addCustomSessionId(
+                MockMvcRequestBuilders.get("/pings/{ipAddress}/{start}/{end}",
+                        LOCAL_IP_ADDRESS,
+                        START.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
+                        END.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
+        );
 
+        // then assert
         ResultActions resultActions = performRequestAndBasicAssertPingLogControllerResponse(requestBuilder, pings);
         if(!pings.getPingLogs().isEmpty())
             AssertHATEOASLinks(resultActions, pings.getPingLogs().get(0));
@@ -226,10 +256,13 @@ class ConnTestControllerIntegrationTest {
     void testGetPingsByDateTimeRangeByIpIOException() throws Exception {
         // when
         when(connTestService.getPingsByDateTimeRangeByIp(any(), any(), anyString())).thenThrow(IOException.class);
-        MockHttpServletRequestBuilder requestBuilder = get("/pings/{ipAddress}/{start}/{end}",
-                LOCAL_IP_ADDRESS,
-                START.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
-                END.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+
+        MockHttpServletRequestBuilder requestBuilder = TestUtils.addCustomSessionId(
+                MockMvcRequestBuilders.get("/pings/{ipAddress}/{start}/{end}",
+                        LOCAL_IP_ADDRESS,
+                        START.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
+                        END.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
+        );
 
         // then assert
         mockMvc.perform(requestBuilder)
@@ -243,9 +276,11 @@ class ConnTestControllerIntegrationTest {
         when(connTestService.getPingsLostAvgByIp(LOCAL_IP_ADDRESS))
                 .thenReturn(BigDecimal.valueOf(0.3));
 
-        // then assert
-        MockHttpServletRequestBuilder requestBuilder = get("/pings/{ipAddress}/avg", LOCAL_IP_ADDRESS);
+        MockHttpServletRequestBuilder requestBuilder = TestUtils.addCustomSessionId(
+                MockMvcRequestBuilders.get("/pings/{ipAddress}/avg", LOCAL_IP_ADDRESS)
+        );
 
+        // then assert
         ResultActions resultActions = mockMvc.perform(requestBuilder)
                 .andExpect( // [' and '] are meant for escaping the '.' due to json navigation errors
                     jsonPath("$._links.['%s'].href"
@@ -264,7 +299,10 @@ class ConnTestControllerIntegrationTest {
     void testGetPingsLostAvgByIpIOException() throws Exception {
         // when
         when(connTestService.getPingsLostAvgByIp(LOCAL_IP_ADDRESS)).thenThrow(IOException.class);
-        MockHttpServletRequestBuilder requestBuilder = get("/pings/{ipAddress}/avg", LOCAL_IP_ADDRESS);
+
+        MockHttpServletRequestBuilder requestBuilder = TestUtils.addCustomSessionId(
+                MockMvcRequestBuilders.get("/pings/{ipAddress}/avg", LOCAL_IP_ADDRESS)
+        );
 
         // then assert
         mockMvc.perform(requestBuilder)
@@ -278,12 +316,14 @@ class ConnTestControllerIntegrationTest {
         when(connTestService.getPingsLostAvgByDateTimeRangeByIp(START, END, LOCAL_IP_ADDRESS))
                 .thenReturn(BigDecimal.valueOf(0.3));
 
-        // then assert
-        MockHttpServletRequestBuilder requestBuilder = get("/pings/{ipAddress}/avg/{start}/{end}",
-                LOCAL_IP_ADDRESS,
-                START.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
-                END.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+        MockHttpServletRequestBuilder requestBuilder = TestUtils.addCustomSessionId(
+                MockMvcRequestBuilders.get("/pings/{ipAddress}/avg/{start}/{end}",
+                        LOCAL_IP_ADDRESS,
+                        START.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
+                        END.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
+        );
 
+        // then assert
         ResultActions resultActions = mockMvc.perform(requestBuilder)
                 .andExpect( // [' and '] are meant for escaping the '.' due to json navigation errors
                     jsonPath("$._links.['%s'].href"
@@ -303,10 +343,13 @@ class ConnTestControllerIntegrationTest {
     void testGetPingsLostAvgByDateTimeRangeByIp() throws Exception {
         // when
         when(connTestService.getPingsLostAvgByDateTimeRangeByIp(any(), any(), anyString())).thenThrow(IOException.class);
-        MockHttpServletRequestBuilder requestBuilder = get("/pings/{ipAddress}/avg/{start}/{end}",
-                LOCAL_IP_ADDRESS,
-                START.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
-                END.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+
+        MockHttpServletRequestBuilder requestBuilder = TestUtils.addCustomSessionId(
+                MockMvcRequestBuilders.get("/pings/{ipAddress}/avg/{start}/{end}",
+                        LOCAL_IP_ADDRESS,
+                        START.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
+                        END.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
+        );
 
         // then assert
         mockMvc.perform(requestBuilder)
