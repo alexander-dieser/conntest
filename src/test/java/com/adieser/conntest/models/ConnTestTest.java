@@ -1,7 +1,7 @@
 package com.adieser.conntest.models;
 
 import com.adieser.conntest.models.utils.Reachable;
-import com.adieser.utils.PingLogUtils;
+import com.adieser.utils.TestUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;

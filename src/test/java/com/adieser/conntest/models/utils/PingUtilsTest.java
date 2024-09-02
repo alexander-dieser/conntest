@@ -13,7 +13,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.stream.Stream;
 
-import static com.adieser.utils.PingLogUtils.LOCAL_IP_ADDRESS;
+import static com.adieser.utils.TestUtils.LOCAL_IP_ADDRESS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
