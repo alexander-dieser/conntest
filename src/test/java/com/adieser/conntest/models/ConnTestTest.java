@@ -14,8 +14,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.stream.Stream;
 
 import static com.adieser.conntest.models.ConnTest.PING_SESSION_INTERRUPTED_MSG;
-import static com.adieser.utils.PingLogUtils.DEFAULT_PING_TIME;
-import static com.adieser.utils.PingLogUtils.LOCAL_IP_ADDRESS;
+import static com.adieser.utils.TestUtils.DEFAULT_PING_TIME;
+import static com.adieser.utils.TestUtils.LOCAL_IP_ADDRESS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.ArgumentMatchers.any;
@@ -66,7 +66,7 @@ class ConnTestTest {
     @Test
     @SuppressWarnings("squid:S2925")
     void testPingSessionSuccess() throws InterruptedException {
-        PingLog defaultPingLog = PingLogUtils.getDefaultPingLog();
+        PingLog defaultPingLog = TestUtils.getDefaultPingLog();
 
         // when
         ConnTest underTestSpy = spy(new ConnTest(executorService, LOCAL_IP_ADDRESS, logger, pingLogRepository, pingUtils));

@@ -27,11 +27,11 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import static com.adieser.conntest.models.CsvPingLogRepository.PING_LOG_NAME;
-import static com.adieser.utils.PingLogUtils.CLOUD_IP_ADDRESS;
-import static com.adieser.utils.PingLogUtils.DEFAULT_LOG_DATE_TIME;
-import static com.adieser.utils.PingLogUtils.DEFAULT_PING_TIME;
-import static com.adieser.utils.PingLogUtils.LOCAL_IP_ADDRESS;
-import static com.adieser.utils.PingLogUtils.getDefaultPingLog;
+import static com.adieser.utils.TestUtils.CLOUD_IP_ADDRESS;
+import static com.adieser.utils.TestUtils.DEFAULT_LOG_DATE_TIME;
+import static com.adieser.utils.TestUtils.DEFAULT_PING_TIME;
+import static com.adieser.utils.TestUtils.LOCAL_IP_ADDRESS;
+import static com.adieser.utils.TestUtils.getDefaultPingLog;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
