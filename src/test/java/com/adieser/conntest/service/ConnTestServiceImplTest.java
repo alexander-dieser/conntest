@@ -422,6 +422,18 @@ class ConnTestServiceImplTest {
         assertEquals(expected, testResult);
     }
 
+    @Test
+    void testClearPinglogFile() throws InterruptedException {
+        // when
+        ConnTestServiceImpl underTest = new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository);
+
+        // then
+        underTest.clearPingLogFile();
+
+        // assert
+        verify(pingLogRepository, times(1)).clearPingLogFile();
+    }
+
     static Stream<Boolean> areTestsRunningProvider() {
         return Stream.of(
                 true,

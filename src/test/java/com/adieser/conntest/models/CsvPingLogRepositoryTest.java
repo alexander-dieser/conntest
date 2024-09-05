@@ -25,10 +25,12 @@ import java.util.stream.Stream;
 import static com.adieser.utils.TestUtils.CLOUD_IP_ADDRESS;
 import static com.adieser.utils.TestUtils.LOCAL_IP_ADDRESS;
 import static com.adieser.utils.TestUtils.getDefaultPingLog;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
@@ -52,11 +54,6 @@ class CsvPingLogRepositoryTest {
     @Mock
     CSVWriter cvsFileWriterMock;
 
-    /**
-     * Success ping save:
-     * Propósito: Verificar si el método guarda correctamente un objeto PingLog.
-     * Método: Proporciona un PingLog válido y asegúrate de que no se lancen excepciones.
-     */
     @ParameterizedTest
     @MethodSource("successPingLogProvider")
     void testSavePingLogSuccess(PingLog pingLog)
@@ -64,7 +61,7 @@ class CsvPingLogRepositoryTest {
         // when
         CsvPingLogRepository underTestSpy = spy(new CsvPingLogRepository("test", logger));
 
-        doReturn(fileWriterMock).when(underTestSpy).getFileWriter();
+        doReturn(fileWriterMock).when(underTestSpy).getFileWriter(anyBoolean());
         when(underTestSpy.getCsvWriter(fileWriterMock)).thenReturn(cvsFileWriterMock);
         when(underTestSpy.getStatefulBeanToCsv(cvsFileWriterMock)).thenReturn(sbcMock);
 
@@ -75,11 +72,6 @@ class CsvPingLogRepositoryTest {
         verify(sbcMock, times(1)).write(pingLog);
     }
 
-    /**
-     * Prueba de Guardado con Ruta No Válida:
-     * Propósito: Verificar si el método maneja adecuadamente una ruta de archivo no válida.
-     * Método: Proporciona un PingLog válido y una ruta de archivo incorrecta, y asegúrate de que se maneje la excepción correctamente.
-     */
     @Test
     void testSavePingLogInvalidPath() {
         // when
@@ -91,36 +83,26 @@ class CsvPingLogRepositoryTest {
         verify(logger, times(1)).error(eq(CsvPingLogRepository.SAVE_PING_ERROR_MSG), any(FileNotFoundException.class));
     }
 
-    /**
-     * Prueba de Manejo de Excepción (IOException):
-     * Propósito: Verificar si el método maneja adecuadamente una excepción de tipo IOException.
-     * Método: Configura un escenario donde se provoque una excepción de tipo IOException al intentar escribir en el archivo.
-     */
     @Test
     void testSavePingLogIOException() throws IOException {
         // when
         PingLog mockPingLog = mock(PingLog.class);
         CsvPingLogRepository underTestSpy = spy(new CsvPingLogRepository("test", logger));
 
-        doThrow(new IOException()).when(underTestSpy).getFileWriter();
+        doThrow(new IOException()).when(underTestSpy).getFileWriter(anyBoolean());
 
         // then assert
         assertThrows(InterruptedException.class, () -> underTestSpy.savePingLog(mockPingLog));
         verify(logger, times(1)).error(eq(CsvPingLogRepository.SAVE_PING_ERROR_MSG), any(IOException.class));
     }
 
-    /**
-     * Prueba de Manejo de Excepción (CsvRequiredFieldEmptyException):
-     * Propósito: Verificar si el método maneja adecuadamente una excepción de tipo CsvRequiredFieldEmptyException.
-     * Método: Configura un escenario donde se provoque una excepción de tipo CsvRequiredFieldEmptyException al intentar escribir en el archivo.
-     */
     @ParameterizedTest
     @MethodSource("statefulBeanToCsvExceptionsProvider")
     void testSavePingLogStatefulBeanToCsvExceptions(Class<? extends Throwable> clazz) throws IOException, CsvRequiredFieldEmptyException, CsvDataTypeMismatchException {
         // when
         PingLog mockPingLog = mock(PingLog.class);
         CsvPingLogRepository underTestSpy = spy(new CsvPingLogRepository("test", logger));
-        doReturn(fileWriterMock).when(underTestSpy).getFileWriter();
+        doReturn(fileWriterMock).when(underTestSpy).getFileWriter(anyBoolean());
         when(underTestSpy.getCsvWriter(fileWriterMock)).thenReturn(cvsFileWriterMock);
         doThrow(clazz).when(sbcMock).write(mockPingLog);
         when(underTestSpy.getStatefulBeanToCsv(cvsFileWriterMock)).thenReturn(sbcMock);
@@ -250,6 +232,35 @@ class CsvPingLogRepositoryTest {
             assertEquals(pingLog, pingLogsByIpStream.toList().get(0));
         else
             assertTrue(pingLogsByIpStream.toList().isEmpty());
+    }
+
+    @Test
+    void clearPingLogFile_Success() throws Exception {
+        // when
+        CsvPingLogRepository underTestSpy = spy(new CsvPingLogRepository("test", logger));
+        doReturn(fileWriterMock).when(underTestSpy).getFileWriter(false);
+
+        //then
+        assertDoesNotThrow(underTestSpy::clearPingLogFile);
+
+        // assert
+        verify(fileWriterMock).write("");
+        verify(fileWriterMock).flush();
+        verify(fileWriterMock).close();
+    }
+
+    @Test
+    void clearPingLogFile_IOExceptionThrown() throws Exception {
+        // when
+        CsvPingLogRepository underTestSpy = spy(new CsvPingLogRepository("test", logger));
+        doReturn(fileWriterMock).when(underTestSpy).getFileWriter(false);
+        doThrow(new IOException("Test exception")).when(fileWriterMock).write("");
+
+        InterruptedException exception = assertThrows(InterruptedException.class,
+                underTestSpy::clearPingLogFile);
+
+        assertEquals(CsvPingLogRepository.CLEAN_PINGLOG_FILE_MSG, exception.getMessage());
+        verify(logger).error(eq(CsvPingLogRepository.CLEAN_PINGLOG_FILE_MSG), any(IOException.class));
     }
 
     static Stream<PingLog> successPingLogProvider() {

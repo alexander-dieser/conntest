@@ -36,6 +36,7 @@ import static com.adieser.utils.TestUtils.getDefaultPingLog;
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -54,8 +55,8 @@ class ConnTestControllerIntegrationTest {
     @MockBean
     private ConnTestService connTestService;
 
-    private final LocalDateTime START = DEFAULT_LOG_DATE_TIME.minusHours(1);
-    private final LocalDateTime END = DEFAULT_LOG_DATE_TIME.plusHours(1);
+    private static final LocalDateTime START = DEFAULT_LOG_DATE_TIME.minusHours(1);
+    private static final LocalDateTime END = DEFAULT_LOG_DATE_TIME.plusHours(1);
 
     @Test
     void testLocalIspCloud() throws Exception {
@@ -120,7 +121,10 @@ class ConnTestControllerIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$._links.startTestSession.href")
                         .value(linkTo(methodOn(ConnTestController.class)
-                                .testLocalIspCloud()).toString()));
+                                .testLocalIspCloud()).toString()))
+                .andExpect(jsonPath("$._links.clearPinglogFile.href")
+                        .value(linkTo(methodOn(ConnTestController.class)
+                                .clearPingLogs()).toString()));
 
         // assert
         verify(connTestService, times(1)).stopTests();
@@ -355,6 +359,29 @@ class ConnTestControllerIntegrationTest {
         mockMvc.perform(requestBuilder)
                 .andExpect(status().is5xxServerError())
                 .andExpect(content().string("Internal Server Error"));
+    }
+
+    @Test
+    void testClearPingLogs() throws InterruptedException {
+        // when
+        doNothing().when(connTestService).clearPingLogFile();
+
+        MockHttpServletRequestBuilder requestBuilder = TestUtils.addCustomSessionId(
+                MockMvcRequestBuilders.delete("/pings")
+        );
+
+        // then assert
+        try {
+            mockMvc.perform(requestBuilder)
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$._links.startTestSession.href")
+                            .value(linkTo(methodOn(ConnTestController.class)
+                                    .testLocalIspCloud()).toString()));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        verify(connTestService, times(1)).clearPingLogFile();
     }
 
     private ResultActions performRequestAndBasicAssertPingLogControllerResponse(MockHttpServletRequestBuilder requestBuilder,
