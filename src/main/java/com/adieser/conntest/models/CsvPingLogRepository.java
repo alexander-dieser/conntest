@@ -35,6 +35,7 @@ import java.util.stream.Stream;
  */
 public class CsvPingLogRepository implements PingLogRepository {
     public static final String SAVE_PING_ERROR_MSG = "Save Ping error";
+    public static final String CLEAN_PINGLOG_FILE_MSG = "Clear pinglog file error";
     public static final String PING_LOG_NAME = "ping.log";
     private final String path;
 
@@ -47,7 +48,7 @@ public class CsvPingLogRepository implements PingLogRepository {
 
     @Override
     public void savePingLog(PingLog pingLog) throws InterruptedException {
-        try (Writer writer  = getFileWriter()) {
+        try (Writer writer  = getFileWriter(true)) {
             CSVWriter csvWriter = getCsvWriter(writer);
             StatefulBeanToCsv<PingLog> sbc = getStatefulBeanToCsv(csvWriter);
 
@@ -58,8 +59,8 @@ public class CsvPingLogRepository implements PingLogRepository {
         }
     }
 
-    FileWriter getFileWriter() throws IOException {
-        return new FileWriter(path + "/" + PING_LOG_NAME, true);
+    FileWriter getFileWriter(boolean append) throws IOException {
+        return new FileWriter(path + "/" + PING_LOG_NAME, append);
     }
 
     CSVWriter getCsvWriter(Writer writer) {
@@ -131,6 +132,17 @@ public class CsvPingLogRepository implements PingLogRepository {
                     BigDecimal.valueOf(pingLogsInDateTimeRange.size()),
                     2,
                     RoundingMode.CEILING);
+    }
+
+    @Override
+    public void clearPingLogFile() throws InterruptedException {
+        try (Writer writer  = getFileWriter(false)) {
+            writer.write("");
+            writer.flush();
+        } catch (IOException e) {
+            logger.error(CLEAN_PINGLOG_FILE_MSG, e);
+            throw new InterruptedException(CLEAN_PINGLOG_FILE_MSG);
+        }
     }
 
     /**

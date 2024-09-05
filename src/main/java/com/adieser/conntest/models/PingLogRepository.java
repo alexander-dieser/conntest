@@ -65,4 +65,8 @@ public interface PingLogRepository {
      */
     BigDecimal findLostPingLogsAvgByDateTimeRangeByIp(LocalDateTime start, LocalDateTime end, String ipAddress) throws IOException;
 
+    /**
+     * Clear all pings from the pinglog file
+     */
+    void clearPingLogFile() throws InterruptedException;
 }

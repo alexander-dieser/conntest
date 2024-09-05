@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -85,14 +86,26 @@ public class ConnTestController {
     /**
      * stop all the test sessions
      */
+    @SuppressWarnings({"java:S2142"})
     @PostMapping(value = "/stop-tests", produces={"application/json"})
     @Operation(summary = "Stop all the test sessions")
     public ResponseEntity<PingTestResponse> stopTests() {
         connTestService.stopTests();
 
         PingTestResponse response = new PingTestResponse();
-        response.add(linkTo(methodOn(ConnTestController.class).testLocalIspCloud())
-                .withRel(HATEOASLinkRelValueTemplates.START_TEST_SESSION));
+        try {
+            response.add(
+                    linkTo(methodOn(ConnTestController.class).testLocalIspCloud())
+                            .withRel(HATEOASLinkRelValueTemplates.START_TEST_SESSION),
+                    linkTo(methodOn(ConnTestController.class).clearPingLogs())
+                            .withRel(HATEOASLinkRelValueTemplates.CLEAR_PINGLOG_FILE)
+            );
+        } catch (InterruptedException ignored) {
+            /*
+                dummy exception thrown by the methods in the HATEOAS links, methods that are never executed
+                in that code block, they serve only as reference to the links
+            */
+        }
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -271,6 +284,18 @@ public class ConnTestController {
                 averageResult,
                 HttpStatus.OK
         );
+    }
+
+    @DeleteMapping("/pings")
+    @Operation(summary = "Clear the pinglog file")
+    public ResponseEntity<PingTestResponse> clearPingLogs() throws InterruptedException {
+        connTestService.clearPingLogFile();
+
+        PingTestResponse response = new PingTestResponse();
+        response.add(linkTo(methodOn(ConnTestController.class).testLocalIspCloud())
+                .withRel(HATEOASLinkRelValueTemplates.START_TEST_SESSION));
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     private static void addHATEOASLinksForPingLogsReturningEndpoints(PingSessionExtract pings) {

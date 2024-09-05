@@ -132,6 +132,11 @@ public class ConnTestServiceImpl implements ConnTestService {
                 .toList();
     }
 
+    @Override
+    public void clearPingLogFile() throws InterruptedException {
+        pingLogRepository.clearPingLogFile();
+    }
+
     /**
      * Create the ping session results formatted as {@link PingSessionExtract}
      * @param pingLogs List of ping sessions results
