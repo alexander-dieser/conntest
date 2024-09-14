@@ -11,4 +11,5 @@ public class HATEOASLinkRelValueTemplates {
     public static final String GET_30_MINS_NEIGHBORHOOD_BY_IP = "get30MinsNeighborhoodByIP-%s";
     public static final String GET_LOST_AVG_BY_IP = "getLostAvgByIP-%s";
     public static final String GET_30_MINS_NEIGHBORHOOD_LOST_AVG_BY_IP = "get30MinsNeighborhoodLostAvgByIP-%s";
+    public static final String CLEAR_PINGLOG_FILE = "clearPinglogFile";
 }

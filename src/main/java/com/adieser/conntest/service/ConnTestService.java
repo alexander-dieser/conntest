@@ -78,4 +78,9 @@ public interface ConnTestService {
      * @return list of IP addresses
      */
     List<String> getIpAddressesFromActiveTests();
+
+    /**
+     * Remove all the entries from the current pinglog file
+     */
+    void clearPingLogFile() throws InterruptedException;
 }

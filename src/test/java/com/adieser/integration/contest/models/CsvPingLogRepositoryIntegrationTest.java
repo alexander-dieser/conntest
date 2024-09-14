@@ -183,6 +183,14 @@ class CsvPingLogRepositoryIntegrationTest{
             assertEquals(BigDecimal.ZERO, lostPingLogsAvgByIP, "Wrong average");
     }
 
+    @Test
+    void clearPingLogFile_Success() throws Exception {
+        writePingLog();
+        csvPingLogRepository.clearPingLogFile();
+
+        assertEquals(0, readPingLog().size(), "Failed to clear ping log file");
+    }
+
     /**
      * Create the directories and ping.log file
      */
