@@ -7,26 +7,29 @@
 
 /* Table and labels vbox style */
 .table-vbox {
-    -fx-min-width: 250px;
-    -fx-pref-width: 550px;
-    -fx-padding: 0px 10px 0px 10px;
-    -fx-max-width: 350px;
-    -fx-margin: 250px 0px 0px 0px;
+    -fx-alignment: center;
+    -fx-min-width: 450px;
+    -fx-max-width: 650px;
+    -fx-pref-width: 600px;
+    -fx-padding: 0px 0px 0px 0px;
+
+    -fx-margin: 250px 10px 10px 10px;
 }
 
 /* Table view style */
 .table {
     -fx-border-collapse: collapse;
-    -fx-width: 100%;
+
     -fx-border-width: 0;
-    -fx-background-color: #e8e8e8f4;
+    -fx-background-color: #ffffff;
     -fx-background-radius: 7px 7px 7px 7px;
-    -fx-spacing: 20px;
-    -fx-margin: 10px 10px 0px 10px;
+
+    -fx-margin: 0px 10px 0px 10px;
     -fx-alignment: center;
 
-    -fx-pref-width: 100%;
+
     -fx-min-height: 300px;
+
 
 }
 
@@ -60,6 +63,17 @@
     -fx-mouse-transparent: true;
 }
 
+.table-view:row-selection .table-row-cell:filled:hover {
+    -fx-background-color: rgba(9, 92, 138, 0);
+}
+
+.table-view:row-selection .table-row-cell:filled:selected{
+    -fx-background-color: transparent;
+}
+.table-view:row-selection .table-row-cell:filled:selected:hover {
+    -fx-background-color: transparent;
+}
+
 .table .table-row-cell:nth-child(even) {
     -fx-background-color: #f2f2f2;
 }
@@ -88,4 +102,46 @@
 }
 .table-view .virtual-flow .scroll-bar:horizontal .thumb {
     -fx-background-color:  #8a8a8a;
+}
+
+
+/* Footer Table view style */
+.footer_table {
+    -fx-border-collapse: collapse;
+
+    -fx-border-width: 0;
+    -fx-background-color: #ffffff;
+
+    -fx-margin: 0px 10px 10px 10px;
+    -fx-alignment: center;
+
+
+    -fx-max-height: 10px;
+}
+
+.footer_table .column-header-background .filler {
+    -fx-background-color: transparent;
+}
+
+.footer_table .corner {
+    -fx-background-color: transparent;
+}
+
+.footer_table .column-header-background {
+    -fx-background-color: linear-gradient(to bottom, #095c8acc, #1b6b9acc);
+    -fx-background-radius: 0px 0px 7px 7px;
+    -fx-text-fill: #ffffff;
+}
+
+.footer_table .column-header {
+    -fx-background-color: transparent;
+}
+
+.footer_table .column-header-background .label{
+    -fx-background-color: transparent;
+    -fx-text-fill: #ffffff;
+}
+
+.footer_table .placeholder {
+    -fx-text-fill: #ffffff;
 }
