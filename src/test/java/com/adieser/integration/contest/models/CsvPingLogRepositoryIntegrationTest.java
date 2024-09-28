@@ -140,6 +140,37 @@ class CsvPingLogRepositoryIntegrationTest{
         assertEquals(1, pingAmount, "No ping found");
     }
 
+    @Test
+    void testFindLostPingsByIp() throws IOException {
+        writePingLog(DEFAULT_LOG_DATE_TIME, LOCAL_IP_ADDRESS, -1);
+
+        long pingAmount = csvPingLogRepository.findLostPingsByIp(LOCAL_IP_ADDRESS).size();
+
+        assertEquals(1, pingAmount, "No ping found");
+    }
+
+    @Test
+    void testFindLostPingsByDateTimeRangeByIp() throws IOException {
+        // in-range success local ping
+        writePingLog();
+        // in-range lost local ping
+        writePingLog(DEFAULT_LOG_DATE_TIME, LOCAL_IP_ADDRESS, -1);
+        // in-range lost cloud ping
+        writePingLog(DEFAULT_LOG_DATE_TIME, CLOUD_IP_ADDRESS, -1);
+        // out-of-range lost local ping
+        writePingLog(LocalDateTime.of(2023, 10, 5, 0, 0, 0),
+                LOCAL_IP_ADDRESS,
+                -1);
+
+        long pingAmount = csvPingLogRepository.findLostPingsByDateTimeRangeByIp(
+                DEFAULT_LOG_DATE_TIME.minusHours(1), DEFAULT_LOG_DATE_TIME.plusHours(1),
+                LOCAL_IP_ADDRESS
+        ).size();
+
+        assertEquals(1, pingAmount, "No ping found");
+    }
+
+
     @ParameterizedTest
     @MethodSource("thereIsFailedPingsProvider")
     void testFindLostPingLogsAvgByIP(boolean emptyFailedPingLogs) throws IOException {

@@ -57,6 +57,11 @@ public interface ConnTestService {
      */
     PingSessionExtract getPingsByDateTimeRangeByIp(LocalDateTime start, LocalDateTime end, String ipAddress) throws IOException;
 
+
+    PingSessionExtract getLostPingsByIp(String ipAddress) throws IOException;
+
+    PingSessionExtract getLostPingsByDateTimeRangeByIp(LocalDateTime start, LocalDateTime end, String ipAddress) throws IOException;
+
     /**
      * Get the average of lost pings within a list of pings filtered by IP
      * @param ipAddress IP address use to filter the results

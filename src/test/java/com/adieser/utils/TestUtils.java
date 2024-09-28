@@ -21,6 +21,14 @@ public class TestUtils {
                 .build();
     }
 
+    public static PingLog getDefaultLostPingLog() {
+        return PingLog.builder()
+                .ipAddress(LOCAL_IP_ADDRESS)
+                .dateTime(DEFAULT_LOG_DATE_TIME)
+                .pingTime(-1L)
+                .build();
+    }
+
     /**
      * This method takes a MockHttpServletRequestBuilder object as input and returns a new MockHttpServletRequestBuilder
      * object with a custom session ID added to it.
