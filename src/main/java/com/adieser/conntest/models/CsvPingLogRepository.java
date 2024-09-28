@@ -101,6 +101,18 @@ public class CsvPingLogRepository implements PingLogRepository {
     }
 
     @Override
+    public List<PingLog> findLostPingsByIp(String ipAddress) throws IOException {
+        return getLostPingLogsStream(getPingLogsByIpStream(readAll().stream(), ipAddress))
+                .toList();
+    }
+
+    @Override
+    public List<PingLog> findLostPingsByDateTimeRangeByIp(LocalDateTime start, LocalDateTime end, String ipAddress) throws IOException {
+        return getLostPingLogsStream(getPingLogsByDateTimeRangeByIpStream(readAll().stream(), start, end, ipAddress))
+                .toList();
+    }
+
+    @Override
     public BigDecimal findLostPingLogsAvgByIP(String ipAddress) throws IOException {
 
         List<PingLog> pingLogsByIp = getPingLogsByIpStream(readAll().stream(), ipAddress).toList();

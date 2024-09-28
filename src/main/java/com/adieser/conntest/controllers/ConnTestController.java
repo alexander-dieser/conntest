@@ -216,6 +216,55 @@ public class ConnTestController {
         return new ResponseEntity<>(pings, httpStatus);
     }
 
+    @ApiResponse(responseCode = "200", description = "a list of lost pings along with the total count.")
+    @GetMapping(value = "/pings/{ipAddress}/lost", produces = {"application/json"})
+    @Operation(summary = "Get all the lost pings filtered by IP")
+    public ResponseEntity<PingSessionExtract> getLostPingsByIp(
+            @Parameter(
+                    description = "IP address used to filter the results",
+                    required = true)
+            @PathVariable String ipAddress) throws IOException {
+        HttpStatus httpStatus = HttpStatus.OK;
+        PingSessionExtract lostPings = connTestService.getLostPingsByIp(ipAddress);
+
+        if(lostPings.getPingLogs().isEmpty())
+            httpStatus = HttpStatus.NO_CONTENT;
+
+        addHATEOASLinksForPingLogsReturningEndpoints(lostPings);
+
+        return new ResponseEntity<>(lostPings, httpStatus);
+    }
+
+    @ApiResponse(responseCode = "200", description = "a list of lost pings along with the total count.")
+    @GetMapping(value = "/pings/{ipAddress}/lost/{start}/{end}", produces = {"application/json"})
+    @Operation(summary = "Get all the lost pings within a datetime range filtered by IP")
+    public ResponseEntity<PingSessionExtract> getLostPingsByDateTimeRangeByIp(
+            @Parameter(
+                    description = "IP address used to filter the results",
+                    required = true)
+            @PathVariable String ipAddress,
+            @Parameter(
+                    description = "Start date and time of the range",
+                    required = true)
+            @PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime start,
+            @Parameter(
+                    description = "End date in the range",
+                    required = true)
+            @PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime end) throws IOException {
+        HttpStatus httpStatus = HttpStatus.OK;
+        PingSessionExtract lostPings = connTestService.getLostPingsByDateTimeRangeByIp(start, end, ipAddress);
+
+        if(lostPings.getPingLogs().isEmpty())
+            httpStatus = HttpStatus.NO_CONTENT;
+
+        addHATEOASLinksForPingLogsReturningEndpoints(lostPings);
+
+        return new ResponseEntity<>(lostPings, httpStatus);
+    }
+
+
+
+
     /**
      * Get the average of lost pings within a list of pings filtered by IP
      * @param ipAddress IP address used to filter the results
