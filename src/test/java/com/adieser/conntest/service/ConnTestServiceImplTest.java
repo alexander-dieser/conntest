@@ -271,7 +271,8 @@ class ConnTestServiceImplTest {
         // when
         List<PingLog> lostPingLogs = List.of(TestUtils.getDefaultLostPingLog());
 
-        ConnTestServiceImpl underTest = new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository);
+        ConnTestServiceImpl underTest =
+                new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository, pingUtils);
         doReturn(lostPingLogs).when(pingLogRepository).findLostPingsByIp(LOCAL_IP_ADDRESS);
 
         // then
@@ -290,7 +291,8 @@ class ConnTestServiceImplTest {
         // when
         List<PingLog> lostPingLogs = List.of(TestUtils.getDefaultLostPingLog());
 
-        ConnTestServiceImpl underTest = new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository);
+        ConnTestServiceImpl underTest =
+                new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository, pingUtils);
         doReturn(lostPingLogs).when(pingLogRepository).findLostPingsByDateTimeRangeByIp(
                 START,
                 END,
