@@ -121,6 +121,28 @@ public class ConnTestServiceImpl implements ConnTestService {
     }
 
     @Override
+    public PingSessionExtract getLostPingsByIp(String ipAddress) throws IOException {
+        List<PingLog> pingLogs = pingLogRepository.findLostPingsByIp(ipAddress);
+
+        PingSessionExtract response = createBasicResponse(pingLogs);
+        response.setIpAddress(ipAddress);
+
+        return response;
+    }
+
+    @Override
+    public PingSessionExtract getLostPingsByDateTimeRangeByIp(LocalDateTime start, LocalDateTime end, String ipAddress) throws IOException {
+        List<PingLog> pingLogs = pingLogRepository.findLostPingsByDateTimeRangeByIp(start, end, ipAddress);
+
+        PingSessionExtract response = createBasicResponse(pingLogs);
+        response.setStartDate(start);
+        response.setEndDate(end);
+        response.setIpAddress(ipAddress);
+
+        return response;
+    }
+
+    @Override
     public BigDecimal getPingsLostAvgByIp(String ipAddress) throws IOException {
         return pingLogRepository.findLostPingLogsAvgByIP(ipAddress);
     }

@@ -32,6 +32,7 @@ import static com.adieser.conntest.controllers.responses.ErrorResponse.MAX_IP_AD
 import static com.adieser.utils.TestUtils.DEFAULT_LOG_DATE_TIME;
 import static com.adieser.utils.TestUtils.DEFAULT_PING_TIME;
 import static com.adieser.utils.TestUtils.LOCAL_IP_ADDRESS;
+import static com.adieser.utils.TestUtils.getDefaultLostPingLog;
 import static com.adieser.utils.TestUtils.getDefaultPingLog;
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
@@ -141,7 +142,7 @@ class ConnTestControllerIntegrationTest {
                 MockMvcRequestBuilders.get("/pings")
         );
 
-        ResultActions resultActions = performRequestAndBasicAssertPingLogControllerResponse(requestBuilder, pings);
+        ResultActions resultActions = performRequestAndBasicAssertPingLogControllerResponse(requestBuilder, pings, false);
         if(!pings.getPingLogs().isEmpty())
             AssertHATEOASLinks(resultActions, pings.getPingLogs().get(0));
 
@@ -176,7 +177,7 @@ class ConnTestControllerIntegrationTest {
         );
 
         // then assert
-        ResultActions resultActions = performRequestAndBasicAssertPingLogControllerResponse(requestBuilder, pings);
+        ResultActions resultActions = performRequestAndBasicAssertPingLogControllerResponse(requestBuilder, pings, false);
         if(!pings.getPingLogs().isEmpty())
             AssertHATEOASLinks(resultActions, pings.getPingLogs().get(0));
 
@@ -212,7 +213,7 @@ class ConnTestControllerIntegrationTest {
         );
 
         // then assert
-        ResultActions resultActions = performRequestAndBasicAssertPingLogControllerResponse(requestBuilder, pings);
+        ResultActions resultActions = performRequestAndBasicAssertPingLogControllerResponse(requestBuilder, pings, false);
         if(!pings.getPingLogs().isEmpty())
             AssertHATEOASLinks(resultActions, pings.getPingLogs().get(0));
 
@@ -249,7 +250,7 @@ class ConnTestControllerIntegrationTest {
         );
 
         // then assert
-        ResultActions resultActions = performRequestAndBasicAssertPingLogControllerResponse(requestBuilder, pings);
+        ResultActions resultActions = performRequestAndBasicAssertPingLogControllerResponse(requestBuilder, pings, false);
         if(!pings.getPingLogs().isEmpty())
             AssertHATEOASLinks(resultActions, pings.getPingLogs().get(0));
 
@@ -263,6 +264,81 @@ class ConnTestControllerIntegrationTest {
 
         MockHttpServletRequestBuilder requestBuilder = TestUtils.addCustomSessionId(
                 MockMvcRequestBuilders.get("/pings/{ipAddress}/{start}/{end}",
+                        LOCAL_IP_ADDRESS,
+                        START.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
+                        END.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
+        );
+
+        // then assert
+        mockMvc.perform(requestBuilder)
+                .andExpect(status().is5xxServerError())
+                .andExpect(content().string("Internal Server Error"));
+    }
+
+    @ParameterizedTest
+    @MethodSource("lostPingResponseProvider")
+    void testGetLostPingsByIp(PingSessionExtract pings) throws Exception {
+        // when
+        when(connTestService.getLostPingsByIp(LOCAL_IP_ADDRESS))
+                .thenReturn(pings);
+
+        MockHttpServletRequestBuilder requestBuilder = TestUtils.addCustomSessionId(
+                MockMvcRequestBuilders.get("/pings/{ipAddress}/lost", LOCAL_IP_ADDRESS)
+        );
+
+        // then assert
+        ResultActions resultActions =
+                performRequestAndBasicAssertPingLogControllerResponse(requestBuilder, pings, true);
+        if(!pings.getPingLogs().isEmpty())
+            AssertHATEOASLinks(resultActions, pings.getPingLogs().get(0));
+
+        verify(connTestService, times(1)).getLostPingsByIp(LOCAL_IP_ADDRESS);
+    }
+
+    @Test
+    void testGetLostPingsByIpIOException() throws Exception {
+        // when
+        when(connTestService.getLostPingsByIp(LOCAL_IP_ADDRESS)).thenThrow(IOException.class);
+
+        MockHttpServletRequestBuilder requestBuilder = TestUtils.addCustomSessionId(
+                MockMvcRequestBuilders.get("/pings/{ipAddress}/lost", LOCAL_IP_ADDRESS)
+        );
+
+        // then assert
+        mockMvc.perform(requestBuilder)
+                .andExpect(status().is5xxServerError())
+                .andExpect(content().string("Internal Server Error"));
+    }
+
+    @ParameterizedTest
+    @MethodSource("lostPingResponseProvider")
+    void getLostPingsByDateTimeRangeByIp(PingSessionExtract pings) throws Exception {
+        // when
+        when(connTestService.getLostPingsByDateTimeRangeByIp(START, END, LOCAL_IP_ADDRESS))
+                .thenReturn(pings);
+
+        MockHttpServletRequestBuilder requestBuilder = TestUtils.addCustomSessionId(
+                MockMvcRequestBuilders.get("/pings/{ipAddress}/lost/{start}/{end}",
+                        LOCAL_IP_ADDRESS,
+                        START.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
+                        END.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
+        );
+
+        // then assert
+        ResultActions resultActions = performRequestAndBasicAssertPingLogControllerResponse(requestBuilder, pings, true);
+        if(!pings.getPingLogs().isEmpty())
+            AssertHATEOASLinks(resultActions, pings.getPingLogs().get(0));
+
+        verify(connTestService, times(1)).getLostPingsByDateTimeRangeByIp(START, END, LOCAL_IP_ADDRESS);
+    }
+
+    @Test
+    void testGetLostPingsByDateTimeRangeByIpIOException() throws Exception {
+        // when
+        when(connTestService.getLostPingsByDateTimeRangeByIp(any(), any(), anyString())).thenThrow(IOException.class);
+
+        MockHttpServletRequestBuilder requestBuilder = TestUtils.addCustomSessionId(
+                MockMvcRequestBuilders.get("/pings/{ipAddress}/lost/{start}/{end}",
                         LOCAL_IP_ADDRESS,
                         START.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
                         END.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
@@ -385,7 +461,8 @@ class ConnTestControllerIntegrationTest {
     }
 
     private ResultActions performRequestAndBasicAssertPingLogControllerResponse(MockHttpServletRequestBuilder requestBuilder,
-                                                                                PingSessionExtract pings) throws Exception {
+                                                                                PingSessionExtract pings,
+                                                                                Boolean lost) throws Exception {
         String jsonFormatExpectedDate = DEFAULT_LOG_DATE_TIME.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
 
         ResultActions result;
@@ -402,7 +479,7 @@ class ConnTestControllerIntegrationTest {
                     .andExpect(jsonPath("$.pingLogs", hasSize(1)))
                     .andExpect(jsonPath("$.pingLogs[0].dateTime").value(jsonFormatExpectedDate))
                     .andExpect(jsonPath("$.pingLogs[0].ipAddress").value(LOCAL_IP_ADDRESS))
-                    .andExpect(jsonPath("$.pingLogs[0].pingTime").value(DEFAULT_PING_TIME));
+                    .andExpect(jsonPath("$.pingLogs[0].pingTime").value(lost ? -1L : DEFAULT_PING_TIME));
 
         return result;
     }
@@ -465,6 +542,13 @@ class ConnTestControllerIntegrationTest {
         );
     }
 
+    static Stream<PingSessionExtract> lostPingResponseProvider() {
+        return Stream.of(
+                getEmptyResponse(),
+                getLostPingResponse()
+        );
+    }
+
     static Stream<List<String>> ipAddressesProvider() {
         return Stream.of(
                 List.of("1.1.1.1", "2.2.2.2", "3.3.3.3"),
@@ -484,5 +568,12 @@ class ConnTestControllerIntegrationTest {
                         .amountOfPings(0)
                         .pingLogs(List.of())
                         .build();
+    }
+
+    private static PingSessionExtract getLostPingResponse() {
+        return PingSessionExtract.builder()
+                .amountOfPings(1)
+                .pingLogs(List.of(getDefaultLostPingLog()))
+                .build();
     }
 }

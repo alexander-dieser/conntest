@@ -69,4 +69,35 @@ public interface PingLogRepository {
      * Clear all pings from the pinglog file
      */
     void clearPingLogFile() throws InterruptedException;
+
+    /**
+     * Retrieves a list of lost ping logs for a specific IP address.
+     *
+     * <p>This method queries the datasource for all ping logs associated with the given IP address
+     * where the ping attempt was unsuccessful (i.e., the ping was "lost"). A lost ping typically
+     * indicates that the target host did not respond within the expected time frame.</p>
+     *
+     * @param ipAddress The IP address to search for, in string format (e.g., "192.168.1.1").
+     *                  This should be a valid IPv4 or IPv6 address.
+     * @return A List of PingLog objects representing the lost pings for the specified IP address.
+     *         The list will be empty if no lost pings are found for the given IP address.
+     *
+     * @see PingLog
+     */
+    List<PingLog> findLostPingsByIp(String ipAddress) throws IOException;
+
+    /**
+     * Retrieves a list of lost ping logs within a specific date and time range for a given IP address.
+     *
+     * @param start The start date and time of the range to search for lost pings.
+     * @param end The end date and time of the range to search for lost pings.
+     * @param ipAddress The IP address to search for, in string format (e.g., "192.168.1.1").
+     *                  This should be a valid IPv4 or IPv6 address.
+     * @return A List of PingLog objects representing the lost pings for the specified IP address
+     *         and date and time range. The list will be empty if no lost pings are found for the
+     *         given IP address within the specified date and time range.
+     *
+     * @see PingLog
+     */
+    List<PingLog> findLostPingsByDateTimeRangeByIp(LocalDateTime start, LocalDateTime end, String ipAddress) throws IOException;
 }

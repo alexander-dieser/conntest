@@ -5,6 +5,7 @@ import com.adieser.conntest.models.ConnTest;
 import com.adieser.conntest.models.PingLog;
 import com.adieser.conntest.models.PingLogRepository;
 import com.adieser.conntest.models.utils.Reachable;
+import com.adieser.utils.TestUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -262,6 +263,53 @@ class ConnTestServiceImplTest {
 
         // then assert
         assertThrows(IOException.class, () -> underTest.getPingsByDateTimeRangeByIp(START,END,LOCAL_IP_ADDRESS));
+    }
+
+
+    @Test
+    void testGetLostPingsByIp() throws IOException {
+        // when
+        List<PingLog> lostPingLogs = List.of(TestUtils.getDefaultLostPingLog());
+
+        ConnTestServiceImpl underTest = new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository);
+        doReturn(lostPingLogs).when(pingLogRepository).findLostPingsByIp(LOCAL_IP_ADDRESS);
+
+        // then
+        PingSessionExtract pings = underTest.getLostPingsByIp(LOCAL_IP_ADDRESS);
+
+        // assert
+        assertEquals(1, pings.getAmountOfPings());
+        PingLog pingLog = pings.getPingLogs().get(0);
+        assertEquals(-1L, pingLog.getPingTime());
+        assertEquals(DEFAULT_LOG_DATE_TIME, pingLog.getDateTime());
+        assertEquals(LOCAL_IP_ADDRESS, pingLog.getIpAddress());
+    }
+
+    @Test
+    void testGetLostPingsByDateTimeRangeByIp() throws IOException {
+        // when
+        List<PingLog> lostPingLogs = List.of(TestUtils.getDefaultLostPingLog());
+
+        ConnTestServiceImpl underTest = new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository);
+        doReturn(lostPingLogs).when(pingLogRepository).findLostPingsByDateTimeRangeByIp(
+                START,
+                END,
+                LOCAL_IP_ADDRESS
+        );
+
+        // then
+        PingSessionExtract pings = underTest.getLostPingsByDateTimeRangeByIp(
+                START,
+                END,
+                LOCAL_IP_ADDRESS
+        );
+
+        // assert
+        assertEquals(1, pings.getAmountOfPings());
+        PingLog pingLog = pings.getPingLogs().get(0);
+        assertEquals(-1L, pingLog.getPingTime());
+        assertEquals(DEFAULT_LOG_DATE_TIME, pingLog.getDateTime());
+        assertEquals(LOCAL_IP_ADDRESS, pingLog.getIpAddress());
     }
 
     @Test
