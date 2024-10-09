@@ -52,15 +52,19 @@ public class UiController {
     private ProgressIndicator progressIndicator;
     @FXML
     private ComboBox<Integer> timeChoiceBox;
-    Integer timechoice = 5;
+    private Integer timechoice = 5;
     @FXML
     private CheckBox dayFilterBox;
-
+    @FXML
+    private ScrollPane descriptionScroll;
     @FXML
     private VBox tablesVBox;
+    @FXML
+    private VBox tableVBox;
+    @FXML
+    private TableView<PingRow> tableView;
 
-    TableView<PingRow> tableView = new TableView<>();
-    TableView<String> footerTable = new TableView<>();
+    Boolean isTableviewSet = false;
 
     private final List<TableColumn<String, String>> pingCountColumnList = new ArrayList<>();
     private final List<TableColumn<String, String>> averageLostColumnList = new ArrayList<>();
@@ -117,7 +121,7 @@ public class UiController {
         connTestService.testLocalISPInternet();
         ipAddress = connTestService.getIpAddressesFromActiveTests();
 
-        if (tableView.getColumns().isEmpty()) setTables();
+        if(Boolean.FALSE.equals(isTableviewSet)) setTables();
 
         createExecutorService();
         startExecutorService(timechoice);
@@ -126,12 +130,14 @@ public class UiController {
     }
 
     /**
-     * Updates the visual controls by hiding the progress indicator and enabling the stop button.
+     * Updates the visual controls by hiding the progress indicator, the description scroll and enabling the stop button and table view
      */
     public void updateVisualControls(){
         Platform.runLater(() -> {
             progressIndicator.setVisible(false);
             stopButton.setDisable(false);
+            descriptionScroll.setVisible(false);
+            tableView.setVisible(true);
         });
     }
 
@@ -187,26 +193,33 @@ public class UiController {
     }
 
     /**
-     * Sets up the TableView and Footer Table to display ping data for multiple IPs, including a save button,
-     * and updates the UI.
+     * Sets up the TableView and Footer Table to display ping data for multiple IPs, including a save button
      */
     public void setTables() {
-        Platform.runLater(() -> tablesVBox.getChildren().clear());
-        averageLostColumnList.clear();
-        pingCountColumnList.clear();
+        // Limpiar contenido anterior de la tabla
+        Platform.runLater(() -> {
+                    tableView.getItems().clear();
+                    tableView.getColumns().clear();
 
-        // Table setup
+                    averageLostColumnList.clear();
+                    pingCountColumnList.clear();
+                });
+
+        // Configurar las columnas de la tabla principal
         TableColumn<PingRow, String> dateTimeColumn = new TableColumn<>("Date");
         dateTimeColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getDateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))));
         dateTimeColumn.setPrefWidth(150);
         TableColumn<PingRow, String> allPingTimeColumn = new TableColumn<>("Ping Time (ms)");
 
-        tableView.getColumns().add(dateTimeColumn);
-        tableView.getStyleClass().add("table");
-        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        tableView.setFocusTraversable(false);
+        Platform.runLater(() -> {
+                    tableView.getColumns().add(dateTimeColumn);
+                    tableView.getStyleClass().add("table");
+                    tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+                    tableView.setFocusTraversable(false);
+                });
 
-        // Footer table setup
+        // Configurar la tabla de pie (footerTable)
+        TableView<String> footerTable = new TableView<>();
         TableColumn<String, String> averageLostColumn = new TableColumn<>("Average Lost");
         averageLostColumn.setPrefWidth(150);
         TableColumn<String, String> pingCountColumn = new TableColumn<>("PingCount");
@@ -218,22 +231,31 @@ public class UiController {
         footerTable.getStyleClass().add("footer_table");
         footerTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
-        // Save button setup
+        // Botón Save
         Button saveButton = new Button("Save");
         saveButton.setOnAction(event -> saveLogs(dateTimeColumn, allPingTimeColumn));
         saveButton.getStyleClass().add("save-button");
 
-        //Ping columns and label columns setup
+        // Configurar las columnas de pings y etiquetas
         for (int i = 0; i < Math.min(ipAddress.size(), 3); i++) {
             buildPingsColumn(ipAddress.get(i), allPingTimeColumn, i);
-            setLabels();
+            setLabels(footerTable);
         }
-        tableView.getColumns().add(allPingTimeColumn);
 
-        //Get all together
-        VBox tableVBox = new VBox(tableView, footerTable,saveButton);
-        tableVBox.getStyleClass().add("table-vbox");
-        Platform.runLater(() -> tablesVBox.getChildren().add(tableVBox));
+
+        Platform.runLater(() -> {
+            tableView.getColumns().add(allPingTimeColumn);
+
+            tableVBox.getChildren().clear();
+            tableVBox.getChildren().add(tableView);
+            tableVBox.getChildren().add(footerTable);
+            tableVBox.getChildren().add(saveButton);
+            tableVBox.getStyleClass().add("table-vbox");
+
+            tablesVBox.getChildren().clear();
+            tablesVBox.getChildren().add(tableVBox);
+        });
+        isTableviewSet = true;
     }
 
     /**
@@ -256,10 +278,9 @@ public class UiController {
     }
 
     /**
-     * Builds a table view with labels for a specified IP address, including
-     * date and ping time columns, and a save button
+     * Set average lost and ping count labels for a specified IP address at the footer table
      */
-    private void setLabels() {
+    private void setLabels(TableView<String> footerTable) {
         TableColumn<String, String> resultALColumn = new TableColumn<>("");
         averageLostColumnList.add(resultALColumn);
         resultALColumn.setPrefWidth(150);
@@ -314,7 +335,12 @@ public class UiController {
     }
 
     /**
-     * Carga los registros de ping para cada dirección IP y los agrega a la tabla unificada.
+     * Loads the ping logs for the specified IP address and adds them to the provided list.
+     * If the day filter is selected, it retrieves logs within the current day's time range.
+     * Returns the number of pings for the session.
+     * @param ip The IP address for which to load logs.
+     * @param allPingLogs The list where the loaded logs will be added.
+     * @return The total number of pings for the session.
      */
     public long loadLogs(String ip, List<List<PingLog>> allPingLogs) throws IOException {
         PingSessionExtract pingLogs = !dayFilterBox.isSelected()
@@ -325,6 +351,12 @@ public class UiController {
         return pingLogs.getAmountOfPings();
     }
 
+    /**
+     * Combines the ping logs from multiple IPs by their timestamp into a single list of PingRow objects.
+     * Each PingRow contains the date and time, and the associated ping times for each IP.
+     * @param pingLogsByIp The list of ping logs, grouped by IP address.
+     * @return A list of PingRow objects, combining pings by timestamp.
+     */
     public List<PingRow> combinePingsByDateTime(List<List<PingLog>> pingLogsByIp) {
         Map<LocalDateTime, List<String>> combinedMap = new TreeMap<>();
 
@@ -333,12 +365,10 @@ public class UiController {
                 LocalDateTime dateTime = pingLog.getDateTime();
                 String pingTime = String.valueOf(pingLog.getPingTime());
 
-                // Si el dateTime ya está en el mapa, agregamos el tiempo de ping
                 combinedMap.putIfAbsent(dateTime, new ArrayList<>());
                 combinedMap.get(dateTime).add(pingTime);
             }
         }
-
         List<PingRow> pingRows = new ArrayList<>();
         for (Map.Entry<LocalDateTime, List<String>> entry : combinedMap.entrySet()) {
             LocalDateTime dateTime = entry.getKey();
@@ -353,14 +383,16 @@ public class UiController {
     }
 
     /**
-     * Obtiene el inicio del día actual.
+     * Returns the start of the current day (00:00:00).
+     * @return The start of the current day as a LocalDateTime.
      */
     private LocalDateTime getStartOfDay() {
         return LocalDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0);
     }
 
     /**
-     * Obtiene el final del día actual.
+     * Returns the end of the current day (23:59:59).
+     * @return The end of the current day as a LocalDateTime.
      */
     private LocalDateTime getEndOfDay() {
         return LocalDateTime.now().withHour(23).withMinute(59).withSecond(59).withNano(999999999);
