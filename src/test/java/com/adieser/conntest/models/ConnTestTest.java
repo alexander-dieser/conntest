@@ -1,5 +1,6 @@
 package com.adieser.conntest.models;
 
+import com.adieser.conntest.models.utils.Reachable;
 import com.adieser.utils.TestUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -9,9 +10,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.Logger;
 
-import java.io.IOException;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Stream;
 
@@ -21,12 +19,9 @@ import static com.adieser.utils.TestUtils.LOCAL_IP_ADDRESS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -36,17 +31,17 @@ import static org.mockito.Mockito.when;
 class ConnTestTest {
     @Mock
     Logger logger;
-
     @Mock
     ExecutorService executorService;
-
     @Mock
     PingLogRepository pingLogRepository;
+    @Mock
+    Reachable pingUtils;
 
     @Test
     void testStartPingSession() {
         // when
-        ConnTest underTest = new ConnTest(executorService, LOCAL_IP_ADDRESS, logger, pingLogRepository);
+        ConnTest underTest = new ConnTest(executorService, LOCAL_IP_ADDRESS, logger, pingLogRepository, pingUtils);
         doNothing().when(executorService).execute(any());
 
         // then
@@ -59,7 +54,7 @@ class ConnTestTest {
     @Test
     void testStopPingSession() {
         // when
-        ConnTest underTest = new ConnTest(executorService, LOCAL_IP_ADDRESS, logger, pingLogRepository);
+        ConnTest underTest = new ConnTest(executorService, LOCAL_IP_ADDRESS, logger, pingLogRepository, pingUtils);
 
         // then
         underTest.stopPingSession();
@@ -74,9 +69,9 @@ class ConnTestTest {
         PingLog defaultPingLog = TestUtils.getDefaultPingLog();
 
         // when
-        ConnTest underTestSpy = spy(new ConnTest(executorService, LOCAL_IP_ADDRESS, logger, pingLogRepository));
+        ConnTest underTestSpy = spy(new ConnTest(executorService, LOCAL_IP_ADDRESS, logger, pingLogRepository, pingUtils));
         doReturn(DEFAULT_PING_TIME).when(underTestSpy).ping();
-        when(underTestSpy.buildPingLog(DEFAULT_PING_TIME)).thenReturn(defaultPingLog);
+        when(underTestSpy.buildPingLog()).thenReturn(defaultPingLog);
         doNothing().when(pingLogRepository).savePingLog(any());
 
         // then
@@ -93,7 +88,7 @@ class ConnTestTest {
     @SuppressWarnings("squid:S2925")
     void testPingSessionInterruptedException() throws InterruptedException {
         // when
-        ConnTest underTestSpy = spy(new ConnTest(executorService, LOCAL_IP_ADDRESS, logger, pingLogRepository));
+        ConnTest underTestSpy = spy(new ConnTest(executorService, LOCAL_IP_ADDRESS, logger, pingLogRepository, pingUtils));
         doReturn(DEFAULT_PING_TIME).when(underTestSpy).ping();
         doNothing().when(pingLogRepository).savePingLog(any());
 
@@ -113,8 +108,8 @@ class ConnTestTest {
     @SuppressWarnings("squid:S2925")
     void testPing(boolean isReachable) {
         // when
-        ConnTest underTestSpy = spy(new ConnTest(executorService, LOCAL_IP_ADDRESS, logger, pingLogRepository));
-        when(underTestSpy.isReachable(LOCAL_IP_ADDRESS)).thenReturn(isReachable);
+        ConnTest underTestSpy = spy(new ConnTest(executorService, LOCAL_IP_ADDRESS, logger, pingLogRepository, pingUtils));
+        when(pingUtils.isReachable(LOCAL_IP_ADDRESS)).thenReturn(isReachable);
 
         // then
         long ping = underTestSpy.ping();
@@ -123,50 +118,6 @@ class ConnTestTest {
             ping != -1 means ping success, i.e. it is reachable
          */
         assertEquals(isReachable, ping != -1L);
-    }
-
-    @ParameterizedTest
-    @MethodSource("testPingSuccess")
-    void testIsReachable(boolean isReachable) throws IOException {
-        // when
-        ConnTest underTestSpy = spy(new ConnTest(executorService, LOCAL_IP_ADDRESS, logger, pingLogRepository));
-        InetAddress inet = mock(InetAddress.class);
-        when(inet.isReachable(anyInt())).thenReturn(isReachable);
-        when(underTestSpy.getInet(LOCAL_IP_ADDRESS)).thenReturn(inet);
-
-        // then
-        boolean reachable = underTestSpy.isReachable(LOCAL_IP_ADDRESS);
-
-        // assert
-        assertEquals(isReachable, reachable);
-    }
-
-    @Test
-    void testIsReachableIOException() throws IOException {
-        // when
-        ConnTest underTestSpy = spy(new ConnTest(executorService, LOCAL_IP_ADDRESS, logger, pingLogRepository));
-        InetAddress inet = mock(InetAddress.class);
-        when(inet.isReachable(anyInt())).thenThrow(IOException.class);
-        when(underTestSpy.getInet(LOCAL_IP_ADDRESS)).thenReturn(inet);
-
-        // then
-        underTestSpy.isReachable(LOCAL_IP_ADDRESS);
-
-        // assert
-        verify(logger, times(1)).error(anyString(), anyString(), any(IOException.class));
-    }
-
-    @Test
-    void testIsReachableUnknownHostException() throws UnknownHostException {
-        // when
-        ConnTest underTestSpy = spy(new ConnTest(executorService, LOCAL_IP_ADDRESS, logger, pingLogRepository));
-        when(underTestSpy.getInet(LOCAL_IP_ADDRESS)).thenThrow(UnknownHostException.class);
-
-        // then
-        underTestSpy.isReachable(LOCAL_IP_ADDRESS);
-
-        // assert
-        verify(logger, times(1)).error(anyString(), anyString(), any(UnknownHostException.class));
     }
 
     static Stream<Boolean> testPingSuccess() {

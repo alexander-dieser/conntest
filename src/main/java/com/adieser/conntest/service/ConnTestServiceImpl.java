@@ -5,8 +5,8 @@ import com.adieser.conntest.models.ConnTest;
 import com.adieser.conntest.models.PingLog;
 import com.adieser.conntest.models.PingLogRepository;
 import com.adieser.conntest.models.Pingable;
+import com.adieser.conntest.models.utils.Reachable;
 import org.slf4j.Logger;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
@@ -41,12 +41,17 @@ public class ConnTestServiceImpl implements ConnTestService {
 
     private final PingLogRepository pingLogRepository;
 
+    private final Reachable pingUtils;
+
     public ConnTestServiceImpl(ExecutorService threadPoolExecutor, Logger logger,
-                               TracertProvider tracertProvider, @Qualifier("csvPingLogRepository") PingLogRepository pingLogRepository) {
+                               TracertProvider tracertProvider,
+                               PingLogRepository pingLogRepository,
+                               Reachable pingUtils) {
         this.logger = logger;
         this.threadPoolExecutor = threadPoolExecutor;
         this.tracertProvider = tracertProvider;
         this.pingLogRepository = pingLogRepository;
+        this.pingUtils = pingUtils;
     }
 
     @Override
@@ -202,7 +207,7 @@ public class ConnTestServiceImpl implements ConnTestService {
      */
     List<ConnTest> getConnTestsFromIpAddresses(List<String> ipAddresses) {
         return ipAddresses.stream()
-                .map(s -> new ConnTest(threadPoolExecutor, s, logger, pingLogRepository))
+                .map(s -> new ConnTest(threadPoolExecutor, s, logger, pingLogRepository, pingUtils))
                 .toList();
     }
 

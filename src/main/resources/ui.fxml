@@ -105,7 +105,7 @@
             </HBox>
             <!-- FILTERS -->
             <Label text="Filters: "><VBox.margin><Insets bottom="5.0" /></VBox.margin></Label>
-            <HBox prefHeight="26.0" prefWidth="1000.0">
+            <HBox prefHeight="26.0" prefWidth="1000.0" spacing="9">
                 <CheckBox fx:id="dayFilterBox" mnemonicParsing="false" text=" Current day only" />
             </HBox>
          <padding>
@@ -115,8 +115,8 @@
 
         <!-- 0  1 -->
         <!-- Description and Tables -->
-        <HBox fx:id="tablesHBox" alignment="TOP_CENTER" prefHeight="600.0" prefWidth="1000.0" GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.vgrow="ALWAYS" HBox.hgrow="ALWAYS">
-            <ScrollPane id="descriptionScroll" fitToWidth="true">
+        <VBox fx:id="tablesVBox" alignment="TOP_CENTER" prefHeight="700.0" prefWidth="1000.0" GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.vgrow="ALWAYS" HBox.hgrow="ALWAYS">
+            <ScrollPane fx:id="descriptionScroll" fitToWidth="true">
                 <VBox spacing="6" style="-fx-background-color: white;  -fx-border-color: transparent; -fx-background-radius: 7px 7px 7px 7px;" VBox.vgrow="ALWAYS">
                     <Label styleClass="description-header-label" text="ConnTest Application User Manual" />
                     <Label styleClass="description-content-label" text="Welcome to the ConnTest Application! This application is designed to help you test and monitor the connectivity to various IP addresses by performing ping tests. The application automatically discovers the hops to local, ISP, and Google IP addresses, and displays the results in a user-friendly interface." wrapText="true" />
@@ -146,10 +146,13 @@
                     <Label styleClass="description-section-header" text="Thank you for using the ConnTest Application." wrapText="true" />
                 </VBox>
             </ScrollPane>
-            <GridPane.margin>
-                <Insets top="15.0" />
-            </GridPane.margin>
-        </HBox>
+            <VBox fx:id="tableVBox" prefHeight="200.0" prefWidth="100.0">
+                <TableView fx:id="tableView" prefHeight="5.0" prefWidth="5.0" visible="false"/>
+            </VBox>
+                <GridPane.margin>
+                    <Insets top="15.0" />
+                </GridPane.margin>
+        </VBox>
 
 
       <VBox.margin>

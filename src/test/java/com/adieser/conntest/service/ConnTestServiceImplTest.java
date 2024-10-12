@@ -4,6 +4,7 @@ import com.adieser.conntest.controllers.responses.PingSessionExtract;
 import com.adieser.conntest.models.ConnTest;
 import com.adieser.conntest.models.PingLog;
 import com.adieser.conntest.models.PingLogRepository;
+import com.adieser.conntest.models.utils.Reachable;
 import com.adieser.utils.TestUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -58,11 +59,14 @@ class ConnTestServiceImplTest {
     PingLogRepository pingLogRepository;
     @Mock
     TracertProvider tracertProvider;
+    @Mock
+    Reachable pingUtils;
 
     @Test
     void testTestLocalISPInternet() {
         // when
-        ConnTestServiceImpl underTest = spy(new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository));
+        ConnTestServiceImpl underTest =
+                spy(new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository, pingUtils));
         List<String> localAndISPIpAddresses = new ArrayList<>(Arrays.asList(LOCAL_IP_ADDRESS, ISP_IP_ADDRESS));
         List<ConnTest> mockConnTests = List.of(mock(ConnTest.class),mock(ConnTest.class),mock(ConnTest.class));
 
@@ -87,7 +91,8 @@ class ConnTestServiceImplTest {
         String ip2 = "2.2.2.2";
         String ip3 = "3.3.3.3";
 
-        ConnTestServiceImpl underTest = spy(new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository));
+        ConnTestServiceImpl underTest =
+                spy(new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository, pingUtils));
         List<String> ipAddresses = new ArrayList<>(Arrays.asList(ip1, ip2, ip3));
 
         ConnTest localConnMock = mock(ConnTest.class);
@@ -124,7 +129,8 @@ class ConnTestServiceImplTest {
     @MethodSource("areTestsRunningProvider")
     void testStopTests(boolean areTestRunning) {
         // when
-        ConnTestServiceImpl underTest = new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository);
+        ConnTestServiceImpl underTest =
+                new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository, pingUtils);
         List<ConnTest> mockConnTests = List.of(mock(ConnTest.class),mock(ConnTest.class),mock(ConnTest.class));
 
         if(areTestRunning)
@@ -148,7 +154,8 @@ class ConnTestServiceImplTest {
     @MethodSource("pingLogsProvider")
     void testGetPings(List<PingLog> pingLogs) throws IOException {
         // when
-        ConnTestServiceImpl underTest = new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository);
+        ConnTestServiceImpl underTest =
+                new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository, pingUtils);
         doReturn(pingLogs).when(pingLogRepository).findAllPingLogs();
 
         // then
@@ -161,7 +168,8 @@ class ConnTestServiceImplTest {
     @Test
     void testGetPingsIOException() throws IOException {
         // when
-        ConnTestServiceImpl underTest = new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository);
+        ConnTestServiceImpl underTest =
+                new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository, pingUtils);
         doThrow(IOException.class).when(pingLogRepository).findAllPingLogs();
 
         // then assert
@@ -172,7 +180,8 @@ class ConnTestServiceImplTest {
     @MethodSource("pingLogsProvider")
     void testGetPingsByDateTimeRange(List<PingLog> pingLogs) throws IOException {
         // when
-        ConnTestServiceImpl underTest =new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository);
+        ConnTestServiceImpl underTest =
+                new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository, pingUtils);
         doReturn(pingLogs).when(pingLogRepository).findPingLogsByDateTimeRange(START, END);
 
         // then
@@ -188,7 +197,8 @@ class ConnTestServiceImplTest {
     @Test
     void testGetPingsByDateTimeRangeIOException() throws IOException {
         // when
-        ConnTestServiceImpl underTest = new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository);
+        ConnTestServiceImpl underTest =
+                new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository, pingUtils);
         doThrow(IOException.class).when(pingLogRepository).findPingLogsByDateTimeRange(START, END);
 
         // then assert
@@ -199,7 +209,8 @@ class ConnTestServiceImplTest {
     @MethodSource("pingLogsProvider")
     void testGetPingsByIp(List<PingLog> pingLogs) throws IOException {
         // when
-        ConnTestServiceImpl underTest = new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository);
+        ConnTestServiceImpl underTest =
+                new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository, pingUtils);
         doReturn(pingLogs).when(pingLogRepository).findPingLogByIp(LOCAL_IP_ADDRESS);
 
         // then
@@ -212,7 +223,8 @@ class ConnTestServiceImplTest {
     @Test
     void testGetPingsByIpIOException() throws IOException {
         // when
-        ConnTestServiceImpl underTest = new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository);
+        ConnTestServiceImpl underTest =
+                new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository, pingUtils);
         doThrow(IOException.class).when(pingLogRepository).findPingLogByIp(LOCAL_IP_ADDRESS);
 
         // then assert
@@ -223,7 +235,8 @@ class ConnTestServiceImplTest {
     @MethodSource("pingLogsProvider")
     void testGetPingsByDateTimeRangeByIp(List<PingLog> pingLogs) throws IOException {
         // when
-        ConnTestServiceImpl underTest = new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository);
+        ConnTestServiceImpl underTest =
+                new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository, pingUtils);
         doReturn(pingLogs).when(pingLogRepository).findPingLogsByDateTimeRangeByIp(
                 START,
                 END,
@@ -244,7 +257,8 @@ class ConnTestServiceImplTest {
     @Test
     void testGetPingsByDateTimeRangeByIpIOException() throws IOException {
         // when
-        ConnTestServiceImpl underTest = new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository);
+        ConnTestServiceImpl underTest =
+                new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository, pingUtils);
         doThrow(IOException.class).when(pingLogRepository).findPingLogsByDateTimeRangeByIp(START,END,LOCAL_IP_ADDRESS);
 
         // then assert
@@ -257,7 +271,8 @@ class ConnTestServiceImplTest {
         // when
         List<PingLog> lostPingLogs = List.of(TestUtils.getDefaultLostPingLog());
 
-        ConnTestServiceImpl underTest = new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository);
+        ConnTestServiceImpl underTest =
+                new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository, pingUtils);
         doReturn(lostPingLogs).when(pingLogRepository).findLostPingsByIp(LOCAL_IP_ADDRESS);
 
         // then
@@ -276,7 +291,8 @@ class ConnTestServiceImplTest {
         // when
         List<PingLog> lostPingLogs = List.of(TestUtils.getDefaultLostPingLog());
 
-        ConnTestServiceImpl underTest = new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository);
+        ConnTestServiceImpl underTest =
+                new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository, pingUtils);
         doReturn(lostPingLogs).when(pingLogRepository).findLostPingsByDateTimeRangeByIp(
                 START,
                 END,
@@ -301,7 +317,8 @@ class ConnTestServiceImplTest {
     @Test
     void testGetPingsLostAvgByIp() throws IOException {
         // when
-        ConnTestServiceImpl underTest = new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository);
+        ConnTestServiceImpl underTest =
+                new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository, pingUtils);
         BigDecimal avg = new BigDecimal("0.2");
         doReturn(avg).when(pingLogRepository).findLostPingLogsAvgByIP(LOCAL_IP_ADDRESS);
 
@@ -315,7 +332,8 @@ class ConnTestServiceImplTest {
     @Test
     void testGetPingsLostAvgByIpIOException() throws IOException {
         // when
-        ConnTestServiceImpl underTest = new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository);
+        ConnTestServiceImpl underTest =
+                new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository, pingUtils);
         doThrow(IOException.class).when(pingLogRepository).findLostPingLogsAvgByIP(LOCAL_IP_ADDRESS);
 
         // then assert
@@ -325,7 +343,8 @@ class ConnTestServiceImplTest {
     @Test
     void testGetPingsLostAvgByDateTimeRangeByIp() throws IOException {
         // when
-        ConnTestServiceImpl underTest = new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository);
+        ConnTestServiceImpl underTest =
+                new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository, pingUtils);
         BigDecimal avg = new BigDecimal("0.2");
         doReturn(avg).when(pingLogRepository).findLostPingLogsAvgByDateTimeRangeByIp(
                 START,
@@ -347,7 +366,8 @@ class ConnTestServiceImplTest {
     @Test
     void testGetPingsLostAvgByDateTimeRangeByIpIOException() throws IOException {
         // when
-        ConnTestServiceImpl underTest = new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository);
+        ConnTestServiceImpl underTest =
+                new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository, pingUtils);
         doThrow(IOException.class).when(pingLogRepository).findLostPingLogsAvgByDateTimeRangeByIp(START,
                 END,
                 LOCAL_IP_ADDRESS);
@@ -361,7 +381,8 @@ class ConnTestServiceImplTest {
     @Test
     void testCreateResponse(){
         // when
-        ConnTestServiceImpl underTest = new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository);
+        ConnTestServiceImpl underTest =
+                new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository, pingUtils);
         List<PingLog> pingLogs = List.of(getDefaultPingLog());
 
         // then
@@ -380,7 +401,8 @@ class ConnTestServiceImplTest {
     @Test
     void testGetLocalAndISPIpAddresses() throws IOException {
         // when
-        ConnTestServiceImpl underTest = spy(new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository));
+        ConnTestServiceImpl underTest =
+                spy(new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository, pingUtils));
         BufferedReader bufferedReader = mock(BufferedReader.class);
         when(bufferedReader.readLine())
                 .thenReturn("")
@@ -407,7 +429,8 @@ class ConnTestServiceImplTest {
     @Test
     void testGetLocalAndISPIpAddressesIOException() throws IOException {
         // when
-        ConnTestServiceImpl underTest = spy(new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository));
+        ConnTestServiceImpl underTest =
+                spy(new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository, pingUtils));
         BufferedReader bufferedReader = mock(BufferedReader.class);
         when(bufferedReader.readLine()).thenThrow(IOException.class);
 
@@ -423,7 +446,8 @@ class ConnTestServiceImplTest {
     @Test
     void testGetConnTestsFromIpAddresses() {
         // when
-        ConnTestServiceImpl underTest = new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository);
+        ConnTestServiceImpl underTest =
+                new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository, pingUtils);
         List<String> ipAddresses = List.of(LOCAL_IP_ADDRESS, ISP_IP_ADDRESS);
 
         // then
@@ -438,7 +462,8 @@ class ConnTestServiceImplTest {
     @Test
     void testExecuteTracert() throws IOException {
         // when
-        ConnTestServiceImpl underTest = spy(new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository));
+        ConnTestServiceImpl underTest =
+                spy(new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository, pingUtils));
         Optional<BufferedReader> mockReader = mock(Optional.class);
         doReturn(mockReader).when(tracertProvider).executeTracert();
 
@@ -453,10 +478,11 @@ class ConnTestServiceImplTest {
     @Test
     void testGetIpAddressesFromActiveTests(){
         // when
-        ConnTestServiceImpl underTest = spy(new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository));
+        ConnTestServiceImpl underTest =
+                spy(new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository, pingUtils));
         List<String> ipAddresses = List.of("IP_1", "IP_2", "IP_3");
         underTest.tests = ipAddresses.stream()
-                .map(ip -> new ConnTest(executorService, ip, logger, pingLogRepository))
+                .map(ip -> new ConnTest(executorService, ip, logger, pingLogRepository, pingUtils))
                 .toList();
 
         // then
@@ -473,7 +499,8 @@ class ConnTestServiceImplTest {
     @Test
     void testClearPinglogFile() throws InterruptedException {
         // when
-        ConnTestServiceImpl underTest = new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository);
+        ConnTestServiceImpl underTest =
+                new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository, pingUtils);
 
         // then
         underTest.clearPingLogFile();
