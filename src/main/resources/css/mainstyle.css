@@ -1,5 +1,7 @@
 .tittlebar{
   -fx-background-color: #095C8A;
+  -fx-border-width: 5px;
+  -fx-border-color: #095C8A;
 }
 
 .tittlebar .button{
@@ -74,7 +76,8 @@
 
 /* Loader style */
 .loader {
-  -fx-progress-color: #FFF7D6;}
+  -fx-progress-color: #FFF7D6;
+}
 
 /* Texts styles */
 .h2-label{
@@ -140,49 +143,4 @@
   -fx-background-color:  #095C8A;
   -fx-border-color:  #095C8A;
   -fx-border-radius: 5;
-}
-
-/* Descrption labels style */
-.description-header-label {
-  -fx-font-size: 15px;
-  -fx-font-weight: bold;
-  -fx-text-fill: #555555c5;
-  -fx-font-style: italic;
-}
-
-.description-section-header {
-  -fx-font-size: 14px;
-  -fx-font-weight: bold;
-  -fx-text-fill: #555555c5;
-  -fx-font-style: italic;
-}
-
-.description-content-label {
-  -fx-font-size: 14px;
-  -fx-text-fill: #666666cb;
-  -fx-wrap-text: true;
-  -fx-font-style: italic;
-}
-
-#descriptionScroll {
-  -fx-background-color: white;
-  -fx-padding: 10px 10px 0px 10px;
-}
-
-#descriptionScroll .track {
-  -fx-background-color: white;
-}
-
-#descriptionScroll .track-background {
-  -fx-background-color: white;
-}
-
-#descriptionScroll .thumb {
-  -fx-background-color: #acababb6;
-}
-
-#descriptionScroll .increment-button,
-#descriptionScroll .decrement-button {
-  -fx-opacity: 0;
-  -fx-padding: 2;
 }

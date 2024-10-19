@@ -5,9 +5,9 @@
 <?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
 
-<VBox alignment="TOP_CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="800.0" stylesheets="@/css/mainstyle.css, @/css/comboboxstyle.css, @/css/tablestyle.css" xmlns="http://javafx.com/javafx/11.0.14-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.adieser.conntest.views.UiController">
+<VBox alignment="TOP_CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="800.0" stylesheets="@/css/mainstyle.css, @/css/comboboxstyle.css, @/css/tablestyle.css, @/css/usermanualstyle.css" xmlns="http://javafx.com/javafx/11.0.14-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.adieser.conntest.views.UiController">
     <HBox alignment="CENTER_RIGHT" prefHeight="28.0" styleClass="tittlebar">
-        <Button fx:id="minimizeButton">
+        <Button fx:id="minimizeButton" onAction="#handleMinimize">
             <HBox.margin>
                 <Insets top="5.0" />
             </HBox.margin>
@@ -17,7 +17,7 @@
                 </ImageView>
             </graphic>
         </Button>
-        <Button fx:id="maximizeRestoreButton">
+        <Button fx:id="maximizeRestoreButton" onAction="#handleMaximizeRestore">
             <HBox.margin>
                 <Insets top="5.0" />
             </HBox.margin>
@@ -27,7 +27,7 @@
                 </ImageView>
             </graphic>
         </Button>
-        <Button fx:id="closeButton">
+        <Button fx:id="closeButton" onAction="#handleClose">
             <HBox.margin>
                 <Insets left="5.0" right="5.0" top="5.0" />
             </HBox.margin>
@@ -94,9 +94,16 @@
         </rowConstraints>
         <!-- 0  0 -->
         <VBox prefWidth="269.0" styleClass="h3-label" GridPane.columnIndex="0" GridPane.rowIndex="0">
-            <Label style="-fx-font-size: 16px; -fx-font-weight: bold;" text="Configurations">
+            <HBox prefHeight="30.0" prefWidth="190.0" spacing="10" VBox.vgrow="NEVER">
+                <Label style="-fx-font-size: 16px; -fx-font-weight: bold;" text="Configurations" />
+                <Region HBox.hgrow="ALWAYS" />
+                <Button onAction="#openUserManual" styleClass="usermanualbutton" text="?">
+               <HBox.margin>
+                  <Insets right="15.0" />
+               </HBox.margin></Button>
+            </HBox>
 
-            </Label>
+
             <!-- TIME CHOICE BOX -->
             <HBox alignment="CENTER_LEFT" prefHeight="30.0" prefWidth="190.0" styleClass="combo-box">
                 <Label text="Refresh time: "><HBox.margin><Insets right="5.0" /></HBox.margin></Label>
@@ -146,18 +153,16 @@
                     <Label styleClass="description-section-header" text="Thank you for using the ConnTest Application." wrapText="true" />
                 </VBox>
             </ScrollPane>
-            <VBox fx:id="tableVBox" prefHeight="200.0" prefWidth="100.0">
-                <TableView fx:id="tableView" prefHeight="5.0" prefWidth="5.0" visible="false"/>
+            <VBox fx:id="tableVBox">
+                <TableView fx:id="tableView" prefHeight="5.0" prefWidth="5.0" visible="false" />
             </VBox>
                 <GridPane.margin>
                     <Insets top="15.0" />
                 </GridPane.margin>
         </VBox>
-
-
-      <VBox.margin>
-         <Insets left="20.0" right="20.0" top="20.0" />
-      </VBox.margin>
+        <VBox.margin>
+             <Insets left="20.0" right="20.0" top="20.0" />
+        </VBox.margin>
     </GridPane>
 
 
