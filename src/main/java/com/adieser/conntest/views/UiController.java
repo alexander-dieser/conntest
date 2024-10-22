@@ -118,7 +118,7 @@ public class UiController {
         connTestService.testLocalISPInternet();
         ipAddress = connTestService.getIpAddressesFromActiveTests();
 
-        setTables(ipAddress);
+        setTables();
 
         createExecutorService();
         startExecutorService(timechoice);
@@ -192,7 +192,7 @@ public class UiController {
     /**
      * Sets up the TableView and Footer Table to display ping data for multiple IPs, including a save button
      */
-    public void setTables(List<String> listIpAddress) {
+    public void setTables() {
         Platform.runLater(() -> {
                     tableView.getItems().clear();
                     tableView.getColumns().clear();
@@ -231,8 +231,8 @@ public class UiController {
         saveButton.getStyleClass().add("save-button");
 
         // Set ping columns and labels
-        for (int i = 0; i < Math.min(listIpAddress.size(), 3); i++) {
-            buildPingsColumn(listIpAddress.get(i), allPingTimeColumn, i);
+        for (int i = 0; i < Math.min(ipAddress.size(), 3); i++) {
+            buildPingsColumn(ipAddress.get(i), allPingTimeColumn, i);
             setLabels(footerTable);
         }
 
