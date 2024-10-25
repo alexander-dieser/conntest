@@ -123,38 +123,9 @@
         <!-- 0  1 -->
         <!-- Description and Tables -->
         <VBox fx:id="tablesVBox" alignment="TOP_CENTER" prefHeight="700.0" prefWidth="1000.0" GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.vgrow="ALWAYS" HBox.hgrow="ALWAYS">
-            <ScrollPane fx:id="descriptionScroll" fitToWidth="true">
-                <VBox spacing="6" style="-fx-background-color: white;  -fx-border-color: transparent; -fx-background-radius: 7px 7px 7px 7px;" VBox.vgrow="ALWAYS">
-                    <Label styleClass="description-header-label" text="ConnTest Application User Manual" />
-                    <Label styleClass="description-content-label" text="Welcome to the ConnTest Application! This application is designed to help you test and monitor the connectivity to various IP addresses by performing ping tests. The application automatically discovers the hops to local, ISP, and Google IP addresses, and displays the results in a user-friendly interface." wrapText="true" />
 
-                    <Label styleClass="description-section-header" text="Starting the Test" />
-                    <Label styleClass="description-content-label" text="To begin the test, click the Start button on the main interface. The application will initiate the process of discovering the IP hops to your local network, ISP, and Google." wrapText="true" />
-
-                    <Label styleClass="description-section-header" text="Automatic IP Discovery" />
-                    <Label styleClass="description-content-label" text="The application will automatically discover the IP hops for Local, ISP, and Google IP addresses. This process will take a few moments." wrapText="true" />
-
-                    <Label styleClass="description-section-header" text="Viewing Ping Results" />
-                    <Label styleClass="description-content-label" text="Once the IPs are discovered, the application will display the ping results in tables. Each one corresponds to an IP address. The columns in the tables include:" wrapText="true" />
-                    <Label styleClass="description-content-label" text=" - Date: The date and time the ping was performed." wrapText="true" />
-                    <Label styleClass="description-content-label" text=" - Latency: The time it took for the ping to travel to the IP address and back, measured in milliseconds (ms). If a ping times out, it will be indicated with a value of -1 in the latency column" wrapText="true" />
-
-                    <Label styleClass="description-section-header" text="Understanding the Interface" />
-                    <Label styleClass="description-content-label" text=" - Start Button: Initiates the ping test." wrapText="true" />
-                    <Label styleClass="description-content-label" text=" - Stop Button: Stops the ongoing ping test." wrapText="true" />
-                    <Label styleClass="description-content-label" text=" - Time Choice Box: Allows you to select the interval for performing pings." wrapText="true" />
-                    <Label styleClass="description-content-label" text=" - Day Filter Box: Enables filtering of results by day." wrapText="true" />
-                    <Label styleClass="description-content-label" text=" - Save Button: Save the displayed ping results to a log file." wrapText="true" />
-
-                    <Label styleClass="description-section-header" text="Troubleshooting" />
-                    <Label styleClass="description-content-label" text="No Results Displayed: Ensure that your network connection is active. If the problem persists, try restarting the application." wrapText="true" />
-                    <Label styleClass="description-content-label" text="Application Freezes: If the application becomes unresponsive, try closing and reopening it. Ensure that your system meets the required specifications for running the application." wrapText="true" />
-
-                    <Label styleClass="description-section-header" text="Thank you for using the ConnTest Application." wrapText="true" />
-                </VBox>
-            </ScrollPane>
             <VBox fx:id="tableVBox">
-                <TableView fx:id="tableView" prefHeight="5.0" prefWidth="5.0" visible="false" />
+                <TableView fx:id="tableView" prefHeight="5.0" prefWidth="5.0" />
             </VBox>
                 <GridPane.margin>
                     <Insets top="15.0" />

@@ -62,8 +62,6 @@ public class UiController {
     @FXML
     private VBox tableVBox;
     @FXML
-    private ScrollPane descriptionScroll;
-    @FXML
     private TableView<PingRow> tableView;
 
     private final List<TableColumn<String, String>> pingCountColumnList = new ArrayList<>();
@@ -82,6 +80,11 @@ public class UiController {
      */
     @FXML
     private void initialize() {
+        if (ipAddress == null) {
+            ipAddress = new ArrayList<>();
+            ipAddress.add("");
+        }
+        setTables();
         stopButton.setDisable(true);
         timeChoiceBox.getItems().addAll(1, 5, 10, 15);
         this.startButton.setOnAction(actionEvent -> {
@@ -133,8 +136,6 @@ public class UiController {
         Platform.runLater(() -> {
             progressIndicator.setVisible(false);
             stopButton.setDisable(false);
-            tableView.setVisible(true);
-            descriptionScroll.setVisible(false);
         });
     }
 
@@ -221,7 +222,7 @@ public class UiController {
 
         footerTable.getColumns().add(pingCountColumn);
         footerTable.setSelectionModel(null);
-        footerTable.setItems(FXCollections.observableList(new ArrayList<>(Collections.nCopies(ipAddress.size(), ""))));
+        footerTable.setItems(FXCollections.observableList(new ArrayList<>(Collections.nCopies(Math.max(ipAddress.size(), 1), ""))));
         footerTable.getStyleClass().add("footer_table");
         footerTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
