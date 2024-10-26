@@ -8,6 +8,7 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
@@ -22,6 +23,7 @@ import javafx.stage.Stage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.slf4j.Logger;
+import javafx.scene.Node;
 
 import java.io.*;
 import java.time.LocalDateTime;
@@ -56,15 +58,11 @@ public class UiController {
     @FXML
     private CheckBox dayFilterBox;
     @FXML
-    private ScrollPane descriptionScroll;
-    @FXML
     private VBox tablesVBox;
     @FXML
     private VBox tableVBox;
     @FXML
     private TableView<PingRow> tableView;
-
-    Boolean isTableviewSet = false;
 
     private final List<TableColumn<String, String>> pingCountColumnList = new ArrayList<>();
     private final List<TableColumn<String, String>> averageLostColumnList = new ArrayList<>();
@@ -82,6 +80,11 @@ public class UiController {
      */
     @FXML
     private void initialize() {
+        if (ipAddress == null) {
+            ipAddress = new ArrayList<>();
+            ipAddress.add("");
+        }
+        setTables();
         stopButton.setDisable(true);
         timeChoiceBox.getItems().addAll(1, 5, 10, 15);
         this.startButton.setOnAction(actionEvent -> {
@@ -108,9 +111,6 @@ public class UiController {
             }
         });
         this.dayFilterBox.setOnAction(actionEvent -> { if(ipAddress != null) Platform.runLater(this::updateTables); });
-        this.closeButton.setOnAction(event -> handleClose());
-        this.minimizeButton.setOnAction(event -> handleMinimize());
-        this.maximizeRestoreButton.setOnAction(event -> handleMaximizeRestore());
     }
 
     /**
@@ -121,7 +121,7 @@ public class UiController {
         connTestService.testLocalISPInternet();
         ipAddress = connTestService.getIpAddressesFromActiveTests();
 
-        if(Boolean.FALSE.equals(isTableviewSet)) setTables();
+        setTables();
 
         createExecutorService();
         startExecutorService(timechoice);
@@ -136,8 +136,6 @@ public class UiController {
         Platform.runLater(() -> {
             progressIndicator.setVisible(false);
             stopButton.setDisable(false);
-            descriptionScroll.setVisible(false);
-            tableView.setVisible(true);
         });
     }
 
@@ -160,18 +158,18 @@ public class UiController {
      * */
     void updateTables(){
         try {
-            long amountOfPings;
-            List<List<PingLog>> allPingLogs = new ArrayList<>();
+                long amountOfPings;
+                List<List<PingLog>> allPingLogs = new ArrayList<>();
 
-            for (int i = 0; i < Math.min(ipAddress.size(), 3); i++) {
-                amountOfPings = loadLogs(ipAddress.get(i), allPingLogs);
-                setAverageLost(ipAddress.get(i), averageLostColumnList.get(i));
-                setPingCount(pingCountColumnList.get(i), amountOfPings);
-            }
+                for (int i = 0; i < Math.min(ipAddress.size(), 3); i++) {
+                    amountOfPings = loadLogs(ipAddress.get(i), allPingLogs);
+                    setAverageLost(ipAddress.get(i), averageLostColumnList.get(i));
+                    setPingCount(pingCountColumnList.get(i), amountOfPings);
+                }
 
-            List<PingRow> pingRows = combinePingsByDateTime(allPingLogs);
-            Collections.reverse(pingRows);
-            tableView.getItems().setAll(pingRows);
+                List<PingRow> pingRows = combinePingsByDateTime(allPingLogs);
+                Collections.reverse(pingRows);
+                tableView.getItems().setAll(pingRows);
         }catch(IOException e){
             stopExecutorService();
         }
@@ -196,16 +194,13 @@ public class UiController {
      * Sets up the TableView and Footer Table to display ping data for multiple IPs, including a save button
      */
     public void setTables() {
-        // Limpiar contenido anterior de la tabla
         Platform.runLater(() -> {
                     tableView.getItems().clear();
                     tableView.getColumns().clear();
-
-                    averageLostColumnList.clear();
-                    pingCountColumnList.clear();
+                averageLostColumnList.clear();
+                pingCountColumnList.clear();
                 });
-
-        // Configurar las columnas de la tabla principal
+        // Set pings table
         TableColumn<PingRow, String> dateTimeColumn = new TableColumn<>("Date");
         dateTimeColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getDateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))));
         dateTimeColumn.setPrefWidth(150);
@@ -218,7 +213,7 @@ public class UiController {
                     tableView.setFocusTraversable(false);
                 });
 
-        // Configurar la tabla de pie (footerTable)
+        //Set footer table
         TableView<String> footerTable = new TableView<>();
         TableColumn<String, String> averageLostColumn = new TableColumn<>("Average Lost");
         averageLostColumn.setPrefWidth(150);
@@ -227,21 +222,20 @@ public class UiController {
 
         footerTable.getColumns().add(pingCountColumn);
         footerTable.setSelectionModel(null);
-        footerTable.setItems(FXCollections.observableList(new ArrayList<>(Collections.nCopies(ipAddress.size(), ""))));
+        footerTable.setItems(FXCollections.observableList(new ArrayList<>(Collections.nCopies(Math.max(ipAddress.size(), 1), ""))));
         footerTable.getStyleClass().add("footer_table");
         footerTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
-        // Botón Save
+        //Set save button
         Button saveButton = new Button("Save");
         saveButton.setOnAction(event -> saveLogs(dateTimeColumn, allPingTimeColumn));
         saveButton.getStyleClass().add("save-button");
 
-        // Configurar las columnas de pings y etiquetas
+        // Set ping columns and labels
         for (int i = 0; i < Math.min(ipAddress.size(), 3); i++) {
             buildPingsColumn(ipAddress.get(i), allPingTimeColumn, i);
             setLabels(footerTable);
         }
-
 
         Platform.runLater(() -> {
             tableView.getColumns().add(allPingTimeColumn);
@@ -255,7 +249,6 @@ public class UiController {
             tablesVBox.getChildren().clear();
             tablesVBox.getChildren().add(tableVBox);
         });
-        isTableviewSet = true;
     }
 
     /**
@@ -282,10 +275,10 @@ public class UiController {
      */
     private void setLabels(TableView<String> footerTable) {
         TableColumn<String, String> resultALColumn = new TableColumn<>("");
-        averageLostColumnList.add(resultALColumn);
+        Platform.runLater(() -> averageLostColumnList.add(resultALColumn));
         resultALColumn.setPrefWidth(150);
         TableColumn<String, String> resultPCColumn = new TableColumn<>("");
-        pingCountColumnList.add(resultPCColumn);
+        Platform.runLater(() -> pingCountColumnList.add(resultPCColumn));
         resultPCColumn.getColumns().add(resultALColumn);
 
         footerTable.getColumns().add(resultPCColumn);
@@ -461,11 +454,21 @@ public class UiController {
         }
     }
 
+    /**
+     * Opens the user manual in a new window
+     */
+    @FXML
+    private void openUserManual(ActionEvent event) throws IOException {
+        Stage ownerStage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+        UserManualController userManualController = new UserManualController();
+        userManualController.showUserManual(ownerStage);
+    }
 
     /**
      * Closes the current stage.
      */
-    private void handleClose() {
+    @FXML
+    private void handleClose(ActionEvent event) {
         Stage stage = (Stage) closeButton.getScene().getWindow();
         stage.close();
     }
@@ -473,7 +476,8 @@ public class UiController {
     /**
      * Minimizes the current stage.
      */
-    private void handleMinimize() {
+    @FXML
+    private void handleMinimize(ActionEvent event) {
         Stage stage = (Stage) minimizeButton.getScene().getWindow();
         stage.setIconified(true);
     }
@@ -481,7 +485,8 @@ public class UiController {
     /**
      * Maximizes or restores the current stage and updates the button image.
      */
-    private void handleMaximizeRestore() {
+    @FXML
+    private void handleMaximizeRestore(ActionEvent event) {
         Stage stage = (Stage) maximizeRestoreButton.getScene().getWindow();
         if (stage.isMaximized()) {
             stage.setMaximized(false);
