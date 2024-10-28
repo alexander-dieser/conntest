@@ -100,4 +100,11 @@ public interface PingLogRepository {
      * @see PingLog
      */
     List<PingLog> findLostPingsByDateTimeRangeByIp(LocalDateTime start, LocalDateTime end, String ipAddress) throws IOException;
+
+    /**
+     * Retrieve the lowest latency pinglog and the highest latency pinglog
+     * @param ipAddress IP address use to filter the results
+     * @return List of pings
+     */
+    List<PingLog> findMaxMinPingLog(String ipAddress) throws IOException;
 }

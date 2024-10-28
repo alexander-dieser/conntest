@@ -460,6 +460,42 @@ class ConnTestControllerIntegrationTest {
         verify(connTestService, times(1)).clearPingLogFile();
     }
 
+    @ParameterizedTest
+    @MethodSource("maxMinResponseProvider")
+    void testGetMaxMinPingLog(PingSessionExtract pings) throws Exception {
+        // when
+        when(connTestService.getMaxMinPingLog(LOCAL_IP_ADDRESS)).thenReturn(pings);
+
+        // then assert
+        MockHttpServletRequestBuilder requestBuilder = TestUtils.addCustomSessionId(
+                MockMvcRequestBuilders.get("/pings/{ipAddress}/max-min",
+                        LOCAL_IP_ADDRESS
+                )
+        );
+
+        ResultActions result = mockMvc.perform(requestBuilder);
+
+        if(pings.getPingLogs().isEmpty()){
+            result.andExpect(status().isNoContent())
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(jsonPath("$.pingLogs", hasSize(0)));
+        }else {
+            result.andExpect(status().isOk())
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(jsonPath("$.amountOfPings").value(2))
+                    .andExpect(jsonPath("$.ipAddress").value(LOCAL_IP_ADDRESS))
+                    .andExpect(jsonPath("$.pingLogs", hasSize(2)))
+                    .andExpect(jsonPath("$.pingLogs[0].ipAddress").value(LOCAL_IP_ADDRESS))
+                    .andExpect(jsonPath("$.pingLogs[0].pingTime").value(DEFAULT_PING_TIME))
+                    .andExpect(jsonPath("$.pingLogs[1].ipAddress").value(LOCAL_IP_ADDRESS))
+                    .andExpect(jsonPath("$.pingLogs[1].pingTime").value(DEFAULT_PING_TIME));
+
+            AssertHATEOASLinks(result, pings.getPingLogs().get(0));
+        }
+
+        verify(connTestService, times(1)).getMaxMinPingLog(LOCAL_IP_ADDRESS);
+    }
+
     private ResultActions performRequestAndBasicAssertPingLogControllerResponse(MockHttpServletRequestBuilder requestBuilder,
                                                                                 PingSessionExtract pings,
                                                                                 Boolean lost) throws Exception {
@@ -546,6 +582,22 @@ class ConnTestControllerIntegrationTest {
         return Stream.of(
                 getEmptyResponse(),
                 getLostPingResponse()
+        );
+    }
+
+    static Stream<PingSessionExtract> maxMinResponseProvider() {
+        return Stream.of(
+                PingSessionExtract.builder()
+                        .amountOfPings(2)
+                        .ipAddress(LOCAL_IP_ADDRESS)
+                        .pingLogs(List.of(getDefaultPingLog(),
+                                getDefaultPingLog()))
+                        .build(),
+                PingSessionExtract.builder()
+                        .amountOfPings(0)
+                        .ipAddress(LOCAL_IP_ADDRESS)
+                        .pingLogs(List.of())
+                        .build()
         );
     }
 

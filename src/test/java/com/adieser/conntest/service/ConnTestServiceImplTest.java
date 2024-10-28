@@ -509,6 +509,26 @@ class ConnTestServiceImplTest {
         verify(pingLogRepository, times(1)).clearPingLogFile();
     }
 
+    @Test
+    void testGetMaxMinPingLog() throws IOException {
+        // when
+        ConnTestServiceImpl underTest =
+                new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository, pingUtils);
+        doReturn(
+                List.of(getDefaultPingLog(),
+                        getDefaultPingLog()))
+                .when(pingLogRepository).findMaxMinPingLog(LOCAL_IP_ADDRESS);
+
+        // then
+        PingSessionExtract pings = underTest.getMaxMinPingLog(LOCAL_IP_ADDRESS);
+
+        // assert
+        assertEquals(DEFAULT_PING_TIME, pings.getPingLogs().get(0).getPingTime());
+        assertEquals(DEFAULT_PING_TIME, pings.getPingLogs().get(1).getPingTime());
+        assertEquals(2, pings.getAmountOfPings());
+        assertEquals(LOCAL_IP_ADDRESS, pings.getIpAddress());
+    }
+
     static Stream<Boolean> areTestsRunningProvider() {
         return Stream.of(
                 true,

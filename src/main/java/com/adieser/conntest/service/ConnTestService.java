@@ -57,9 +57,20 @@ public interface ConnTestService {
      */
     PingSessionExtract getPingsByDateTimeRangeByIp(LocalDateTime start, LocalDateTime end, String ipAddress) throws IOException;
 
-
+    /**
+     * Retrieve all the lost ping logs
+     * @param ipAddress IP address use to filter the results
+     * @return List of ping results and metadata {@link PingSessionExtract}
+     */
     PingSessionExtract getLostPingsByIp(String ipAddress) throws IOException;
 
+    /**
+     * Retrieve all the lost ping logs within a datetime range
+     * @param start start date and time of the range
+     * @param end end date in the range
+     * @param ipAddress IP address use to filter the results
+     * @return List of ping results and metadata {@link PingSessionExtract}
+     */
     PingSessionExtract getLostPingsByDateTimeRangeByIp(LocalDateTime start, LocalDateTime end, String ipAddress) throws IOException;
 
     /**
@@ -88,4 +99,11 @@ public interface ConnTestService {
      * Remove all the entries from the current pinglog file
      */
     void clearPingLogFile() throws InterruptedException;
+
+    /**
+     * Retrieve the lowest latency pinglog and the highest latency pinglog
+     * @param ipAddress IP address use to filter the results
+     * @return List of ping results and metadata {@link PingSessionExtract}
+     */
+    PingSessionExtract getMaxMinPingLog(String ipAddress) throws IOException;
 }

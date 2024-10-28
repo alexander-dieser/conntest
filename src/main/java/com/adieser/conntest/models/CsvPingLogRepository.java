@@ -20,6 +20,8 @@ import java.math.RoundingMode;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -110,6 +112,28 @@ public class CsvPingLogRepository implements PingLogRepository {
     public List<PingLog> findLostPingsByDateTimeRangeByIp(LocalDateTime start, LocalDateTime end, String ipAddress) throws IOException {
         return getLostPingLogsStream(getPingLogsByDateTimeRangeByIpStream(readAll().stream(), start, end, ipAddress))
                 .toList();
+    }
+
+    @Override
+    public List<PingLog> findMaxMinPingLog(String ipAddress) throws IOException {
+
+        PingLog lowestLatency = getPingLogsByIpStream(readAll().stream(), ipAddress)
+                .min(Comparator.comparingLong(PingLog::getPingTime))
+                .orElse(null);
+
+        // If one of the pingLogs is null, it means both will (the file is empty). Therefore, it returns and empty list
+        if(lowestLatency == null)
+            return List.of();
+
+        PingLog highestLatency = getPingLogsByIpStream(readAll().stream(), ipAddress)
+                .max(Comparator.comparingLong(PingLog::getPingTime))
+                .orElse(null);
+
+        List<PingLog> highestLowest = new ArrayList<>();
+        highestLowest.add(lowestLatency);
+        highestLowest.add(highestLatency);
+
+        return highestLowest;
     }
 
     @Override
