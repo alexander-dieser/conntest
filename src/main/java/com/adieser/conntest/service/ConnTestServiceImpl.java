@@ -164,6 +164,14 @@ public class ConnTestServiceImpl implements ConnTestService {
         pingLogRepository.clearPingLogFile();
     }
 
+    @Override
+    public PingSessionExtract getMaxMinPingLog(String ipAddress) throws IOException {
+        PingSessionExtract response = createBasicResponse(pingLogRepository.findMaxMinPingLog(ipAddress));
+        response.setIpAddress(ipAddress);
+
+        return response;
+    }
+
     /**
      * Create the ping session results formatted as {@link PingSessionExtract}
      * @param pingLogs List of ping sessions results

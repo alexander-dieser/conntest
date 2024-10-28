@@ -169,7 +169,7 @@ class CsvPingLogRepositoryTest {
 
     @ParameterizedTest
     @MethodSource("getPingLogsByDateTimeRangeByIpStreamProvider")
-    void testGetPingLogsByDateTimeRangeByIp(LocalDateTime pingDate,
+    void testGetPingLogsByDateTimeRangeByIpStream(LocalDateTime pingDate,
                                             LocalDateTime start,
                                             LocalDateTime end,
                                             String ipAddress,
@@ -195,7 +195,7 @@ class CsvPingLogRepositoryTest {
 
     @ParameterizedTest
     @MethodSource("getLostPingLogsStreamProvider")
-    void testGetLostPingLogsStreamSuccess(long pingTime, boolean pingFound){
+    void testGetLostPingLogsStream(long pingTime, boolean pingFound){
         // when
         CsvPingLogRepository underTest = new CsvPingLogRepository("test", logger);
         PingLog pingLog = getDefaultPingLog();
@@ -262,6 +262,8 @@ class CsvPingLogRepositoryTest {
         assertEquals(CsvPingLogRepository.CLEAN_PINGLOG_FILE_MSG, exception.getMessage());
         verify(logger).error(eq(CsvPingLogRepository.CLEAN_PINGLOG_FILE_MSG), any(IOException.class));
     }
+
+
 
     static Stream<PingLog> successPingLogProvider() {
         return Stream.of(

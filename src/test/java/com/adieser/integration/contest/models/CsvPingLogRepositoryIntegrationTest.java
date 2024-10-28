@@ -6,6 +6,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -170,7 +171,6 @@ class CsvPingLogRepositoryIntegrationTest{
         assertEquals(1, pingAmount, "No ping found");
     }
 
-
     @ParameterizedTest
     @MethodSource("thereIsFailedPingsProvider")
     void testFindLostPingLogsAvgByIP(boolean emptyFailedPingLogs) throws IOException {
@@ -214,6 +214,22 @@ class CsvPingLogRepositoryIntegrationTest{
             assertEquals(BigDecimal.ZERO, lostPingLogsAvgByIP, "Wrong average");
     }
 
+    @ParameterizedTest
+    @MethodSource("minMaxPinglogsProvider")
+    void testFindMaxMinPingLog(List<Long> pingTimes, Long expectedMinPing, Long expectedMaxPing) throws IOException {
+        for(Long time : pingTimes)
+            writePingLog(DEFAULT_LOG_DATE_TIME, LOCAL_IP_ADDRESS, time);
+
+        List<PingLog> maxMinPingLog = csvPingLogRepository.findMaxMinPingLog(LOCAL_IP_ADDRESS);
+
+        if(expectedMinPing != null) {
+            assertEquals(expectedMinPing, maxMinPingLog.get(0).getPingTime(), "wrong min ping");
+            assertEquals(expectedMaxPing, maxMinPingLog.get(1).getPingTime(), "wrong max ping");
+        }
+        else
+            assertTrue(maxMinPingLog.isEmpty());
+    }
+
     @Test
     void clearPingLogFile_Success() throws Exception {
         writePingLog();
@@ -243,6 +259,35 @@ class CsvPingLogRepositoryIntegrationTest{
         return Stream.of(
                 true,
                 false
+        );
+    }
+
+    static Stream<Arguments> minMaxPinglogsProvider() {
+        return Stream.of(
+                // Multiple pinglogs
+                Arguments.of(
+                        List.of(1L, 50L, 200L),
+                        1L,
+                        200L
+                ),
+                // Multiple pinglogs same pingtime
+                Arguments.of(
+                        List.of(1L, 1L),
+                        1L,
+                        1L
+                ),
+                // One pinglog only
+                Arguments.of(
+                        List.of(1L),
+                        1L,
+                        1L
+                ),
+                // No pinglogs
+                Arguments.of(
+                        List.of(),
+                        null,
+                        null
+                )
         );
     }
 
