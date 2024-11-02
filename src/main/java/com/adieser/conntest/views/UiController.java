@@ -448,17 +448,21 @@ public class UiController {
     }
 
     /**
-     * Clears the ping logs displayed in the TableView and footer table.
+     * Opens a confirmation dialog to clear the ping log file. If the user confirms,
+     * this method triggers the `clearLogsAction` method, which calls the service
+     * to clear the log file and updates the displayed tables.
+     * @param event The ActionEvent triggered by the user interaction, used to obtain the current stage.
+     * @throws IOException if there is an error loading the confirmation dialog.
      */
     @FXML
     private void clearLogs(ActionEvent event) throws IOException {
         Stage ownerStage = (Stage) ((Node) event.getSource()).getScene().getWindow();
         ModalController modalController = new ModalController();
-        modalController.setAction(this::clearLogFile);
+        modalController.setAction(this::clearLogsAction);
         modalController.showModal(ownerStage,"/confirmClearLogDialog.fxml", "Clear Log Confirmation", 300,150);
     }
 
-    private void clearLogFile() {
+    private void clearLogsAction() {
         try {
             connTestService.clearPingLogFile();
         } catch (InterruptedException e) {
