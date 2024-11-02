@@ -63,6 +63,10 @@ public class UiController {
     private VBox tableVBox;
     @FXML
     private TableView<PingRow> tableView;
+    @FXML
+    private TableView<String> footerTable;
+    @FXML
+    private Button saveButton;
 
     private final List<TableColumn<String, String>> pingCountColumnList = new ArrayList<>();
     private final List<TableColumn<String, String>> averageLostColumnList = new ArrayList<>();
@@ -195,60 +199,45 @@ public class UiController {
      */
     public void setTables() {
         Platform.runLater(() -> {
-                    tableView.getItems().clear();
-                    tableView.getColumns().clear();
-                averageLostColumnList.clear();
-                pingCountColumnList.clear();
-                });
+            tableView.getItems().clear();
+            tableView.getColumns().clear();
+            footerTable.getColumns().clear();
+            averageLostColumnList.clear();
+            pingCountColumnList.clear();
+        });
         // Set pings table
         TableColumn<PingRow, String> dateTimeColumn = new TableColumn<>("Date");
         dateTimeColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getDateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))));
         dateTimeColumn.setPrefWidth(150);
         TableColumn<PingRow, String> allPingTimeColumn = new TableColumn<>("Ping Time (ms)");
 
-        Platform.runLater(() -> {
-                    tableView.getColumns().add(dateTimeColumn);
-                    tableView.getStyleClass().add("table");
-                    tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-                    tableView.setFocusTraversable(false);
-                });
-
         //Set footer table
-        TableView<String> footerTable = new TableView<>();
         TableColumn<String, String> averageLostColumn = new TableColumn<>("Average Lost");
         averageLostColumn.setPrefWidth(150);
         TableColumn<String, String> pingCountColumn = new TableColumn<>("PingCount");
         pingCountColumn.getColumns().add(averageLostColumn);
 
-        footerTable.getColumns().add(pingCountColumn);
-        footerTable.setSelectionModel(null);
-        footerTable.setItems(FXCollections.observableList(new ArrayList<>(Collections.nCopies(Math.max(ipAddress.size(), 1), ""))));
-        footerTable.getStyleClass().add("footer_table");
-        footerTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        Platform.runLater(() -> {
+            tableView.getColumns().add(dateTimeColumn);
+            tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+            tableView.setFocusTraversable(false);
 
-        //Set save button
-        Button saveButton = new Button("Save");
-        saveButton.setOnAction(event -> saveLogs(dateTimeColumn, allPingTimeColumn));
-        saveButton.getStyleClass().add("save-button");
+            footerTable.getColumns().add(pingCountColumn);
+            footerTable.setSelectionModel(null);
+            footerTable.setItems(FXCollections.observableList(new ArrayList<>(Collections.nCopies(Math.max(ipAddress.size(), 1), ""))));
+            footerTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        });
 
         // Set ping columns and labels
         for (int i = 0; i < Math.min(ipAddress.size(), 3); i++) {
             buildPingsColumn(ipAddress.get(i), allPingTimeColumn, i);
-            setLabels(footerTable);
+            setLabels();
         }
 
-        Platform.runLater(() -> {
-            tableView.getColumns().add(allPingTimeColumn);
 
-            tableVBox.getChildren().clear();
-            tableVBox.getChildren().add(tableView);
-            tableVBox.getChildren().add(footerTable);
-            tableVBox.getChildren().add(saveButton);
-            tableVBox.getStyleClass().add("table-vbox");
+        saveButton.setOnAction(event -> saveLogs(dateTimeColumn, allPingTimeColumn));
 
-            tablesVBox.getChildren().clear();
-            tablesVBox.getChildren().add(tableVBox);
-        });
+        Platform.runLater(() -> tableView.getColumns().add(allPingTimeColumn));
     }
 
     /**
@@ -273,15 +262,19 @@ public class UiController {
     /**
      * Set average lost and ping count labels for a specified IP address at the footer table
      */
-    private void setLabels(TableView<String> footerTable) {
+    private void setLabels() {
         TableColumn<String, String> resultALColumn = new TableColumn<>("");
-        Platform.runLater(() -> averageLostColumnList.add(resultALColumn));
         resultALColumn.setPrefWidth(150);
+
         TableColumn<String, String> resultPCColumn = new TableColumn<>("");
-        Platform.runLater(() -> pingCountColumnList.add(resultPCColumn));
         resultPCColumn.getColumns().add(resultALColumn);
 
-        footerTable.getColumns().add(resultPCColumn);
+        Platform.runLater(() -> {
+            averageLostColumnList.add(resultALColumn);
+            pingCountColumnList.add(resultPCColumn);
+            footerTable.getColumns().add(resultPCColumn);
+        });
+
     }
 
     /**
@@ -455,13 +448,34 @@ public class UiController {
     }
 
     /**
+     * Clears the ping logs displayed in the TableView and footer table.
+     */
+    @FXML
+    private void clearLogs(ActionEvent event) throws IOException {
+        Stage ownerStage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+        ModalController modalController = new ModalController();
+        modalController.setAction(this::clearLogFile);
+        modalController.showModal(ownerStage,"/confirmClearLogDialog.fxml", "Clear Log Confirmation", 300,150);
+    }
+
+    private void clearLogFile() {
+        try {
+            connTestService.clearPingLogFile();
+        } catch (InterruptedException e) {
+            logger.error("Error clearing ping log file", e);
+        }
+        updateTables();
+    }
+
+
+    /**
      * Opens the user manual in a new window
      */
     @FXML
     private void openUserManual(ActionEvent event) throws IOException {
         Stage ownerStage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-        UserManualController userManualController = new UserManualController();
-        userManualController.showUserManual(ownerStage);
+        ModalController modalController = new ModalController();
+        modalController.showModal(ownerStage,"/usermanual.fxml", "User Manual", 300, 400);
     }
 
     /**

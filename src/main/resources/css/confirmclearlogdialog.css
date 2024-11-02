@@ -1,0 +1,26 @@
+.root_confirmmodal{
+    -fx-border-width: 1px;
+    -fx-border-color: #c9c5c5;
+    -fx-border-radius: 5px;
+}
+
+/* Save buttons style */
+.button{
+    -fx-padding: 5px 20px;
+    -fx-border-width: 0;
+    -fx-border-radius: 80px;
+    -fx-background-color: #095c8adb;
+    -fx-text-fill: #ffffff;
+    -fx-font-weight: bold;
+    -fx-font-size: 12px;
+    -fx-transition: all 0.5s;
+    -fx-margin: 20px;
+    -fx-alignment: CENTER_RIGHT;
+}
+
+.button:hover {
+    -fx-background-color: #095c8adb;
+    -fx-effect: dropshadow(gaussian, #095c8adb, 1, 0.04, 0, 0);
+    -fx-scale-x: 1.005;
+    -fx-scale-y: 1.005;
+}
