@@ -93,17 +93,24 @@
   -fx-alignment: CENTER_LEFT;
 }
 
+/* Buttons HBox style */
+.buttons-box{
+  -fx-padding: 20;
+  -fx-alignment: TOP_CENTER;
+  -fx-spacing: 10px;
+}
+
 /* Save buttons style */
 .save-button{
-  -fx-padding: 6px 20px;
-  -fx-border-width: 0;
-  -fx-border-radius: 80px;
+  -fx-padding: 5px 20px;
+  -fx-border-color:  #095c8adb;
+  -fx-border-radius: 5px;
   -fx-background-color: #095c8adb;
   -fx-text-fill: #ffffff;
   -fx-font-weight: bold;
-  -fx-font-size: 10px;
+  -fx-font-size: 12px;
   -fx-transition: all 0.5s;
-  -fx-margin: 10px;
+  -fx-margin: 20px;
   -fx-alignment: CENTER_RIGHT;
 }
 
@@ -120,9 +127,35 @@
   -fx-border-width: 1;
 }
 
-.resize-handle:hover {
+.save-button.resize-handle:hover {
   -fx-border-color: dodgerblue;
 }
+
+/* Clear button style */
+.clear-button{
+  -fx-padding: 5px 20px;
+  -fx-border-color:  #4a86a8;
+  -fx-border-radius: 5px;
+  -fx-background-color: #ffffffdb;
+  -fx-text-fill: #3B4856;
+  -fx-font-weight: bold;
+  -fx-font-size: 12px;
+  -fx-transition: all 0.5s;
+  -fx-margin: 20px;
+  -fx-alignment: CENTER_RIGHT;
+}
+
+.clear-button:hover {
+  -fx-background-color: #f3faff;
+  -fx-effect: dropshadow(gaussian, #dff1fd, 1, 0.04, 0, 0);
+  -fx-scale-x: 1.005;
+  -fx-scale-y: 1.005;
+}
+
+.clear-button.resize-handle:hover {
+  -fx-border-color: #dff1fd;
+}
+
 
 /* Check Box style */
 .check-box .box {

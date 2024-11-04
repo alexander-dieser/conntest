@@ -54,7 +54,7 @@ public class StageListener implements ApplicationListener<JavafxApplication.Stag
 
             stage.setScene(scene);
             stage.setMinWidth(800);
-            stage.setMinHeight(650);
+            stage.setMinHeight(750);
             stage.setTitle("ConnTest");
             stage.getIcons().add(new Image("image/logo.png"));
 
