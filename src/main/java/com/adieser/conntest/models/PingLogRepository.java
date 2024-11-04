@@ -107,4 +107,11 @@ public interface PingLogRepository {
      * @return List of pings
      */
     List<PingLog> findMaxMinPingLog(String ipAddress) throws IOException;
+
+    /**
+     * Calculate and retrieve the average of latency pings within a list of pings filtered by IP address
+     * @param ipAddress IP address use to filter the results
+     * @return average of latency pings
+     */
+    BigDecimal findAvgLatencyByIp(String ipAddress) throws IOException;
 }

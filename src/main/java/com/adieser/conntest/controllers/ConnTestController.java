@@ -367,6 +367,31 @@ public class ConnTestController {
         );
     }
 
+    @ApiResponse(responseCode = "200", description = "a number representing the average latency time of a given IP address.")
+    @GetMapping(value = "/pings/{ipAddress}/avg-latency", produces = {"application/json"})
+    @Operation(summary = "Get the average latency time of a given IP address")
+    public ResponseEntity<AverageResponse> getAvgLatencyByIp(
+            @Parameter(
+                    description = "IP address used to filter the results",
+                    required = true)
+            @PathVariable String ipAddress) throws IOException {
+
+        AverageResponse averageResult = AverageResponse.builder()
+                .ipAddress(ipAddress)
+                .average(connTestService.getAvgLatencyByIp(ipAddress))
+                .build();
+
+        averageResult.add(
+                linkTo(methodOn(ConnTestController.class).getPingsByIp(ipAddress))
+                        .withRel(HATEOASLinkRelValueTemplates.GET_BY_IP.formatted(ipAddress))
+        );
+
+        return new ResponseEntity<>(
+                averageResult,
+                HttpStatus.OK
+        );
+    }
+
     @DeleteMapping("/pings")
     @Operation(summary = "Clear the pinglog file")
     public ResponseEntity<PingTestResponse> clearPingLogs() throws InterruptedException {

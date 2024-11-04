@@ -153,6 +153,11 @@ public class ConnTestServiceImpl implements ConnTestService {
     }
 
     @Override
+    public BigDecimal getAvgLatencyByIp(String ipAddress) throws IOException {
+        return pingLogRepository.findAvgLatencyByIp(ipAddress);
+    }
+
+    @Override
     public List<String> getIpAddressesFromActiveTests(){
         return tests.stream()
                 .map(ConnTest::getIpAddress)
