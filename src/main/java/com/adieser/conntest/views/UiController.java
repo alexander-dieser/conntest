@@ -84,11 +84,16 @@ public class UiController {
      */
     @FXML
     private void initialize() {
+        ipAddress = getAllIpAddresses();
         if (ipAddress == null) {
             ipAddress = new ArrayList<>();
             ipAddress.add("");
+            setTables();
+        }else{
+            setTables();
+            Platform.runLater(this::updateTables);
         }
-        setTables();
+
         stopButton.setDisable(true);
         timeChoiceBox.getItems().addAll(1, 5, 10, 15);
         this.startButton.setOnAction(actionEvent -> {
@@ -116,6 +121,33 @@ public class UiController {
         });
         this.dayFilterBox.setOnAction(actionEvent -> { if(ipAddress != null) Platform.runLater(this::updateTables); });
     }
+
+    /**
+     * Retrieve the last three IP addresses from the ping logs
+     * @return List of IP addresses
+     */
+    public List<String> getAllIpAddresses() {
+        PingSessionExtract pingSession;
+        try {
+            pingSession = connTestService.getPings();
+        } catch (IOException e) {
+            pingSession = null;
+            logger.error("Unable to find IP addresses at the pinglogs file", e);
+        }
+        Set<String> ipAddressesSet = new LinkedHashSet<>();
+
+        if (pingSession != null && pingSession.getPingLogs() != null) {
+            List<PingLog> pingLogs = pingSession.getPingLogs();
+            Collections.reverse(pingLogs);
+
+            for (PingLog log : pingLogs) {
+                ipAddressesSet.add(log.getIpAddress());
+            }
+        }
+        List<String> uniqueIpAddresses = new ArrayList<>(ipAddressesSet);
+        return uniqueIpAddresses.stream().limit(3).toList();
+    }
+
 
     /**
      * Initializes a ping session, sets up the table view if is not already set, creates and starts a Scheduled Executor
@@ -162,18 +194,18 @@ public class UiController {
      * */
     void updateTables(){
         try {
-                long amountOfPings;
-                List<List<PingLog>> allPingLogs = new ArrayList<>();
+            long amountOfPings;
+            List<List<PingLog>> allPingLogs = new ArrayList<>();
 
-                for (int i = 0; i < Math.min(ipAddress.size(), 3); i++) {
-                    amountOfPings = loadLogs(ipAddress.get(i), allPingLogs);
-                    setAverageLost(ipAddress.get(i), averageLostColumnList.get(i));
-                    setPingCount(pingCountColumnList.get(i), amountOfPings);
-                }
+            for (int i = 0; i < Math.min(ipAddress.size(), 3); i++) {
+                amountOfPings = loadLogs(ipAddress.get(i), allPingLogs);
+                setAverageLost(ipAddress.get(i), averageLostColumnList.get(i));
+                setPingCount(pingCountColumnList.get(i), amountOfPings);
+            }
 
-                List<PingRow> pingRows = combinePingsByDateTime(allPingLogs);
-                Collections.reverse(pingRows);
-                tableView.getItems().setAll(pingRows);
+            List<PingRow> pingRows = combinePingsByDateTime(allPingLogs);
+            Collections.reverse(pingRows);
+            tableView.getItems().setAll(pingRows);
         }catch(IOException e){
             stopExecutorService();
         }
@@ -294,8 +326,8 @@ public class UiController {
                     setText(null);
                     setStyle("");
                 } else if (item.equals("...")) {
-                        setText(item);
-                        setTextFill(Color.GRAY);
+                    setText(item);
+                    setTextFill(Color.GRAY);
                 } else {
                     setText(item);
                     setTextFill(getColorForPingTime(Long.valueOf(item)));
