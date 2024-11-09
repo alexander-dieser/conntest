@@ -391,6 +391,31 @@ class ConnTestControllerIntegrationTest {
     }
 
     @Test
+    void getAvgLatencyByIp() throws Exception {
+        // when
+        when(connTestService.getAvgLatencyByIp(LOCAL_IP_ADDRESS))
+                .thenReturn(BigDecimal.valueOf(0.3));
+
+        MockHttpServletRequestBuilder requestBuilder = TestUtils.addCustomSessionId(
+                MockMvcRequestBuilders.get("/pings/{ipAddress}/avg-latency", LOCAL_IP_ADDRESS)
+        );
+
+        // then assert
+        ResultActions resultActions = mockMvc.perform(requestBuilder)
+                .andExpect( // [' and '] are meant for escaping the '.' due to json navigation errors
+                        jsonPath("$._links.['%s'].href"
+                                .formatted(HATEOASLinkRelValueTemplates.GET_BY_IP
+                                        .formatted(LOCAL_IP_ADDRESS)
+                                )
+                        )
+                                .value(linkTo(methodOn(ConnTestController.class).getPingsByIp(LOCAL_IP_ADDRESS)).toString())
+                );
+
+        assertAverage(resultActions);
+        verify(connTestService, times(1)).getAvgLatencyByIp(LOCAL_IP_ADDRESS);
+    }
+
+    @Test
     void getPingsLostAvgByDateTimeRangeByIp() throws Exception {
         // when
         when(connTestService.getPingsLostAvgByDateTimeRangeByIp(START, END, LOCAL_IP_ADDRESS))

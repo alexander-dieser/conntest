@@ -529,6 +529,21 @@ class ConnTestServiceImplTest {
         assertEquals(LOCAL_IP_ADDRESS, pings.getIpAddress());
     }
 
+    @Test
+    void testGetAvgLatencyByIp() throws IOException {
+        // when
+        ConnTestServiceImpl underTest =
+                new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository, pingUtils);
+        BigDecimal avg = new BigDecimal("0.2");
+        doReturn(avg).when(pingLogRepository).findAvgLatencyByIp(LOCAL_IP_ADDRESS);
+
+        // then
+        BigDecimal resultAvg = underTest.getAvgLatencyByIp(LOCAL_IP_ADDRESS);
+
+        // assert
+        assertEquals(avg, resultAvg);
+    }
+
     static Stream<Boolean> areTestsRunningProvider() {
         return Stream.of(
                 true,

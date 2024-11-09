@@ -18,7 +18,11 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -263,7 +267,51 @@ class CsvPingLogRepositoryTest {
         verify(logger).error(eq(CsvPingLogRepository.CLEAN_PINGLOG_FILE_MSG), any(IOException.class));
     }
 
+    @ParameterizedTest
+    @MethodSource("findAvgLatencyByIpPingLogProvider")
+    void testFindAvgLatencyByIp(List<PingLog> pingLogs, BigDecimal expectedAvg) throws IOException {
 
+        // When
+        CsvPingLogRepository underTestSpy = spy(new CsvPingLogRepository("test", logger));
+
+        doReturn(mock(List.class))
+                .when(underTestSpy)
+                .readAll();
+
+        doReturn(pingLogs.stream())
+                .when(underTestSpy)
+                .getPingLogsByIpStream(any(), eq(LOCAL_IP_ADDRESS));
+
+        // Then
+        BigDecimal result = underTestSpy.findAvgLatencyByIp(LOCAL_IP_ADDRESS);
+
+        // Assert
+        assertEquals(expectedAvg, result);
+    }
+
+    static Stream<Arguments> findAvgLatencyByIpPingLogProvider() {
+
+        return Stream.of(
+                Arguments.of(
+                        Arrays.asList(
+                                PingLog.builder().ipAddress(LOCAL_IP_ADDRESS).pingTime(10L).build(),
+                                PingLog.builder().ipAddress(LOCAL_IP_ADDRESS).pingTime(20L).build(),
+                                PingLog.builder().ipAddress(LOCAL_IP_ADDRESS).pingTime(30L).build()
+                        ),
+                        BigDecimal.valueOf(20.00).setScale(2, RoundingMode.HALF_UP)
+                ),
+                Arguments.of(
+                        List.of(),
+                        BigDecimal.valueOf(0).setScale(2, RoundingMode.HALF_UP)
+                ),
+                Arguments.of(
+                        Collections.singletonList(
+                                PingLog.builder().ipAddress(LOCAL_IP_ADDRESS).pingTime(50L).build()
+                        ),
+                        BigDecimal.valueOf(50.00).setScale(2, RoundingMode.HALF_UP)
+                )
+        );
+    }
 
     static Stream<PingLog> successPingLogProvider() {
         return Stream.of(
