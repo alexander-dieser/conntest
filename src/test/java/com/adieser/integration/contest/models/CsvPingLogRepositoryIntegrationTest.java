@@ -19,6 +19,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
@@ -228,6 +229,17 @@ class CsvPingLogRepositoryIntegrationTest{
         }
         else
             assertTrue(maxMinPingLog.isEmpty());
+    }
+
+    @Test
+    void testFindAvgLatencyByIp() throws IOException {
+        writePingLog(DEFAULT_LOG_DATE_TIME, LOCAL_IP_ADDRESS, 10L);
+        writePingLog(DEFAULT_LOG_DATE_TIME, LOCAL_IP_ADDRESS, 20L);
+        writePingLog(DEFAULT_LOG_DATE_TIME, LOCAL_IP_ADDRESS, 30L);
+
+        BigDecimal avgLatency = csvPingLogRepository.findAvgLatencyByIp(LOCAL_IP_ADDRESS);
+
+        assertEquals(BigDecimal.valueOf(20L).setScale(2, RoundingMode.HALF_UP), avgLatency);
     }
 
     @Test

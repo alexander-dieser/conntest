@@ -106,4 +106,11 @@ public interface ConnTestService {
      * @return List of ping results and metadata {@link PingSessionExtract}
      */
     PingSessionExtract getMaxMinPingLog(String ipAddress) throws IOException;
+
+    /**
+     * Get the average latency of all the ping logs filtered by IP
+     * @param ipAddress IP address use to filter the results
+     * @return average latency of all the ping logs
+     */
+    BigDecimal getAvgLatencyByIp(String ipAddress) throws IOException;
 }
