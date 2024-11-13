@@ -67,10 +67,10 @@
 }
 
 .table-view:row-selection .table-row-cell:filled:selected{
-    -fx-background-color: #5a899f;
+    -fx-background-color: #9dd5ef;
 }
 .table-view:row-selection .table-row-cell:filled:selected:hover {
-    -fx-background-color: #5a899f;
+    -fx-background-color: #9dd5ef;
 }
 
 .table .table-row-cell:nth-child(even) {

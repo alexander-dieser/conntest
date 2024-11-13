@@ -58,6 +58,8 @@ public class UiController {
     @FXML
     private CheckBox dayFilterBox;
     @FXML
+    private CheckBox lostPingsFilterBox;
+    @FXML
     private VBox tablesVBox;
     @FXML
     private VBox tableVBox;
@@ -94,12 +96,12 @@ public class UiController {
             Platform.runLater(this::updateTables);
         }
 
-        stopButton.setDisable(true);
         timeChoiceBox.getItems().addAll(1, 5, 10, 15);
         this.startButton.setOnAction(actionEvent -> {
             startButton.setDisable(true);
             progressIndicator.setVisible(true);
             dayFilterBox.setDisable(true);
+            lostPingsFilterBox.setDisable(true);
             if(timeChoiceBox.getValue() != null) timechoice = timeChoiceBox.getValue();
             Thread startThread = new Thread(this::start);
             startThread.start();
@@ -110,6 +112,7 @@ public class UiController {
             this.stop();
             startButton.setDisable(false);
             dayFilterBox.setDisable(false);
+            lostPingsFilterBox.setDisable(false);
         });
         this.timeChoiceBox.setOnAction(actionEvent -> {
             if(startButton.isDisable()){
@@ -119,7 +122,6 @@ public class UiController {
                 startExecutorService(timechoice);
             }
         });
-        this.dayFilterBox.setOnAction(actionEvent -> { if(ipAddress != null) Platform.runLater(this::updateTables); });
     }
 
     /**
@@ -192,6 +194,7 @@ public class UiController {
     /**
      * Load logs, set the average of lost pings and ping count for each ip.
      * */
+    @FXML
     void updateTables(){
         try {
             long amountOfPings;
@@ -361,13 +364,22 @@ public class UiController {
      * @return The total number of pings for the session.
      */
     public long loadLogs(String ip, List<List<PingLog>> allPingLogs) throws IOException {
-        PingSessionExtract pingLogs = !dayFilterBox.isSelected()
-                ? connTestService.getPingsByIp(ip)
-                : connTestService.getPingsByDateTimeRangeByIp(getStartOfDay(), getEndOfDay(), ip);
+        PingSessionExtract pingLogs;
+
+        if (!dayFilterBox.isSelected() && !lostPingsFilterBox.isSelected()) {
+            pingLogs = connTestService.getPingsByIp(ip);
+        } else if (dayFilterBox.isSelected() && !lostPingsFilterBox.isSelected()) {
+            pingLogs = connTestService.getPingsByDateTimeRangeByIp(getStartOfDay(), getEndOfDay(), ip);
+        } else if (lostPingsFilterBox.isSelected()) {
+            pingLogs = connTestService.getLostPingsByIp(ip);
+        } else { //Both filters selected
+            pingLogs = connTestService.getLostPingsByDateTimeRangeByIp(getStartOfDay(), getEndOfDay(), ip);
+        }
 
         allPingLogs.add(pingLogs.getPingLogs());
         return pingLogs.getAmountOfPings();
     }
+
 
     /**
      * Combines the ping logs from multiple IPs by their timestamp into a single list of PingRow objects.
@@ -378,27 +390,30 @@ public class UiController {
     public List<PingRow> combinePingsByDateTime(List<List<PingLog>> pingLogsByIp) {
         Map<LocalDateTime, List<String>> combinedMap = new TreeMap<>();
 
-        for (List<PingLog> pingLogs : pingLogsByIp) {
+        for (int i = 0; i < pingLogsByIp.size(); i++) {
+            List<PingLog> pingLogs = pingLogsByIp.get(i);
+
             for (PingLog pingLog : pingLogs) {
                 LocalDateTime dateTime = pingLog.getDateTime();
                 String pingTime = String.valueOf(pingLog.getPingTime());
 
-                combinedMap.putIfAbsent(dateTime, new ArrayList<>());
-                combinedMap.get(dateTime).add(pingTime);
+                // Si no existe el dateTime, crea una lista con "..." y añade el ping en la posición actual.
+                combinedMap.putIfAbsent(dateTime, new ArrayList<>(Collections.nCopies(pingLogsByIp.size(), "...")));
+                combinedMap.get(dateTime).set(i, pingTime); // Coloca el ping en la columna correspondiente
             }
         }
+
+        // Convertir el combinedMap a una lista de PingRow
         List<PingRow> pingRows = new ArrayList<>();
         for (Map.Entry<LocalDateTime, List<String>> entry : combinedMap.entrySet()) {
             LocalDateTime dateTime = entry.getKey();
             List<String> pingTimes = entry.getValue();
-
-            while (pingTimes.size() < pingLogsByIp.size()) {pingTimes.add("...");}
-
             pingRows.add(new PingRow(dateTime, pingTimes));
         }
 
         return pingRows;
     }
+
 
     /**
      * Returns the start of the current day (00:00:00).
@@ -419,12 +434,12 @@ public class UiController {
      * Sets the average of lost pings for each IP address to corresponding labels.
      */
     public void setAverageLost(String ip, TableColumn<String, String> column) throws IOException {
-        if (!dayFilterBox.isSelected()) {
+        if (!dayFilterBox.isSelected() && !lostPingsFilterBox.isSelected()) {
             column.setText(connTestService.getPingsLostAvgByIp(ip) + "%");
-        } else {
-            LocalDateTime currentDayStartTime = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0);
-            LocalDateTime currentDayEndTime = LocalDateTime.now().withHour(23).withMinute(59).withSecond(59).withNano(999999999);
-            column.setText(connTestService.getPingsLostAvgByDateTimeRangeByIp(currentDayStartTime, currentDayEndTime, ip) + "%");
+        } else if (dayFilterBox.isSelected()  && !lostPingsFilterBox.isSelected() ) {
+            column.setText(connTestService.getPingsLostAvgByDateTimeRangeByIp(getStartOfDay(), getEndOfDay(), ip) + "%");
+        } else if (lostPingsFilterBox.isSelected()) {
+            column.setText("100 %");
         }
     }
 
