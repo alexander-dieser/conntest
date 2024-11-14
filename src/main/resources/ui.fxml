@@ -64,7 +64,7 @@
                     <Insets left="40.0" right="15.0" top="10.0" />
                 </HBox.margin>
             </Button>
-            <Button fx:id="stopButton" styleClass="mainbutton" text="Stop analysis">
+            <Button fx:id="stopButton" disable="true" styleClass="mainbutton" text="Stop analysis">
                 <HBox.margin>
                     <Insets right="10.0" top="10.0" />
                 </HBox.margin>
@@ -113,7 +113,8 @@
             <!-- FILTERS -->
             <Label text="Filters: "><VBox.margin><Insets bottom="5.0" /></VBox.margin></Label>
             <HBox prefHeight="26.0" prefWidth="1000.0" spacing="9">
-                <CheckBox fx:id="dayFilterBox" mnemonicParsing="false" text=" Current day only" />
+                <CheckBox fx:id="dayFilterBox" mnemonicParsing="false" onAction="#updateTables" text=" Current day only" />
+                <CheckBox fx:id="lostPingsFilterBox" mnemonicParsing="false" onAction="#updateTables" text=" Show lost pings only" />
             </HBox>
          <padding>
             <Insets left="15.0" />
