@@ -102,7 +102,6 @@ public class UiController {
             startButton.setDisable(true);
             progressIndicator.setVisible(true);
             dayFilterBox.setDisable(true);
-            lostPingsFilterBox.setDisable(true);
             if(timeChoiceBox.getValue() != null) timechoice = timeChoiceBox.getValue();
             Thread startThread = new Thread(this::start);
             startThread.start();
@@ -113,7 +112,6 @@ public class UiController {
             this.stop();
             startButton.setDisable(false);
             dayFilterBox.setDisable(false);
-            lostPingsFilterBox.setDisable(false);
         });
         this.timeChoiceBox.setOnAction(actionEvent -> {
             if(startButton.isDisable()){
