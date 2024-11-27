@@ -463,7 +463,7 @@ public class UiController {
      */
     public void setAverageLatency(String ip, TableColumn<String, String> column) throws IOException {
         if (!dayFilterBox.isSelected() && !lostPingsFilterBox.isSelected()) {
-            column.setText("Ex: " + connTestService.getPingsLostAvgByIp(ip) + " ms");
+            column.setText("Ex: " + connTestService.getAvgLatencyByIp(ip) + " ms");
         } else if (dayFilterBox.isSelected()  && !lostPingsFilterBox.isSelected() ) {
             column.setText("in process");
         } else if (lostPingsFilterBox.isSelected()) {
