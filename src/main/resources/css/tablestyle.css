@@ -113,15 +113,15 @@
 /* Footer Table view style */
 .footer_table {
     -fx-border-collapse: collapse;
-
     -fx-border-width: 0;
     -fx-background-color: #ffffff;
-
     -fx-margin: 0px 10px 10px 10px;
     -fx-alignment: center;
-
-
     -fx-max-height: 10px;
+}
+
+.sub-column {
+    -fx-background-color: #ffffff90;
 }
 
 .footer_table .column-header-background .filler {

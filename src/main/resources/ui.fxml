@@ -5,7 +5,7 @@
 <?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
 
-<VBox alignment="TOP_CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="750.0" stylesheets="@/css/mainstyle.css, @/css/comboboxstyle.css, @/css/tablestyle.css, @/css/usermanualstyle.css" xmlns="http://javafx.com/javafx/11.0.14-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.adieser.conntest.views.UiController">
+<VBox alignment="TOP_CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="770.0" stylesheets="@/css/mainstyle.css, @/css/comboboxstyle.css, @/css/tablestyle.css, @/css/usermanualstyle.css" xmlns="http://javafx.com/javafx/11.0.14-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.adieser.conntest.views.UiController">
     <HBox alignment="CENTER_RIGHT" prefHeight="28.0" styleClass="tittlebar">
         <Button fx:id="minimizeButton" onAction="#handleMinimize">
             <HBox.margin>
@@ -37,6 +37,9 @@
                 </ImageView>
             </graphic>
         </Button>
+      <VBox.margin>
+         <Insets />
+      </VBox.margin>
     </HBox>
     <!-- FIRST DIVISION -->
     <GridPane alignment="TOP_CENTER" maxHeight="100.0" minHeight="85.0" prefHeight="90.0" styleClass="topbackground" VBox.vgrow="NEVER">
@@ -90,11 +93,11 @@
         </columnConstraints>
         <rowConstraints>
             <RowConstraints vgrow="NEVER" />
-            <RowConstraints maxHeight="420" vgrow="ALWAYS" />
+            <RowConstraints maxHeight="520" vgrow="ALWAYS" />
         </rowConstraints>
         <!-- 0  0 -->
         <VBox prefWidth="269.0" styleClass="h3-label" GridPane.columnIndex="0" GridPane.rowIndex="0">
-            <HBox prefHeight="30.0" prefWidth="190.0" spacing="10" VBox.vgrow="NEVER">
+            <HBox prefHeight="30.0" prefWidth="190.0" spacing="10.0" VBox.vgrow="NEVER">
                 <Label style="-fx-font-size: 16px; -fx-font-weight: bold;" text="Configurations" />
                 <Region HBox.hgrow="ALWAYS" />
                 <Button onAction="#openUserManual" styleClass="usermanualbutton" text="?">
@@ -140,7 +143,7 @@
             </GridPane.margin>
         </VBox>
         <VBox.margin>
-            <Insets left="20.0" right="20.0" top="20.0" />
+            <Insets left="20.0" right="20.0" top="10.0" />
         </VBox.margin>
 
     </GridPane>

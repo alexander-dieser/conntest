@@ -70,9 +70,10 @@ public class UiController {
     @FXML
     private Button saveButton;
 
-    private final List<TableColumn<String, String>> pingCountColumnList = new ArrayList<>();
     private final List<TableColumn<String, String>> averageLostColumnList = new ArrayList<>();
-
+    private final List<TableColumn<String, String>> averageLatencyColumnList = new ArrayList<>();
+    private final List<TableColumn<String, String>> lowestHighestColumnList = new ArrayList<>();
+    private final List<TableColumn<String, String>> pingCountColumnList = new ArrayList<>();
 
     @Autowired
     public UiController(ConnTestService connTestService, Logger logger, ScheduledExecutorService executorService) {
@@ -101,7 +102,6 @@ public class UiController {
             startButton.setDisable(true);
             progressIndicator.setVisible(true);
             dayFilterBox.setDisable(true);
-            lostPingsFilterBox.setDisable(true);
             if(timeChoiceBox.getValue() != null) timechoice = timeChoiceBox.getValue();
             Thread startThread = new Thread(this::start);
             startThread.start();
@@ -112,7 +112,6 @@ public class UiController {
             this.stop();
             startButton.setDisable(false);
             dayFilterBox.setDisable(false);
-            lostPingsFilterBox.setDisable(false);
         });
         this.timeChoiceBox.setOnAction(actionEvent -> {
             if(startButton.isDisable()){
@@ -203,6 +202,8 @@ public class UiController {
             for (int i = 0; i < Math.min(ipAddress.size(), 3); i++) {
                 amountOfPings = loadLogs(ipAddress.get(i), allPingLogs);
                 setAverageLost(ipAddress.get(i), averageLostColumnList.get(i));
+                setAverageLatency(ipAddress.get(i), averageLatencyColumnList.get(i));
+                setLowestHighest(ipAddress.get(i), lowestHighestColumnList.get(i));
                 setPingCount(pingCountColumnList.get(i), amountOfPings);
             }
 
@@ -238,6 +239,8 @@ public class UiController {
             tableView.getColumns().clear();
             footerTable.getColumns().clear();
             averageLostColumnList.clear();
+            averageLatencyColumnList.clear();
+            lowestHighestColumnList.clear();
             pingCountColumnList.clear();
         });
         // Set pings table
@@ -248,8 +251,15 @@ public class UiController {
 
         //Set footer table
         TableColumn<String, String> averageLostColumn = new TableColumn<>("Average Lost");
-        averageLostColumn.setPrefWidth(150);
+        TableColumn<String, String> averageLatencyColumn = new TableColumn<>("Average Latency");
+        TableColumn<String, String> lowestHighestColumn = new TableColumn<>("Lowest / Highest");
         TableColumn<String, String> pingCountColumn = new TableColumn<>("PingCount");
+
+        lowestHighestColumn.setPrefWidth(150);
+
+        averageLatencyColumn.getColumns().add(lowestHighestColumn);
+        averageLatencyColumn.getStyleClass().add("sub-column");
+        averageLostColumn.getColumns().add(averageLatencyColumn);
         pingCountColumn.getColumns().add(averageLostColumn);
 
         Platform.runLater(() -> {
@@ -268,7 +278,6 @@ public class UiController {
             buildPingsColumn(ipAddress.get(i), allPingTimeColumn, i);
             setLabels();
         }
-
 
         saveButton.setOnAction(event -> saveLogs(dateTimeColumn, allPingTimeColumn));
 
@@ -298,18 +307,24 @@ public class UiController {
      * Set average lost and ping count labels for a specified IP address at the footer table
      */
     private void setLabels() {
-        TableColumn<String, String> resultALColumn = new TableColumn<>("");
-        resultALColumn.setPrefWidth(150);
+        TableColumn<String, String> resultAverageLostColumn = new TableColumn<>("");
+        TableColumn<String, String> resultAverageLatencyColumn = new TableColumn<>("");
+        TableColumn<String, String> resultlowestHighestColumn = new TableColumn<>("");
+        TableColumn<String, String> resultPingCountColumn = new TableColumn<>("");
 
-        TableColumn<String, String> resultPCColumn = new TableColumn<>("");
-        resultPCColumn.getColumns().add(resultALColumn);
+        resultlowestHighestColumn.setPrefWidth(150);
+        resultAverageLatencyColumn.getColumns().add(resultlowestHighestColumn);
+        resultAverageLatencyColumn.getStyleClass().add("sub-column");
+        resultAverageLostColumn.getColumns().add(resultAverageLatencyColumn);
+        resultPingCountColumn.getColumns().add(resultAverageLostColumn);
 
         Platform.runLater(() -> {
-            averageLostColumnList.add(resultALColumn);
-            pingCountColumnList.add(resultPCColumn);
-            footerTable.getColumns().add(resultPCColumn);
+            averageLostColumnList.add(resultAverageLostColumn);
+            averageLatencyColumnList.add(resultAverageLatencyColumn);
+            lowestHighestColumnList.add(resultlowestHighestColumn);
+            pingCountColumnList.add(resultPingCountColumn);
+            footerTable.getColumns().add(resultPingCountColumn);
         });
-
     }
 
     /**
@@ -440,6 +455,39 @@ public class UiController {
             column.setText(connTestService.getPingsLostAvgByDateTimeRangeByIp(getStartOfDay(), getEndOfDay(), ip) + "%");
         } else if (lostPingsFilterBox.isSelected()) {
             column.setText("100 %");
+        }
+    }
+
+    /**
+     * Sets the average latency for each IP address to corresponding labels.
+     */
+    public void setAverageLatency(String ip, TableColumn<String, String> column) throws IOException {
+        if (!dayFilterBox.isSelected() && !lostPingsFilterBox.isSelected()) {
+            column.setText(connTestService.getAvgLatencyByIp(ip) + " ms");
+        } else if (dayFilterBox.isSelected()  && !lostPingsFilterBox.isSelected() ) {
+            column.setText("in process");
+        } else if (lostPingsFilterBox.isSelected()) {
+            column.setText("-1");
+        }
+    }
+
+    /**
+     * Sets the lowest latency pinglog and the highest latency pinglog for each IP address to corresponding labels.
+     */
+    public void setLowestHighest(String ip, TableColumn<String, String> column) throws IOException {
+        if (!dayFilterBox.isSelected() && !lostPingsFilterBox.isSelected()) {
+            PingSessionExtract extract = connTestService.getMaxMinPingLog(ip);
+            if (extract.getPingLogs() != null && extract.getPingLogs().size() >= 2) {
+                PingLog lowest = extract.getPingLogs().get(0);
+                PingLog highest = extract.getPingLogs().get(1);
+                column.setText(lowest.getPingTime() + " / " + highest.getPingTime() + " ms");
+            }else{
+                logger.error("Error getting lowest and highest latency pinglog for IP: {}", ipAddress);
+            }
+        } else if (dayFilterBox.isSelected()  && !lostPingsFilterBox.isSelected() ) {
+            column.setText("in process");
+        } else if (lostPingsFilterBox.isSelected()) {
+            column.setText("-1/-1");
         }
     }
 
