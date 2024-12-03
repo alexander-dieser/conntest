@@ -463,11 +463,11 @@ public class UiController {
      */
     public void setAverageLatency(String ip, TableColumn<String, String> column) throws IOException {
         if (!dayFilterBox.isSelected() && !lostPingsFilterBox.isSelected()) {
-            column.setText("Ex: " + connTestService.getAvgLatencyByIp(ip) + " ms");
+            column.setText(connTestService.getAvgLatencyByIp(ip) + " ms");
         } else if (dayFilterBox.isSelected()  && !lostPingsFilterBox.isSelected() ) {
             column.setText("in process");
         } else if (lostPingsFilterBox.isSelected()) {
-            column.setText("Ex: -1");
+            column.setText("-1");
         }
     }
 
@@ -480,14 +480,14 @@ public class UiController {
             if (extract.getPingLogs() != null && extract.getPingLogs().size() >= 2) {
                 PingLog lowest = extract.getPingLogs().get(0);
                 PingLog highest = extract.getPingLogs().get(1);
-                column.setText("Ex: " + lowest.getPingTime() + " / " + highest.getPingTime() + " ms");
+                column.setText(lowest.getPingTime() + " / " + highest.getPingTime() + " ms");
             }else{
                 logger.error("Error getting lowest and highest latency pinglog for IP: {}", ipAddress);
             }
         } else if (dayFilterBox.isSelected()  && !lostPingsFilterBox.isSelected() ) {
             column.setText("in process");
         } else if (lostPingsFilterBox.isSelected()) {
-            column.setText("Ex: -1/-1");
+            column.setText("-1/-1");
         }
     }
 
