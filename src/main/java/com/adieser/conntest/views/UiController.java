@@ -40,6 +40,7 @@ public class UiController {
     private ScheduledExecutorService executorService;
     public final Logger logger;
     List<String> ipAddress;
+    public static final String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
     @FXML
     private Button closeButton;
     @FXML
@@ -60,13 +61,13 @@ public class UiController {
     @FXML
     private CheckBox lostPingsFilterBox;
     @FXML
-    private VBox tablesVBox;
-    @FXML
     private VBox tableVBox;
     @FXML
     private TableView<PingRow> tableView;
     @FXML
     private TableView<String> footerTable;
+    @FXML
+    private Label oldestPingLabel;
     @FXML
     private Button saveButton;
 
@@ -94,6 +95,7 @@ public class UiController {
             setTables();
         }else{
             setTables();
+            setOldestPing();
             Platform.runLater(this::updateTables);
         }
 
@@ -159,6 +161,7 @@ public class UiController {
         ipAddress = connTestService.getIpAddressesFromActiveTests();
 
         setTables();
+        setOldestPing();
 
         createExecutorService();
         startExecutorService(timechoice);
@@ -245,7 +248,7 @@ public class UiController {
         });
         // Set pings table
         TableColumn<PingRow, String> dateTimeColumn = new TableColumn<>("Date");
-        dateTimeColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getDateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))));
+        dateTimeColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getDateTime().format(DateTimeFormatter.ofPattern(DATE_FORMAT))));
         dateTimeColumn.setPrefWidth(150);
         TableColumn<PingRow, String> allPingTimeColumn = new TableColumn<>("Ping Time (ms)");
 
@@ -412,13 +415,11 @@ public class UiController {
                 LocalDateTime dateTime = pingLog.getDateTime();
                 String pingTime = String.valueOf(pingLog.getPingTime());
 
-                // Si no existe el dateTime, crea una lista con "..." y añade el ping en la posición actual.
                 combinedMap.putIfAbsent(dateTime, new ArrayList<>(Collections.nCopies(pingLogsByIp.size(), "...")));
-                combinedMap.get(dateTime).set(i, pingTime); // Coloca el ping en la columna correspondiente
+                combinedMap.get(dateTime).set(i, pingTime);
             }
         }
 
-        // Convertir el combinedMap a una lista de PingRow
         List<PingRow> pingRows = new ArrayList<>();
         for (Map.Entry<LocalDateTime, List<String>> entry : combinedMap.entrySet()) {
             LocalDateTime dateTime = entry.getKey();
@@ -499,6 +500,26 @@ public class UiController {
     }
 
     /**
+     * Sets a label to display the oldest ping date and time
+     */
+    public void setOldestPing() {
+        try {
+            PingSessionExtract extract = connTestService.getPings();
+            List<PingLog> pingLogs = extract.getPingLogs();
+
+            if (pingLogs != null && !pingLogs.isEmpty()) {
+                PingLog oldest = pingLogs.get(0);
+                oldestPingLabel.setText("Oldest ping: " + oldest.getDateTime().format(DateTimeFormatter.ofPattern(DATE_FORMAT)));
+            } else {
+                oldestPingLabel.setText(" ");
+            }
+        } catch (IOException e) {
+            logger.error("Error retrieving ping logs: {}", e.getMessage(), e);
+        }
+
+    }
+
+    /**
      * Saves the ping logs displayed in the TableView to a .log file.
      * @param dateColumn the column representing the date of the ping logs.
      * @param pingParentColumn the columns representing the time of the ping logs.
@@ -526,7 +547,7 @@ public class UiController {
 
                 ObservableList<PingRow> items = tableView.getItems();
                 for (PingRow log : items) {
-                    writer.write(log.getDateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+                    writer.write(log.getDateTime().format(DateTimeFormatter.ofPattern(DATE_FORMAT)));
                     writer.write("\t\t");
 
                     for (TableColumn<PingRow, ?> childColumn : pingParentColumn.getColumns()) {
@@ -560,6 +581,7 @@ public class UiController {
     private void clearLogsAction() {
         try {
             connTestService.clearPingLogFile();
+            setOldestPing();
         } catch (InterruptedException e) {
             logger.error("Error clearing ping log file", e);
         }
