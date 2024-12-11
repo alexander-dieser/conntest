@@ -161,7 +161,6 @@ public class UiController {
         ipAddress = connTestService.getIpAddressesFromActiveTests();
 
         setTables();
-        setOldestPing();
 
         createExecutorService();
         startExecutorService(timechoice);
@@ -176,6 +175,7 @@ public class UiController {
         Platform.runLater(() -> {
             progressIndicator.setVisible(false);
             stopButton.setDisable(false);
+            oldestPingLabel.setText(" ");
         });
     }
 
@@ -581,7 +581,6 @@ public class UiController {
     private void clearLogsAction() {
         try {
             connTestService.clearPingLogFile();
-            setOldestPing();
         } catch (InterruptedException e) {
             logger.error("Error clearing ping log file", e);
         }
