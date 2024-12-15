@@ -581,6 +581,7 @@ public class UiController {
     private void clearLogsAction() {
         try {
             connTestService.clearPingLogFile();
+            oldestPingLabel.setText(" ");
         } catch (InterruptedException e) {
             logger.error("Error clearing ping log file", e);
         }
