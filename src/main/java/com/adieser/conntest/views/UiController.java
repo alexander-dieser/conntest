@@ -175,7 +175,6 @@ public class UiController {
         Platform.runLater(() -> {
             progressIndicator.setVisible(false);
             stopButton.setDisable(false);
-            oldestPingLabel.setText(" ");
         });
     }
 
@@ -209,6 +208,8 @@ public class UiController {
                 setLowestHighest(ipAddress.get(i), lowestHighestColumnList.get(i));
                 setPingCount(pingCountColumnList.get(i), amountOfPings);
             }
+
+            setOldestPing();
 
             List<PingRow> pingRows = combinePingsByDateTime(allPingLogs);
             Collections.reverse(pingRows);
@@ -508,7 +509,7 @@ public class UiController {
             List<PingLog> pingLogs = extract.getPingLogs();
 
             if (pingLogs != null && !pingLogs.isEmpty()) {
-                PingLog oldest = pingLogs.get(0);
+                PingLog oldest = pingLogs.get(pingLogs.size() - 1);
                 oldestPingLabel.setText("Oldest ping: " + oldest.getDateTime().format(DateTimeFormatter.ofPattern(DATE_FORMAT)));
             } else {
                 oldestPingLabel.setText(" ");
