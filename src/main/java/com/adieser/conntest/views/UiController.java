@@ -108,13 +108,7 @@ public class UiController {
             Thread startThread = new Thread(this::start);
             startThread.start();
         });
-        this.stopButton.setOnAction(actionEvent -> {
-            stopButton.setDisable(true);
-            progressIndicator.setVisible(false);
-            this.stop();
-            startButton.setDisable(false);
-            dayFilterBox.setDisable(false);
-        });
+        this.stopButton.setOnAction(actionEvent -> this.stop());
         this.timeChoiceBox.setOnAction(actionEvent -> {
             if(startButton.isDisable()){
                 stopExecutorService();
@@ -223,8 +217,12 @@ public class UiController {
      * Shuts down the scheduled executor service and stops all tests.
      */
     public void stop() {
+        stopButton.setDisable(true);
+        progressIndicator.setVisible(false);
         stopExecutorService();
         connTestService.stopTests();
+        startButton.setDisable(false);
+        dayFilterBox.setDisable(false);
     }
 
     /**
@@ -483,8 +481,6 @@ public class UiController {
                 PingLog lowest = extract.getPingLogs().get(0);
                 PingLog highest = extract.getPingLogs().get(1);
                 column.setText(lowest.getPingTime() + " / " + highest.getPingTime() + " ms");
-            }else{
-                logger.error("Error getting lowest and highest latency pinglog for IP: {}", ipAddress);
             }
         } else if (dayFilterBox.isSelected()  && !lostPingsFilterBox.isSelected() ) {
             column.setText("in process");
