@@ -505,11 +505,12 @@ public class UiController {
             List<PingLog> pingLogs = extract.getPingLogs();
 
             if (pingLogs != null && !pingLogs.isEmpty()) {
-                PingLog oldest = pingLogs.get(pingLogs.size() - 1);
+                PingLog oldest = pingLogs.get(0);
                 oldestPingLabel.setText("Oldest ping: " + oldest.getDateTime().format(DateTimeFormatter.ofPattern(DATE_FORMAT)));
-            } else {
-                oldestPingLabel.setText(" ");
+            }else{
+                oldestPingLabel.setText("Oldest ping: -");
             }
+
         } catch (IOException e) {
             logger.error("Error retrieving ping logs: {}", e.getMessage(), e);
         }
