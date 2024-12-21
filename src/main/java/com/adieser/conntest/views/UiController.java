@@ -467,7 +467,7 @@ public class UiController {
         } else if (dayFilterBox.isSelected()  && !lostPingsFilterBox.isSelected() ) {
             column.setText("in process");
         } else if (lostPingsFilterBox.isSelected()) {
-            column.setText("-1");
+            column.setText("-1 ms");
         }
     }
 
@@ -481,11 +481,13 @@ public class UiController {
                 PingLog lowest = extract.getPingLogs().get(0);
                 PingLog highest = extract.getPingLogs().get(1);
                 column.setText(lowest.getPingTime() + " / " + highest.getPingTime() + " ms");
+            }else{
+                column.setText("0 / 0 ms");
             }
         } else if (dayFilterBox.isSelected()  && !lostPingsFilterBox.isSelected() ) {
             column.setText("in process");
         } else if (lostPingsFilterBox.isSelected()) {
-            column.setText("-1/-1");
+            column.setText("-1 / -1 ms");
         }
     }
 
@@ -579,11 +581,10 @@ public class UiController {
     private void clearLogsAction() {
         try {
             connTestService.clearPingLogFile();
-            oldestPingLabel.setText(" ");
+            Platform.runLater(this::updateTables);
         } catch (InterruptedException e) {
             logger.error("Error clearing ping log file", e);
         }
-        updateTables();
     }
 
 

@@ -143,3 +143,12 @@
 .footer_table .placeholder {
     -fx-text-fill: #ffffff;
 }
+
+.footer_table .table-row-cell {
+    -fx-border-color: transparent;
+}
+
+.footer_table .table-cell {
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+}
