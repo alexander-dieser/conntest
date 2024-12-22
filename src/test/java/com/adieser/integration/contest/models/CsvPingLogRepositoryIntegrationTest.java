@@ -14,7 +14,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -37,6 +36,7 @@ import static com.adieser.utils.TestUtils.CLOUD_IP_ADDRESS;
 import static com.adieser.utils.TestUtils.DEFAULT_LOG_DATE_TIME;
 import static com.adieser.utils.TestUtils.DEFAULT_PING_TIME;
 import static com.adieser.utils.TestUtils.LOCAL_IP_ADDRESS;
+import static com.adieser.utils.TestUtils.deleteDir;
 import static com.adieser.utils.TestUtils.getDefaultPingLog;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.Matchers.equalTo;
@@ -302,22 +302,6 @@ class CsvPingLogRepositoryIntegrationTest{
                 )
         );
     }
-
-    /**
-     * recursively delete directories, subdirectories and files
-     */
-   private void deleteDir(File fileOrDir) throws IOException {
-        if (fileOrDir.isDirectory()) {
-            File[] files = fileOrDir.listFiles();
-            if (files != null) {
-                for (File file : files) {
-                    deleteDir(file);
-                }
-            }
-        }
-
-        Files.deleteIfExists(fileOrDir.toPath());
-   }
 
     /**
      * Save ping using the repository method

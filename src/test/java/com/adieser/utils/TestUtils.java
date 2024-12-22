@@ -4,6 +4,9 @@ import com.adieser.conntest.models.PingLog;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.time.LocalDateTime;
 
 public class TestUtils {
@@ -41,5 +44,21 @@ public class TestUtils {
         requestBuilder.session(session);
 
         return requestBuilder;
+    }
+
+    /**
+     * recursively delete directories, subdirectories and files
+     */
+    public static void deleteDir(File fileOrDir) throws IOException {
+        if (fileOrDir.isDirectory()) {
+            File[] files = fileOrDir.listFiles();
+            if (files != null) {
+                for (File file : files) {
+                    deleteDir(file);
+                }
+            }
+        }
+
+        Files.deleteIfExists(fileOrDir.toPath());
     }
 }
