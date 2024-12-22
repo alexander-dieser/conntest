@@ -5,7 +5,7 @@
 <?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
 
-<VBox alignment="TOP_CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="750.0" stylesheets="@/css/mainstyle.css, @/css/comboboxstyle.css, @/css/tablestyle.css, @/css/usermanualstyle.css" xmlns="http://javafx.com/javafx/11.0.14-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.adieser.conntest.views.UiController">
+<VBox alignment="TOP_CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="770.0" stylesheets="@/css/mainstyle.css, @/css/comboboxstyle.css, @/css/tablestyle.css, @/css/usermanualstyle.css" xmlns="http://javafx.com/javafx/11.0.14-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.adieser.conntest.views.UiController">
     <HBox alignment="CENTER_RIGHT" prefHeight="28.0" styleClass="tittlebar">
         <Button fx:id="minimizeButton" onAction="#handleMinimize">
             <HBox.margin>
@@ -37,6 +37,9 @@
                 </ImageView>
             </graphic>
         </Button>
+      <VBox.margin>
+         <Insets />
+      </VBox.margin>
     </HBox>
     <!-- FIRST DIVISION -->
     <GridPane alignment="TOP_CENTER" maxHeight="100.0" minHeight="85.0" prefHeight="90.0" styleClass="topbackground" VBox.vgrow="NEVER">
@@ -64,7 +67,7 @@
                     <Insets left="40.0" right="15.0" top="10.0" />
                 </HBox.margin>
             </Button>
-            <Button fx:id="stopButton" styleClass="mainbutton" text="Stop analysis">
+            <Button fx:id="stopButton" disable="true" styleClass="mainbutton" text="Stop analysis">
                 <HBox.margin>
                     <Insets right="10.0" top="10.0" />
                 </HBox.margin>
@@ -90,11 +93,11 @@
         </columnConstraints>
         <rowConstraints>
             <RowConstraints vgrow="NEVER" />
-            <RowConstraints maxHeight="420" vgrow="ALWAYS" />
+            <RowConstraints maxHeight="520" vgrow="ALWAYS" />
         </rowConstraints>
         <!-- 0  0 -->
         <VBox prefWidth="269.0" styleClass="h3-label" GridPane.columnIndex="0" GridPane.rowIndex="0">
-            <HBox prefHeight="30.0" prefWidth="190.0" spacing="10" VBox.vgrow="NEVER">
+            <HBox prefHeight="30.0" prefWidth="190.0" spacing="10.0" VBox.vgrow="NEVER">
                 <Label style="-fx-font-size: 16px; -fx-font-weight: bold;" text="Configurations" />
                 <Region HBox.hgrow="ALWAYS" />
                 <Button onAction="#openUserManual" styleClass="usermanualbutton" text="?">
@@ -113,7 +116,8 @@
             <!-- FILTERS -->
             <Label text="Filters: "><VBox.margin><Insets bottom="5.0" /></VBox.margin></Label>
             <HBox prefHeight="26.0" prefWidth="1000.0" spacing="9">
-                <CheckBox fx:id="dayFilterBox" mnemonicParsing="false" text=" Current day only" />
+                <CheckBox fx:id="dayFilterBox" mnemonicParsing="false" onAction="#updateTables" text=" Current day only" />
+                <CheckBox fx:id="lostPingsFilterBox" mnemonicParsing="false" onAction="#updateTables" text=" Show lost pings only" />
             </HBox>
          <padding>
             <Insets left="15.0" />
@@ -122,12 +126,22 @@
 
         <!-- 0  1 -->
         <!-- Table -->
-        <VBox fx:id="tablesVBox" alignment="TOP_CENTER" prefHeight="700.0" prefWidth="1000.0" GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.vgrow="ALWAYS" HBox.hgrow="ALWAYS">
+        <VBox alignment="TOP_CENTER" prefHeight="700.0" prefWidth="1000.0" GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.vgrow="ALWAYS" HBox.hgrow="ALWAYS">
 
-            <VBox fx:id="tableVBox" maxHeight="600.0" styleClass="table-vbox" VBox.vgrow="ALWAYS">
+            <VBox fx:id="tableVBox" alignment="CENTER" maxHeight="600.0" styleClass="table-vbox" VBox.vgrow="ALWAYS">
                 <TableView fx:id="tableView" prefHeight="5.0" prefWidth="5.0" styleClass="table" VBox.vgrow="ALWAYS" />
                 <TableView fx:id="footerTable" prefHeight="5.0" prefWidth="5.0" styleClass="footer_table" VBox.vgrow="NEVER" />
             </VBox>
+
+            <!-- Label oldest pinglog  -->
+            <HBox alignment="TOP_LEFT" spacing="10">
+                <Region prefWidth="150.0" />
+                <Label fx:id="oldestPingLabel" text="Oldest ping: " />
+            <VBox.margin>
+               <Insets top="10.0" />
+            </VBox.margin>
+            </HBox>
+
 
             <HBox alignment="CENTER" spacing="10" styleClass="buttons-box">
                 <Button onAction="#clearLogs" styleClass="clear-button">Clear</Button>
@@ -139,7 +153,7 @@
             </GridPane.margin>
         </VBox>
         <VBox.margin>
-            <Insets left="20.0" right="20.0" top="20.0" />
+            <Insets left="20.0" right="20.0" top="10.0" />
         </VBox.margin>
 
     </GridPane>

@@ -40,7 +40,7 @@ public class StageListener implements ApplicationListener<JavafxApplication.Stag
             fxmlLoader.setControllerFactory(applicationContext::getBean);
             Parent root = fxmlLoader.load();
 
-            Scene scene = new Scene(root, 1000, 720);
+            Scene scene = new Scene(root, 1000, 750);
 
             // Handle drag event
             root.setOnMousePressed(event -> {

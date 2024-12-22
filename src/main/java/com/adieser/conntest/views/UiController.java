@@ -40,6 +40,7 @@ public class UiController {
     private ScheduledExecutorService executorService;
     public final Logger logger;
     List<String> ipAddress;
+    public static final String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
     @FXML
     private Button closeButton;
     @FXML
@@ -58,7 +59,7 @@ public class UiController {
     @FXML
     private CheckBox dayFilterBox;
     @FXML
-    private VBox tablesVBox;
+    private CheckBox lostPingsFilterBox;
     @FXML
     private VBox tableVBox;
     @FXML
@@ -66,11 +67,14 @@ public class UiController {
     @FXML
     private TableView<String> footerTable;
     @FXML
+    private Label oldestPingLabel;
+    @FXML
     private Button saveButton;
 
-    private final List<TableColumn<String, String>> pingCountColumnList = new ArrayList<>();
     private final List<TableColumn<String, String>> averageLostColumnList = new ArrayList<>();
-
+    private final List<TableColumn<String, String>> averageLatencyColumnList = new ArrayList<>();
+    private final List<TableColumn<String, String>> lowestHighestColumnList = new ArrayList<>();
+    private final List<TableColumn<String, String>> pingCountColumnList = new ArrayList<>();
 
     @Autowired
     public UiController(ConnTestService connTestService, Logger logger, ScheduledExecutorService executorService) {
@@ -91,10 +95,10 @@ public class UiController {
             setTables();
         }else{
             setTables();
+            setOldestPing();
             Platform.runLater(this::updateTables);
         }
 
-        stopButton.setDisable(true);
         timeChoiceBox.getItems().addAll(1, 5, 10, 15);
         this.startButton.setOnAction(actionEvent -> {
             startButton.setDisable(true);
@@ -104,13 +108,7 @@ public class UiController {
             Thread startThread = new Thread(this::start);
             startThread.start();
         });
-        this.stopButton.setOnAction(actionEvent -> {
-            stopButton.setDisable(true);
-            progressIndicator.setVisible(false);
-            this.stop();
-            startButton.setDisable(false);
-            dayFilterBox.setDisable(false);
-        });
+        this.stopButton.setOnAction(actionEvent -> this.stop());
         this.timeChoiceBox.setOnAction(actionEvent -> {
             if(startButton.isDisable()){
                 stopExecutorService();
@@ -119,7 +117,6 @@ public class UiController {
                 startExecutorService(timechoice);
             }
         });
-        this.dayFilterBox.setOnAction(actionEvent -> { if(ipAddress != null) Platform.runLater(this::updateTables); });
     }
 
     /**
@@ -192,6 +189,7 @@ public class UiController {
     /**
      * Load logs, set the average of lost pings and ping count for each ip.
      * */
+    @FXML
     void updateTables(){
         try {
             long amountOfPings;
@@ -200,8 +198,12 @@ public class UiController {
             for (int i = 0; i < Math.min(ipAddress.size(), 3); i++) {
                 amountOfPings = loadLogs(ipAddress.get(i), allPingLogs);
                 setAverageLost(ipAddress.get(i), averageLostColumnList.get(i));
+                setAverageLatency(ipAddress.get(i), averageLatencyColumnList.get(i));
+                setLowestHighest(ipAddress.get(i), lowestHighestColumnList.get(i));
                 setPingCount(pingCountColumnList.get(i), amountOfPings);
             }
+
+            setOldestPing();
 
             List<PingRow> pingRows = combinePingsByDateTime(allPingLogs);
             Collections.reverse(pingRows);
@@ -215,8 +217,12 @@ public class UiController {
      * Shuts down the scheduled executor service and stops all tests.
      */
     public void stop() {
+        stopButton.setDisable(true);
+        progressIndicator.setVisible(false);
         stopExecutorService();
         connTestService.stopTests();
+        startButton.setDisable(false);
+        dayFilterBox.setDisable(false);
     }
 
     /**
@@ -235,18 +241,27 @@ public class UiController {
             tableView.getColumns().clear();
             footerTable.getColumns().clear();
             averageLostColumnList.clear();
+            averageLatencyColumnList.clear();
+            lowestHighestColumnList.clear();
             pingCountColumnList.clear();
         });
         // Set pings table
         TableColumn<PingRow, String> dateTimeColumn = new TableColumn<>("Date");
-        dateTimeColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getDateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))));
+        dateTimeColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getDateTime().format(DateTimeFormatter.ofPattern(DATE_FORMAT))));
         dateTimeColumn.setPrefWidth(150);
         TableColumn<PingRow, String> allPingTimeColumn = new TableColumn<>("Ping Time (ms)");
 
         //Set footer table
         TableColumn<String, String> averageLostColumn = new TableColumn<>("Average Lost");
-        averageLostColumn.setPrefWidth(150);
+        TableColumn<String, String> averageLatencyColumn = new TableColumn<>("Average Latency");
+        TableColumn<String, String> lowestHighestColumn = new TableColumn<>("Lowest / Highest");
         TableColumn<String, String> pingCountColumn = new TableColumn<>("PingCount");
+
+        lowestHighestColumn.setPrefWidth(150);
+
+        averageLatencyColumn.getColumns().add(lowestHighestColumn);
+        averageLatencyColumn.getStyleClass().add("sub-column");
+        averageLostColumn.getColumns().add(averageLatencyColumn);
         pingCountColumn.getColumns().add(averageLostColumn);
 
         Platform.runLater(() -> {
@@ -265,7 +280,6 @@ public class UiController {
             buildPingsColumn(ipAddress.get(i), allPingTimeColumn, i);
             setLabels();
         }
-
 
         saveButton.setOnAction(event -> saveLogs(dateTimeColumn, allPingTimeColumn));
 
@@ -295,18 +309,24 @@ public class UiController {
      * Set average lost and ping count labels for a specified IP address at the footer table
      */
     private void setLabels() {
-        TableColumn<String, String> resultALColumn = new TableColumn<>("");
-        resultALColumn.setPrefWidth(150);
+        TableColumn<String, String> resultAverageLostColumn = new TableColumn<>("");
+        TableColumn<String, String> resultAverageLatencyColumn = new TableColumn<>("");
+        TableColumn<String, String> resultlowestHighestColumn = new TableColumn<>("");
+        TableColumn<String, String> resultPingCountColumn = new TableColumn<>("");
 
-        TableColumn<String, String> resultPCColumn = new TableColumn<>("");
-        resultPCColumn.getColumns().add(resultALColumn);
+        resultlowestHighestColumn.setPrefWidth(150);
+        resultAverageLatencyColumn.getColumns().add(resultlowestHighestColumn);
+        resultAverageLatencyColumn.getStyleClass().add("sub-column");
+        resultAverageLostColumn.getColumns().add(resultAverageLatencyColumn);
+        resultPingCountColumn.getColumns().add(resultAverageLostColumn);
 
         Platform.runLater(() -> {
-            averageLostColumnList.add(resultALColumn);
-            pingCountColumnList.add(resultPCColumn);
-            footerTable.getColumns().add(resultPCColumn);
+            averageLostColumnList.add(resultAverageLostColumn);
+            averageLatencyColumnList.add(resultAverageLatencyColumn);
+            lowestHighestColumnList.add(resultlowestHighestColumn);
+            pingCountColumnList.add(resultPingCountColumn);
+            footerTable.getColumns().add(resultPingCountColumn);
         });
-
     }
 
     /**
@@ -361,13 +381,22 @@ public class UiController {
      * @return The total number of pings for the session.
      */
     public long loadLogs(String ip, List<List<PingLog>> allPingLogs) throws IOException {
-        PingSessionExtract pingLogs = !dayFilterBox.isSelected()
-                ? connTestService.getPingsByIp(ip)
-                : connTestService.getPingsByDateTimeRangeByIp(getStartOfDay(), getEndOfDay(), ip);
+        PingSessionExtract pingLogs;
+
+        if (!dayFilterBox.isSelected() && !lostPingsFilterBox.isSelected()) {
+            pingLogs = connTestService.getPingsByIp(ip);
+        } else if (dayFilterBox.isSelected() && !lostPingsFilterBox.isSelected()) {
+            pingLogs = connTestService.getPingsByDateTimeRangeByIp(getStartOfDay(), getEndOfDay(), ip);
+        } else if (lostPingsFilterBox.isSelected()) {
+            pingLogs = connTestService.getLostPingsByIp(ip);
+        } else { //Both filters selected
+            pingLogs = connTestService.getLostPingsByDateTimeRangeByIp(getStartOfDay(), getEndOfDay(), ip);
+        }
 
         allPingLogs.add(pingLogs.getPingLogs());
         return pingLogs.getAmountOfPings();
     }
+
 
     /**
      * Combines the ping logs from multiple IPs by their timestamp into a single list of PingRow objects.
@@ -378,27 +407,28 @@ public class UiController {
     public List<PingRow> combinePingsByDateTime(List<List<PingLog>> pingLogsByIp) {
         Map<LocalDateTime, List<String>> combinedMap = new TreeMap<>();
 
-        for (List<PingLog> pingLogs : pingLogsByIp) {
+        for (int i = 0; i < pingLogsByIp.size(); i++) {
+            List<PingLog> pingLogs = pingLogsByIp.get(i);
+
             for (PingLog pingLog : pingLogs) {
                 LocalDateTime dateTime = pingLog.getDateTime();
                 String pingTime = String.valueOf(pingLog.getPingTime());
 
-                combinedMap.putIfAbsent(dateTime, new ArrayList<>());
-                combinedMap.get(dateTime).add(pingTime);
+                combinedMap.putIfAbsent(dateTime, new ArrayList<>(Collections.nCopies(pingLogsByIp.size(), "...")));
+                combinedMap.get(dateTime).set(i, pingTime);
             }
         }
+
         List<PingRow> pingRows = new ArrayList<>();
         for (Map.Entry<LocalDateTime, List<String>> entry : combinedMap.entrySet()) {
             LocalDateTime dateTime = entry.getKey();
             List<String> pingTimes = entry.getValue();
-
-            while (pingTimes.size() < pingLogsByIp.size()) {pingTimes.add("...");}
-
             pingRows.add(new PingRow(dateTime, pingTimes));
         }
 
         return pingRows;
     }
+
 
     /**
      * Returns the start of the current day (00:00:00).
@@ -419,12 +449,45 @@ public class UiController {
      * Sets the average of lost pings for each IP address to corresponding labels.
      */
     public void setAverageLost(String ip, TableColumn<String, String> column) throws IOException {
-        if (!dayFilterBox.isSelected()) {
+        if (!dayFilterBox.isSelected() && !lostPingsFilterBox.isSelected()) {
             column.setText(connTestService.getPingsLostAvgByIp(ip) + "%");
-        } else {
-            LocalDateTime currentDayStartTime = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0);
-            LocalDateTime currentDayEndTime = LocalDateTime.now().withHour(23).withMinute(59).withSecond(59).withNano(999999999);
-            column.setText(connTestService.getPingsLostAvgByDateTimeRangeByIp(currentDayStartTime, currentDayEndTime, ip) + "%");
+        } else if (dayFilterBox.isSelected()  && !lostPingsFilterBox.isSelected() ) {
+            column.setText(connTestService.getPingsLostAvgByDateTimeRangeByIp(getStartOfDay(), getEndOfDay(), ip) + "%");
+        } else if (lostPingsFilterBox.isSelected()) {
+            column.setText("100 %");
+        }
+    }
+
+    /**
+     * Sets the average latency for each IP address to corresponding labels.
+     */
+    public void setAverageLatency(String ip, TableColumn<String, String> column) throws IOException {
+        if (!dayFilterBox.isSelected() && !lostPingsFilterBox.isSelected()) {
+            column.setText(connTestService.getAvgLatencyByIp(ip) + " ms");
+        } else if (dayFilterBox.isSelected()  && !lostPingsFilterBox.isSelected() ) {
+            column.setText("in process");
+        } else if (lostPingsFilterBox.isSelected()) {
+            column.setText("-1 ms");
+        }
+    }
+
+    /**
+     * Sets the lowest latency pinglog and the highest latency pinglog for each IP address to corresponding labels.
+     */
+    public void setLowestHighest(String ip, TableColumn<String, String> column) throws IOException {
+        if (!dayFilterBox.isSelected() && !lostPingsFilterBox.isSelected()) {
+            PingSessionExtract extract = connTestService.getMaxMinPingLog(ip);
+            if (extract.getPingLogs() != null && extract.getPingLogs().size() >= 2) {
+                PingLog lowest = extract.getPingLogs().get(0);
+                PingLog highest = extract.getPingLogs().get(1);
+                column.setText(lowest.getPingTime() + " / " + highest.getPingTime() + " ms");
+            }else{
+                column.setText("0 / 0 ms");
+            }
+        } else if (dayFilterBox.isSelected()  && !lostPingsFilterBox.isSelected() ) {
+            column.setText("in process");
+        } else if (lostPingsFilterBox.isSelected()) {
+            column.setText("-1 / -1 ms");
         }
     }
 
@@ -433,6 +496,27 @@ public class UiController {
      */
     public void setPingCount(TableColumn<String, String> column, long amountOfPings) {
         column.setText(String.valueOf(amountOfPings));
+    }
+
+    /**
+     * Sets a label to display the oldest ping date and time
+     */
+    public void setOldestPing() {
+        try {
+            PingSessionExtract extract = connTestService.getPings();
+            List<PingLog> pingLogs = extract.getPingLogs();
+
+            if (pingLogs != null && !pingLogs.isEmpty()) {
+                PingLog oldest = pingLogs.get(0);
+                oldestPingLabel.setText("Oldest ping: " + oldest.getDateTime().format(DateTimeFormatter.ofPattern(DATE_FORMAT)));
+            }else{
+                oldestPingLabel.setText("Oldest ping: -");
+            }
+
+        } catch (IOException e) {
+            logger.error("Error retrieving ping logs: {}", e.getMessage(), e);
+        }
+
     }
 
     /**
@@ -463,7 +547,7 @@ public class UiController {
 
                 ObservableList<PingRow> items = tableView.getItems();
                 for (PingRow log : items) {
-                    writer.write(log.getDateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+                    writer.write(log.getDateTime().format(DateTimeFormatter.ofPattern(DATE_FORMAT)));
                     writer.write("\t\t");
 
                     for (TableColumn<PingRow, ?> childColumn : pingParentColumn.getColumns()) {
@@ -497,10 +581,10 @@ public class UiController {
     private void clearLogsAction() {
         try {
             connTestService.clearPingLogFile();
+            Platform.runLater(this::updateTables);
         } catch (InterruptedException e) {
             logger.error("Error clearing ping log file", e);
         }
-        updateTables();
     }
 
 
