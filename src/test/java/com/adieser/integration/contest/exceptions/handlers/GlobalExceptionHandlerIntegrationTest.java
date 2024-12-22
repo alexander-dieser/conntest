@@ -2,6 +2,7 @@ package com.adieser.integration.contest.exceptions.handlers;
 
 import com.adieser.conntest.ConntestApplication;
 import com.adieser.conntest.exceptions.handlers.GlobalExceptionHandler;
+import com.adieser.conntest.service.writer.FileWriterService;
 import com.adieser.utils.ExceptionHandlerTestController;
 import com.adieser.utils.TestUtils;
 import org.junit.jupiter.api.Test;
@@ -17,7 +18,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(classes = ConntestApplication.class)
-@ContextConfiguration(classes = {ConntestApplication.class, ExceptionHandlerTestController.class, GlobalExceptionHandler.class})
+@ContextConfiguration(classes = {ConntestApplication.class, ExceptionHandlerTestController.class, GlobalExceptionHandler.class, FileWriterService.class})
 @AutoConfigureMockMvc
 class GlobalExceptionHandlerIntegrationTest {
 
