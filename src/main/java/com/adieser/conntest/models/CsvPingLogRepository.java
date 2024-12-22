@@ -1,13 +1,8 @@
 package com.adieser.conntest.models;
 
-import com.opencsv.CSVWriter;
-import com.opencsv.ICSVWriter;
+import com.adieser.conntest.service.writer.FileWriterService;
 import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
-import com.opencsv.bean.StatefulBeanToCsv;
-import com.opencsv.bean.StatefulBeanToCsvBuilder;
-import com.opencsv.exceptions.CsvDataTypeMismatchException;
-import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
 import org.slf4j.Logger;
 
 import java.io.BufferedReader;
@@ -42,41 +37,17 @@ public class CsvPingLogRepository implements PingLogRepository {
     private final String path;
 
     private final Logger logger;
+    private final FileWriterService fileWriterService;
 
-    public CsvPingLogRepository(String path, Logger logger) {
+    public CsvPingLogRepository(String path, Logger logger, FileWriterService fileWriterService) {
         this.path = path;
         this.logger = logger;
+        this.fileWriterService = fileWriterService;
     }
 
     @Override
-    public void savePingLog(PingLog pingLog) throws InterruptedException {
-        try (Writer writer  = getFileWriter(true)) {
-            CSVWriter csvWriter = getCsvWriter(writer);
-            StatefulBeanToCsv<PingLog> sbc = getStatefulBeanToCsv(csvWriter);
-
-            sbc.write(pingLog);
-        } catch (IOException | CsvRequiredFieldEmptyException | CsvDataTypeMismatchException e) {
-            logger.error(SAVE_PING_ERROR_MSG, e);
-            throw new InterruptedException(SAVE_PING_ERROR_MSG);
-        }
-    }
-
-    FileWriter getFileWriter(boolean append) throws IOException {
-        return new FileWriter(path + "/" + PING_LOG_NAME, append);
-    }
-
-    CSVWriter getCsvWriter(Writer writer) {
-        return new CSVWriter(writer,
-                ICSVWriter.DEFAULT_SEPARATOR,
-                ICSVWriter.NO_QUOTE_CHARACTER,
-                ICSVWriter.DEFAULT_ESCAPE_CHARACTER,
-                ICSVWriter.DEFAULT_LINE_END
-        );
-    }
-
-    StatefulBeanToCsv<PingLog> getStatefulBeanToCsv(CSVWriter csvWriter) {
-        return new StatefulBeanToCsvBuilder<PingLog>(csvWriter)
-                .build();
+    public void savePingLog(PingLog pingLog) {
+        fileWriterService.submit(pingLog);
     }
 
     @Override
@@ -190,6 +161,10 @@ public class CsvPingLogRepository implements PingLogRepository {
             logger.error(CLEAN_PINGLOG_FILE_MSG, e);
             throw new InterruptedException(CLEAN_PINGLOG_FILE_MSG);
         }
+    }
+
+    FileWriter getFileWriter(boolean append) throws IOException {
+        return new FileWriter(path + "/" + PING_LOG_NAME, append);
     }
 
     /**

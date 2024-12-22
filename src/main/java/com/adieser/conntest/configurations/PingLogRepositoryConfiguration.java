@@ -2,10 +2,10 @@ package com.adieser.conntest.configurations;
 
 import com.adieser.conntest.models.CsvPingLogRepository;
 import com.adieser.conntest.models.PingLogRepository;
+import com.adieser.conntest.service.writer.FileWriterService;
 import org.slf4j.Logger;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.env.Environment;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -16,13 +16,16 @@ import java.nio.file.Paths;
  */
 @Configuration
 public class PingLogRepositoryConfiguration {
-    private static final String PING_LOGS_PATH_PROPERTY = "conntest.pinglogs.path";
-    private final Environment env;
     private final Logger logger;
+    private final FileWriterService fileWriterService;
+    private final AppProperties appProperties;
 
-    public PingLogRepositoryConfiguration(Environment env, Logger logger) throws IOException {
-        this.env = env;
+    public PingLogRepositoryConfiguration(Logger logger,
+                                          FileWriterService fileWriterService,
+                                          AppProperties appProperties) throws IOException {
         this.logger = logger;
+        this.fileWriterService = fileWriterService;
+        this.appProperties = appProperties;
         createPingLogsDirectory();
     }
 
@@ -32,19 +35,19 @@ public class PingLogRepositoryConfiguration {
      */
     @Bean
     public PingLogRepository csvPingLogRepository(){
-        return new CsvPingLogRepository(env.getProperty(PING_LOGS_PATH_PROPERTY), logger);
+        return new CsvPingLogRepository(appProperties.getPingLogsPath(), logger, fileWriterService);
     }
 
     private void createPingLogsDirectory() throws IOException {
-        String pingLogsPath = env.getProperty(PING_LOGS_PATH_PROPERTY);
+        String pingLogsPath = appProperties.getPingLogsPath();
         if (pingLogsPath != null) {
             try {
                 Files.createDirectories(Paths.get(pingLogsPath));
             } catch (IOException e) {
-                logger.error("Failed to create ping logs directory: " + pingLogsPath, e);
+                logger.error("Failed to create ping logs directory: {}", pingLogsPath, e);
             }
         } else {
-            logger.warn("Property '{}' is not set. Ping logs will not be saved.", PING_LOGS_PATH_PROPERTY);
+            logger.warn("Property 'conntest.pinglogs-path' is not set. Ping logs will not be saved.");
             throw new IOException("Ping logs path not set");
         }
     }

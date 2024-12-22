@@ -1,20 +1,20 @@
 package com.adieser.integration.contest.models;
 
+import com.adieser.conntest.configurations.AppProperties;
 import com.adieser.conntest.models.CsvPingLogRepository;
 import com.adieser.conntest.models.PingLog;
+import com.adieser.conntest.service.writer.FileWriterService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -22,10 +22,14 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 import static com.adieser.conntest.models.CsvPingLogRepository.PING_LOG_NAME;
@@ -34,27 +38,52 @@ import static com.adieser.utils.TestUtils.DEFAULT_LOG_DATE_TIME;
 import static com.adieser.utils.TestUtils.DEFAULT_PING_TIME;
 import static com.adieser.utils.TestUtils.LOCAL_IP_ADDRESS;
 import static com.adieser.utils.TestUtils.getDefaultPingLog;
+import static org.awaitility.Awaitility.await;
+import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 
 class CsvPingLogRepositoryIntegrationTest{
-
     private static final String PINGLOGS_DIR = "src/test/resources/pingLogs";
 
-    private CsvPingLogRepository csvPingLogRepository = new CsvPingLogRepository(
-            PINGLOGS_DIR,
-            LoggerFactory.getLogger("testLogger"));
+    AppProperties appProperties;
+    private CsvPingLogRepository csvPingLogRepository;
+
+    @BeforeEach
+    void setUp() throws IOException {
+        appProperties = new AppProperties();
+        appProperties.setPingLogsPath(PINGLOGS_DIR);
+        appProperties.setFileMaxSize(50000L);
+
+        Files.createDirectories(Paths.get(PINGLOGS_DIR));
+        Files.createFile(Paths.get(PINGLOGS_DIR + "/" + PING_LOG_NAME));
+
+        FileWriterService fileWriterService = new FileWriterService(
+                new ThreadPoolExecutor(3,
+                        5,
+                        60L,
+                        TimeUnit.SECONDS,
+                        new LinkedBlockingQueue<>()),
+                appProperties,
+                Clock.systemDefaultZone()
+                );
+
+        fileWriterService.init();
+
+        csvPingLogRepository = new CsvPingLogRepository(
+                PINGLOGS_DIR,
+                LoggerFactory.getLogger("testLogger"),
+                fileWriterService
+        );
+    }
 
     @Test
-    void testPingLogFile() throws IOException, InterruptedException {
-
+    void testPingLogFile() throws IOException {
         savePingLog(csvPingLogRepository);
+
+        await()
+                .atMost(200, TimeUnit.MILLISECONDS)
+                .until(() -> readPingLog().size(), equalTo(1));
 
         List<PingLog> pingLogs = readPingLog();
 
@@ -63,37 +92,17 @@ class CsvPingLogRepositoryIntegrationTest{
     }
 
     @Test
-    void testPingLogFileAppend() throws IOException, InterruptedException {
+    void testPingLogFileAppend() throws IOException {
         savePingLog(csvPingLogRepository);
         savePingLog(csvPingLogRepository);
+
+        await()
+                .atMost(200, TimeUnit.MILLISECONDS)
+                .until(() -> readPingLog().size(), equalTo(2));
 
         long pingAmount = readPingLog().size();
 
         assertEquals(2, pingAmount, "Failed to write ping in file");
-    }
-
-    @Test
-    void testMissingPingLogFile() throws IOException, InterruptedException {
-        //Make sure the pingLog.log does not exist
-        Files.deleteIfExists(Paths.get(PINGLOGS_DIR + "/" + PING_LOG_NAME));
-
-        savePingLog(csvPingLogRepository);
-
-        assertTrue(new File(PINGLOGS_DIR + "/" + PING_LOG_NAME).exists());
-    }
-
-    @Test
-    void testWrongPath() {
-        Logger testLogger = mock(Logger.class);
-        csvPingLogRepository = new CsvPingLogRepository(
-                "wrong/path/to/pingLogs",
-                testLogger);
-
-        assertThrows(InterruptedException.class, () -> savePingLog(csvPingLogRepository));
-        verify(testLogger,
-                times(1)).error(eq(CsvPingLogRepository.SAVE_PING_ERROR_MSG),
-                any(FileNotFoundException.class)
-        );
     }
 
     @Test
@@ -251,15 +260,6 @@ class CsvPingLogRepositoryIntegrationTest{
     }
 
     /**
-     * Create the directories and ping.log file
-     */
-    @BeforeEach
-    public void setup() throws IOException {
-        Files.createDirectories(Paths.get(PINGLOGS_DIR));
-        Files.createFile(Paths.get(PINGLOGS_DIR + "/" + PING_LOG_NAME));
-    }
-
-    /**
      * remove directories and ping.log file
      */
     @AfterEach
@@ -322,7 +322,7 @@ class CsvPingLogRepositoryIntegrationTest{
     /**
      * Save ping using the repository method
      */
-    private void savePingLog(CsvPingLogRepository csvPingLogRepository) throws InterruptedException {
+    private void savePingLog(CsvPingLogRepository csvPingLogRepository) {
         csvPingLogRepository.savePingLog(PingLog.builder()
                 .dateTime(DEFAULT_LOG_DATE_TIME)
                 .ipAddress(LOCAL_IP_ADDRESS)
