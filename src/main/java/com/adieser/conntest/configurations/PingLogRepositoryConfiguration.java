@@ -7,10 +7,6 @@ import org.slf4j.Logger;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-
 /**
  * Repository-related configurations
  */
@@ -22,11 +18,10 @@ public class PingLogRepositoryConfiguration {
 
     public PingLogRepositoryConfiguration(Logger logger,
                                           FileWriterService fileWriterService,
-                                          AppProperties appProperties) throws IOException {
+                                          AppProperties appProperties) {
         this.logger = logger;
         this.fileWriterService = fileWriterService;
         this.appProperties = appProperties;
-        createPingLogsDirectory();
     }
 
     /**
@@ -36,19 +31,5 @@ public class PingLogRepositoryConfiguration {
     @Bean
     public PingLogRepository csvPingLogRepository(){
         return new CsvPingLogRepository(appProperties.getPingLogsPath(), logger, fileWriterService);
-    }
-
-    private void createPingLogsDirectory() throws IOException {
-        String pingLogsPath = appProperties.getPingLogsPath();
-        if (pingLogsPath != null) {
-            try {
-                Files.createDirectories(Paths.get(pingLogsPath));
-            } catch (IOException e) {
-                logger.error("Failed to create ping logs directory: {}", pingLogsPath, e);
-            }
-        } else {
-            logger.warn("Property 'conntest.pinglogs-path' is not set. Ping logs will not be saved.");
-            throw new IOException("Ping logs path not set");
-        }
     }
 }

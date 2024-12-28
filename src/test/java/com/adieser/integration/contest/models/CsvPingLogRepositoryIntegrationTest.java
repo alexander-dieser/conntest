@@ -59,6 +59,7 @@ class CsvPingLogRepositoryIntegrationTest{
         Files.createFile(Paths.get(PINGLOGS_DIR + "/" + PING_LOG_NAME));
 
         FileWriterService fileWriterService = new FileWriterService(
+                LoggerFactory.getLogger("testLogger"),
                 new ThreadPoolExecutor(3,
                         5,
                         60L,

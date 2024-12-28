@@ -26,6 +26,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -39,6 +40,7 @@ import static com.adieser.conntest.models.CsvPingLogRepository.SAVE_PING_ERROR_M
 import static com.adieser.conntest.service.writer.FileWriterService.FORMATTER;
 import static com.adieser.conntest.service.writer.FileWriterService.ROTATED_FILENAME_FORMAT;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -73,6 +75,9 @@ class FileWriterServiceTest {
     @Mock
     StatefulBeanToCsv<PingLog> mockedSbc;
 
+    @Mock
+    Logger mockedLogger;
+
     @InjectMocks
     @Spy
     FileWriterService fileWriterService;
@@ -92,7 +97,6 @@ class FileWriterServiceTest {
                 .atZone(ZoneId.systemDefault())
                 .toInstant();
         fileWriterService.clock = Clock.fixed(fixedInstant, ZoneId.systemDefault());
-
         fileWriterService.queue = mockedQueue;
     }
 
@@ -128,6 +132,7 @@ class FileWriterServiceTest {
         // Given
         doReturn(mock(BufferedWriter.class)).when(fileWriterService).getWriter();
         doReturn(mock(CSVWriter.class)).when(fileWriterService).getCsvWriter(any());
+        doNothing().when(fileWriterService).createPingLogsDirectory();
         doNothing().when(threadPoolExecutor).execute(any(Runnable.class));
 
         // When
@@ -140,6 +145,7 @@ class FileWriterServiceTest {
     @Test
     void init_IOException() throws IOException {
         // Given
+        doNothing().when(fileWriterService).createPingLogsDirectory();
         doThrow(IOException.class).when(fileWriterService).getWriter();
 
         // When & Then
@@ -156,6 +162,7 @@ class FileWriterServiceTest {
         doNothing().when(mockedSbc).write(any(PingLog.class));
         doReturn(mockedSbc).when(fileWriterService).getStatefulBeanToCsv(any());
 
+        doNothing().when(fileWriterService).createPingLogsDirectory();
         doNothing().when(threadPoolExecutor).execute(any(Runnable.class));
 
         doNothing().when(fileWriterService).checkFileSizeAndRotate();
@@ -185,6 +192,7 @@ class FileWriterServiceTest {
         else {
             doReturn(mockedSbc).when(fileWriterService).getStatefulBeanToCsv(any());
             doReturn(mockedWriter).when(fileWriterService).getWriter();
+            doNothing().when(fileWriterService).createPingLogsDirectory();
             doNothing().when(threadPoolExecutor).execute(any(Runnable.class));
             doNothing().when(fileWriterService).checkFileSizeAndRotate();
 
@@ -235,12 +243,14 @@ class FileWriterServiceTest {
 
         // Then
         verify(mockedWriter, never()).close();
-        assertEquals(1, Files.list(tempDir).count());
+        try(var list = Files.list(tempDir)) {
+            assertEquals(1, list.count());
+        }
     }
 
     @Test
     void checkFileSizeAndRotate_rotate() throws IOException {
-        // Arrange
+        // Given
         Path testFilePath = tempDir.resolve("ping.log");
         Files.createFile(testFilePath);
 
@@ -254,12 +264,14 @@ class FileWriterServiceTest {
         fileWriterService.writer = mockedWriter;
         doReturn(mock(BufferedWriter.class)).when(fileWriterService).getWriter();
 
-        // Act
+        // When
         fileWriterService.checkFileSizeAndRotate();
 
-        // Assert
+        // Then
         verify(mockedWriter).close();
-        assertEquals(1, Files.list(tempDir).count());
+        try(var list = Files.list(tempDir)) {
+            assertEquals(1, list.count());
+        }
         assertFalse(Files.exists(testFilePath));
 
         String timestamp = LocalDateTime.now(fileWriterService.clock).format(FORMATTER);
@@ -281,6 +293,8 @@ class FileWriterServiceTest {
         // Given
         BufferedWriter mockWriter = mock(BufferedWriter.class);
         doReturn(mockWriter).when(fileWriterService).getWriter();
+        doNothing().when(fileWriterService).createPingLogsDirectory();
+
         fileWriterService.init();
 
         // When
@@ -306,6 +320,8 @@ class FileWriterServiceTest {
         BufferedWriter mockWriter = mock(BufferedWriter.class);
         doReturn(mockWriter).when(fileWriterService).getWriter();
         doThrow(IOException.class).when(mockWriter).close();
+        doNothing().when(fileWriterService).createPingLogsDirectory();
+
         fileWriterService.init();
 
         // When
@@ -340,6 +356,85 @@ class FileWriterServiceTest {
         // When
         assertNotNull(statefulBeanToCsv);
         assertThat(statefulBeanToCsv).isInstanceOf(StatefulBeanToCsv.class);
+    }
+
+    @Test
+    void createPingLogsDirectory_ShouldCreateDirectory_WhenDirectoryDoesNotExist() throws IOException {
+        // Given
+        Path logsPath = tempDir.resolve("ping-logs");
+        when(appProperties.getPingLogsPath()).thenReturn(logsPath.toString());
+
+        // When
+        fileWriterService.createPingLogsDirectory();
+
+        // Then
+        assertTrue(Files.exists(logsPath));
+        assertTrue(Files.isDirectory(logsPath));
+    }
+
+    @Test
+    void createPingLogsDirectory_ShouldNotThrowException_WhenDirectoryAlreadyExists() throws IOException {
+        // Given
+        Path logsPath = tempDir.resolve("ping-logs");
+        Files.createDirectory(logsPath);
+        when(appProperties.getPingLogsPath()).thenReturn(logsPath.toString());
+
+        // When & Then
+        assertDoesNotThrow(() -> fileWriterService.createPingLogsDirectory());
+        assertTrue(Files.exists(logsPath));
+        assertTrue(Files.isDirectory(logsPath));
+    }
+
+    @Test
+    void createPingLogsDirectory_ShouldThrowException_WhenPathIsFile() throws IOException {
+        // Given
+        Path filePath = tempDir.resolve("ping-logs");
+        Files.createFile(filePath);
+        appProperties.setPingLogsPath(filePath.toString());
+
+        // When & Then
+        assertThrows(IOException.class, () -> fileWriterService.createPingLogsDirectory());
+    }
+
+    @Test
+    void createPingLogsDirectory_ShouldThrowException_WhenNoWritePermissions() throws IOException {
+        // Given
+        Path readOnlyPath = tempDir.resolve("readonly-dir");
+        Files.createDirectory(readOnlyPath);
+
+        if (System.getProperty("os.name").toLowerCase().contains("windows")) {
+            Files.setAttribute(readOnlyPath, "dos:readonly", true);
+        } else {
+            // Unix-like systems: remove write permissions
+            Files.setPosixFilePermissions(readOnlyPath,
+                    PosixFilePermissions.fromString("r-xr-xr-x"));
+        }
+
+        try {
+            Path logsPath = readOnlyPath.resolve("ping-logs");
+            appProperties.setPingLogsPath(logsPath.toString());
+
+            // When & Then
+            assertThrows(IOException.class, () -> fileWriterService.createPingLogsDirectory());
+        } finally {
+            // Cleanup
+            if (System.getProperty("os.name").toLowerCase().contains("windows")) {
+                Files.setAttribute(readOnlyPath, "dos:readonly", false);
+            } else {
+                Files.setPosixFilePermissions(readOnlyPath,
+                        PosixFilePermissions.fromString("rwxrwxrwx"));
+            }
+        }
+    }
+
+    @Test
+    void createPingLogsDirectory_ShouldThrowException_WhenPathIsNull() {
+        // Given
+        when(appProperties.getPingLogsPath()).thenReturn(null);
+
+        // When & Then
+        Exception e = assertThrows(IOException.class, () -> fileWriterService.createPingLogsDirectory());
+        assertEquals("Ping logs path not set", e.getMessage());
     }
 
     static Stream<Exception> exceptionProvider() {

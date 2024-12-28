@@ -11,6 +11,7 @@ import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedWriter;
@@ -39,6 +40,7 @@ public class FileWriterService {
     public static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss");
     public static final String ROTATED_FILENAME_FORMAT = "ping_%s_%d.log";
 
+    private final Logger logger;
     protected BlockingQueue<PingLog> queue;
     BufferedWriter writer;
     Path filePath;
@@ -49,9 +51,11 @@ public class FileWriterService {
     Clock clock;
     private StatefulBeanToCsv<PingLog> sbc;
 
-    public FileWriterService(ExecutorService threadPoolExecutor,
+    public FileWriterService(Logger logger,
+                             ExecutorService threadPoolExecutor,
                              AppProperties appProperties,
                              Clock clock) {
+        this.logger = logger;
         this.filePath = Paths.get(appProperties.getPingLogsPath() + PING_LOG_NAME);
         this.threadPoolExecutor = threadPoolExecutor;
         this.appProperties = appProperties;
@@ -76,6 +80,8 @@ public class FileWriterService {
      */
     @PostConstruct
     public void init() throws IOException {
+        createPingLogsDirectory();
+
         writer = getWriter();
         sbc = getStatefulBeanToCsv(getCsvWriter(writer));
 
@@ -174,5 +180,24 @@ public class FileWriterService {
     StatefulBeanToCsv<PingLog> getStatefulBeanToCsv(CSVWriter csvWriter) {
         return new StatefulBeanToCsvBuilder<PingLog>(csvWriter)
                 .build();
+    }
+
+    /**
+     * Method to create the ping logs directory.
+     * It creates the directory if it does not exist.
+     * It handles the IOException.
+     */
+    protected void createPingLogsDirectory() throws IOException {
+        String pingLogsPath = appProperties.getPingLogsPath();
+        if (pingLogsPath != null) {
+            try {
+                Files.createDirectories(Paths.get(pingLogsPath));
+            } catch (Exception e) {
+                logger.error("Failed to create ping logs directory: {}", pingLogsPath, e);
+            }
+        } else {
+            logger.warn("Property 'conntest.pinglogs-path' is not set. Ping logs will not be saved.");
+            throw new IOException("Ping logs path not set");
+        }
     }
 }
