@@ -537,23 +537,21 @@ public class UiController {
         if (file != null) {
             try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
                 writer.write(dateColumn.getText());
-                writer.write("\t\t\t");
 
                 for (TableColumn<PingRow, ?> childColumn : pingParentColumn.getColumns()) {
+                    writer.write(",");
                     writer.write(childColumn.getText());
-                    writer.write("\t");
                 }
                 writer.newLine();
 
                 ObservableList<PingRow> items = tableView.getItems();
                 for (PingRow log : items) {
                     writer.write(log.getDateTime().format(DateTimeFormatter.ofPattern(DATE_FORMAT)));
-                    writer.write("\t\t");
 
                     for (TableColumn<PingRow, ?> childColumn : pingParentColumn.getColumns()) {
+                        writer.write(",");
                         Object value = childColumn.getCellData(log);
                         writer.write(value != null ? value.toString() : "");
-                        writer.write("\t");
                     }
                     writer.newLine();
                 }
