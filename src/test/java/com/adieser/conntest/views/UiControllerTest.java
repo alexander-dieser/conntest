@@ -65,10 +65,11 @@ class UiControllerTest {
         UiController underTest = new UiController(connTestService, logger, executorService);
 
         // then
-        underTest.stop();
+        underTest.stopExecutorService();
+        connTestService.stopTests();
 
         // assert
-        verify(connTestService, times(1)).stopTests();
+        verify(executorService, times(1)).shutdownNow();
     }
 
     @Test
@@ -99,7 +100,7 @@ class UiControllerTest {
         //when
         reset(executorService);
         when(executorService.isShutdown()).thenReturn(false);
-        
+
         //then
         underTest.stopExecutorService();
 
