@@ -38,7 +38,6 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
@@ -74,7 +73,7 @@ class ConnTestControllerIntegrationTest {
                                 .stopTests()).toString()));
 
         // assert
-        verify(connTestService, times(1)).testLocalISPInternet();
+        verify(connTestService).testLocalISPInternet();
     }
 
     @ParameterizedTest
@@ -101,7 +100,7 @@ class ConnTestControllerIntegrationTest {
                             .value(linkTo(methodOn(ConnTestController.class)
                                     .stopTests()).toString()));
 
-            verify(connTestService, times(1)).testCustomIps(ipAddresses);
+            verify(connTestService).testCustomIps(ipAddresses);
         } else{
             resultActions
                     .andExpect(status().isBadRequest())
@@ -128,7 +127,7 @@ class ConnTestControllerIntegrationTest {
                                 .clearPingLogs()).toString()));
 
         // assert
-        verify(connTestService, times(1)).stopTests();
+        verify(connTestService).stopTests();
     }
 
     @ParameterizedTest
@@ -146,7 +145,7 @@ class ConnTestControllerIntegrationTest {
         if(!pings.getPingLogs().isEmpty())
             AssertHATEOASLinks(resultActions, pings.getPingLogs().get(0));
 
-        verify(connTestService, times(1)).getPings();
+        verify(connTestService).getPings();
     }
 
     @Test
@@ -181,7 +180,7 @@ class ConnTestControllerIntegrationTest {
         if(!pings.getPingLogs().isEmpty())
             AssertHATEOASLinks(resultActions, pings.getPingLogs().get(0));
 
-        verify(connTestService, times(1)).getPingsByDateTimeRange(START, END);
+        verify(connTestService).getPingsByDateTimeRange(START, END);
     }
 
     @Test
@@ -217,7 +216,7 @@ class ConnTestControllerIntegrationTest {
         if(!pings.getPingLogs().isEmpty())
             AssertHATEOASLinks(resultActions, pings.getPingLogs().get(0));
 
-        verify(connTestService, times(1)).getPingsByIp(LOCAL_IP_ADDRESS);
+        verify(connTestService).getPingsByIp(LOCAL_IP_ADDRESS);
     }
 
     @Test
@@ -254,7 +253,7 @@ class ConnTestControllerIntegrationTest {
         if(!pings.getPingLogs().isEmpty())
             AssertHATEOASLinks(resultActions, pings.getPingLogs().get(0));
 
-        verify(connTestService, times(1)).getPingsByDateTimeRangeByIp(START, END, LOCAL_IP_ADDRESS);
+        verify(connTestService).getPingsByDateTimeRangeByIp(START, END, LOCAL_IP_ADDRESS);
     }
 
     @Test
@@ -292,7 +291,7 @@ class ConnTestControllerIntegrationTest {
         if(!pings.getPingLogs().isEmpty())
             AssertHATEOASLinks(resultActions, pings.getPingLogs().get(0));
 
-        verify(connTestService, times(1)).getLostPingsByIp(LOCAL_IP_ADDRESS);
+        verify(connTestService).getLostPingsByIp(LOCAL_IP_ADDRESS);
     }
 
     @Test
@@ -329,7 +328,7 @@ class ConnTestControllerIntegrationTest {
         if(!pings.getPingLogs().isEmpty())
             AssertHATEOASLinks(resultActions, pings.getPingLogs().get(0));
 
-        verify(connTestService, times(1)).getLostPingsByDateTimeRangeByIp(START, END, LOCAL_IP_ADDRESS);
+        verify(connTestService).getLostPingsByDateTimeRangeByIp(START, END, LOCAL_IP_ADDRESS);
     }
 
     @Test
@@ -372,7 +371,7 @@ class ConnTestControllerIntegrationTest {
                 );
 
         assertAverage(resultActions);
-        verify(connTestService, times(1)).getPingsLostAvgByIp(LOCAL_IP_ADDRESS);
+        verify(connTestService).getPingsLostAvgByIp(LOCAL_IP_ADDRESS);
     }
 
     @Test
@@ -412,7 +411,36 @@ class ConnTestControllerIntegrationTest {
                 );
 
         assertAverage(resultActions);
-        verify(connTestService, times(1)).getAvgLatencyByIp(LOCAL_IP_ADDRESS);
+        verify(connTestService).getAvgLatencyByIp(LOCAL_IP_ADDRESS);
+    }
+
+    @Test
+    void testGetAvgLatencyByDateTimeRangeByIp() throws Exception {
+        // when
+        when(connTestService.getAvgLatencyByDateTimeRangeByIp(START, END, LOCAL_IP_ADDRESS))
+                .thenReturn(BigDecimal.valueOf(0.3));
+
+        MockHttpServletRequestBuilder requestBuilder = TestUtils.addCustomSessionId(
+                MockMvcRequestBuilders.get("/pings/{ipAddress}/avg-latency/{start}/{end}",
+                        LOCAL_IP_ADDRESS,
+                        START.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
+                        END.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
+        );
+
+        // then assert
+        ResultActions resultActions = mockMvc.perform(requestBuilder)
+                .andExpect( // [' and '] are meant for escaping the '.' due to json navigation errors
+                        jsonPath("$._links.['%s'].href"
+                                .formatted(HATEOASLinkRelValueTemplates.GET_BY_IP_BETWEEN
+                                        .formatted(LOCAL_IP_ADDRESS, START, END)
+                                )
+                        )
+                                .value(linkTo(methodOn(ConnTestController.class).getPingsByDateTimeRangeByIp(LOCAL_IP_ADDRESS, START, END)).toString())
+                );
+
+        assertAverage(resultActions);
+        verify(connTestService)
+                .getAvgLatencyByDateTimeRangeByIp(START, END, LOCAL_IP_ADDRESS);
     }
 
     @Test
@@ -432,15 +460,15 @@ class ConnTestControllerIntegrationTest {
         ResultActions resultActions = mockMvc.perform(requestBuilder)
                 .andExpect( // [' and '] are meant for escaping the '.' due to json navigation errors
                     jsonPath("$._links.['%s'].href"
-                            .formatted(HATEOASLinkRelValueTemplates.GET_30_MINS_NEIGHBORHOOD_BY_IP
-                                    .formatted(LOCAL_IP_ADDRESS)))
+                            .formatted(HATEOASLinkRelValueTemplates.GET_LOST_BY_IP_BETWEEN
+                                    .formatted(LOCAL_IP_ADDRESS, START, END)))
                             .value(linkTo(methodOn(ConnTestController.class)
-                                    .getPingsByDateTimeRangeByIp(LOCAL_IP_ADDRESS, START, END)).toString())
+                                    .getLostPingsByDateTimeRangeByIp(LOCAL_IP_ADDRESS, START, END)).toString())
                 );
 
         assertAverage(resultActions);
 
-        verify(connTestService, times(1))
+        verify(connTestService)
                 .getPingsLostAvgByDateTimeRangeByIp(START, END, LOCAL_IP_ADDRESS);
     }
 
@@ -482,7 +510,7 @@ class ConnTestControllerIntegrationTest {
             throw new RuntimeException(e);
         }
 
-        verify(connTestService, times(1)).clearPingLogFile();
+        verify(connTestService).clearPingLogFile();
     }
 
     @ParameterizedTest
@@ -518,7 +546,7 @@ class ConnTestControllerIntegrationTest {
             AssertHATEOASLinks(result, pings.getPingLogs().get(0));
         }
 
-        verify(connTestService, times(1)).getMaxMinPingLog(LOCAL_IP_ADDRESS);
+        verify(connTestService).getMaxMinPingLog(LOCAL_IP_ADDRESS);
     }
 
     private ResultActions performRequestAndBasicAssertPingLogControllerResponse(MockHttpServletRequestBuilder requestBuilder,

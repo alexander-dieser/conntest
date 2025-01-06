@@ -36,7 +36,6 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -62,7 +61,7 @@ class CsvPingLogRepositoryTest {
         underTestSpy.savePingLog(pingLog);
 
         // assert
-        verify(fileWriterServiceMock, times(1)).submit(pingLog);
+        verify(fileWriterServiceMock).submit(pingLog);
     }
 
     /**
@@ -228,6 +227,31 @@ class CsvPingLogRepositoryTest {
         BigDecimal result = underTestSpy.findAvgLatencyByIp(LOCAL_IP_ADDRESS);
 
         // Assert
+        assertEquals(expectedAvg, result);
+    }
+
+    @ParameterizedTest
+    @MethodSource("findAvgLatencyByIpPingLogProvider")
+    void testFindAvgLatencyByDateTimeRangeByIp(List<PingLog> pingLogs,
+                                               BigDecimal expectedAvg) throws IOException {
+
+        // When
+        LocalDateTime start = mock(LocalDateTime.class);
+        LocalDateTime end = mock(LocalDateTime.class);
+
+        doReturn(mock(List.class))
+                .when(underTestSpy)
+                .readAll();
+
+        doReturn(pingLogs.stream())
+                .when(underTestSpy)
+                .getPingLogsByDateTimeRangeByIpStream(any(), eq(start), eq(end), eq(LOCAL_IP_ADDRESS));
+
+        // Then
+        BigDecimal result = underTestSpy.findAvgLatencyByDateTimeRangeByIp(start, end, LOCAL_IP_ADDRESS);
+
+        // Assert
+        verify(underTestSpy).getPingLogsByDateTimeRangeByIpStream(any(),  eq(start), eq(end), eq(LOCAL_IP_ADDRESS));
         assertEquals(expectedAvg, result);
     }
 

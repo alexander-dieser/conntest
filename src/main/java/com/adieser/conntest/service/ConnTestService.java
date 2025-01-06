@@ -113,4 +113,13 @@ public interface ConnTestService {
      * @return average latency of all the ping logs
      */
     BigDecimal getAvgLatencyByIp(String ipAddress) throws IOException;
+
+    /**
+     * Get the average latency of all the ping logs within a datetime range filtered by IP
+     * @param start start date and time of the range
+     * @param end end date in the range
+     * @param ipAddress IP address use to filter the results
+     * @return average latency of all the ping logs
+     */
+    BigDecimal getAvgLatencyByDateTimeRangeByIp(LocalDateTime start, LocalDateTime end, String ipAddress) throws IOException;
 }

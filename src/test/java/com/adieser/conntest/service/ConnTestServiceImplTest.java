@@ -42,7 +42,6 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -79,7 +78,7 @@ class ConnTestServiceImplTest {
         // assert
         localAndISPIpAddresses.add(CLOUD_IP_ADDRESS);
         underTest.tests.forEach(mockConnTest ->
-                verify(underTest, times(1)).testCustomIps(localAndISPIpAddresses)
+                verify(underTest).testCustomIps(localAndISPIpAddresses)
         );
     }
 
@@ -115,12 +114,12 @@ class ConnTestServiceImplTest {
 
         // assert
         if(areTestRunning) {
-            verify(logger, times(1)).warn("Tests are already running (IP {})", ip1);
-            verify(logger, times(1)).warn("Tests are already running (IP {})", ip2);
-            verify(logger, times(1)).warn("Tests are already running (IP {})", ip3);
+            verify(logger).warn("Tests are already running (IP {})", ip1);
+            verify(logger).warn("Tests are already running (IP {})", ip2);
+            verify(logger).warn("Tests are already running (IP {})", ip3);
         } else{
             underTest.tests.forEach(mockConnTest ->
-                    verify(mockConnTest, times(1)).startPingSession()
+                    verify(mockConnTest).startPingSession()
             );
         }
     }
@@ -141,10 +140,10 @@ class ConnTestServiceImplTest {
 
         // assert
         if(!areTestRunning)
-            verify(logger, times(1)).warn("No tests to stop");
+            verify(logger).warn("No tests to stop");
         else{
             mockConnTests.forEach(mockConnTest ->
-                    verify(mockConnTest, times(1)).stopPingSession()
+                    verify(mockConnTest).stopPingSession()
             );
             assertTrue(underTest.tests.isEmpty());
         }
@@ -440,7 +439,7 @@ class ConnTestServiceImplTest {
         underTest.getLocalAndISPIpAddresses();
 
         // assert
-        verify(logger, times(1)).error(eq("Traceroute error"), any(IOException.class));
+        verify(logger).error(eq("Traceroute error"), any(IOException.class));
     }
 
     @Test
@@ -471,7 +470,7 @@ class ConnTestServiceImplTest {
         Optional<BufferedReader> reader = underTest.executeTracert();
 
         // assert
-        verify(tracertProvider, times(1)).executeTracert();
+        verify(tracertProvider).executeTracert();
         assertEquals(mockReader, reader);
     }
 
@@ -506,7 +505,7 @@ class ConnTestServiceImplTest {
         underTest.clearPingLogFile();
 
         // assert
-        verify(pingLogRepository, times(1)).clearPingLogFile();
+        verify(pingLogRepository).clearPingLogFile();
     }
 
     @Test
@@ -541,6 +540,30 @@ class ConnTestServiceImplTest {
         BigDecimal resultAvg = underTest.getAvgLatencyByIp(LOCAL_IP_ADDRESS);
 
         // assert
+        assertEquals(avg, resultAvg);
+    }
+
+    @Test
+    void testGetAvgLatencyByDateTimeRangeByIp() throws IOException {
+        // when
+        ConnTestServiceImpl underTest =
+                new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository, pingUtils);
+        BigDecimal avg = new BigDecimal("0.2");
+        doReturn(avg).when(pingLogRepository).findAvgLatencyByDateTimeRangeByIp(
+                START,
+                END,
+                LOCAL_IP_ADDRESS
+        );
+
+        // then
+        BigDecimal resultAvg = underTest.getAvgLatencyByDateTimeRangeByIp(
+                START,
+                END,
+                LOCAL_IP_ADDRESS
+        );
+
+        // assert
+        verify(pingLogRepository).findAvgLatencyByDateTimeRangeByIp(START, END, LOCAL_IP_ADDRESS);
         assertEquals(avg, resultAvg);
     }
 

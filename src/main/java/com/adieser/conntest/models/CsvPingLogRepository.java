@@ -119,6 +119,18 @@ public class CsvPingLogRepository implements PingLogRepository {
     }
 
     @Override
+    public BigDecimal findAvgLatencyByDateTimeRangeByIp(LocalDateTime start, LocalDateTime end, String ipAddress) throws IOException {
+        double averagePingTime = getPingLogsByDateTimeRangeByIpStream(readAll().stream(), start, end, ipAddress)
+                .map(PingLog::getPingTime)
+                .filter(time -> time != -1)
+                .mapToLong(Long::longValue)
+                .average()
+                .orElse(0.0);
+
+        return BigDecimal.valueOf(averagePingTime).setScale(2, RoundingMode.HALF_UP);
+    }
+
+    @Override
     public BigDecimal findLostPingLogsAvgByIP(String ipAddress) throws IOException {
 
         List<PingLog> pingLogsByIp = getPingLogsByIpStream(readAll().stream(), ipAddress).toList();

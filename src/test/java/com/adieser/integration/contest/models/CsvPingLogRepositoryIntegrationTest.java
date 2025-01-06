@@ -252,6 +252,35 @@ class CsvPingLogRepositoryIntegrationTest{
         assertEquals(BigDecimal.valueOf(20L).setScale(2, RoundingMode.HALF_UP), avgLatency);
     }
 
+    @ParameterizedTest
+    @MethodSource("thereIsFailedPingsProvider")
+    void testFindAvgLatencyByDateTimeRangeByIp(boolean emptyFailedPingLogs) throws IOException {
+        if(!emptyFailedPingLogs) {
+            // in-range local ping
+            writePingLog(DEFAULT_LOG_DATE_TIME, LOCAL_IP_ADDRESS, 2);
+            // in-range local ping
+            writePingLog(DEFAULT_LOG_DATE_TIME, LOCAL_IP_ADDRESS, 4);
+            // in-range lost local ping
+            writePingLog(DEFAULT_LOG_DATE_TIME, LOCAL_IP_ADDRESS, -1);
+            // in-range cloud ping
+            writePingLog(DEFAULT_LOG_DATE_TIME, CLOUD_IP_ADDRESS, 8);
+            // out-of-range local ping
+            writePingLog(LocalDateTime.of(2023, 10, 5, 0, 0, 0),
+                    LOCAL_IP_ADDRESS,
+                    10);
+        }
+
+        BigDecimal pingLogsLatencyAvgByIP = csvPingLogRepository.findAvgLatencyByDateTimeRangeByIp(
+                LocalDateTime.of(2023, 10, 6, 0, 0, 0),
+                LocalDateTime.of(2023, 10, 6, 23, 59, 59),
+                LOCAL_IP_ADDRESS);
+
+        if(!emptyFailedPingLogs)
+            assertEquals(new BigDecimal("3").setScale(2, RoundingMode.HALF_UP), pingLogsLatencyAvgByIP, "Wrong average");
+        else
+            assertEquals(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP), pingLogsLatencyAvgByIP, "Wrong average");
+    }
+
     @Test
     void clearPingLogFile_Success() throws Exception {
         writePingLog();

@@ -357,8 +357,8 @@ public class ConnTestController {
                 .build();
 
         averageResult.add(
-                linkTo(methodOn(ConnTestController.class).getPingsByDateTimeRangeByIp(ipAddress, start, end))
-                        .withRel(HATEOASLinkRelValueTemplates.GET_30_MINS_NEIGHBORHOOD_BY_IP.formatted(ipAddress))
+                linkTo(methodOn(ConnTestController.class).getLostPingsByDateTimeRangeByIp(ipAddress, start, end))
+                        .withRel(HATEOASLinkRelValueTemplates.GET_LOST_BY_IP_BETWEEN.formatted(ipAddress,start,end))
         );
 
         return new ResponseEntity<>(
@@ -384,6 +384,46 @@ public class ConnTestController {
         averageResult.add(
                 linkTo(methodOn(ConnTestController.class).getPingsByIp(ipAddress))
                         .withRel(HATEOASLinkRelValueTemplates.GET_BY_IP.formatted(ipAddress))
+        );
+
+        return new ResponseEntity<>(
+                averageResult,
+                HttpStatus.OK
+        );
+    }
+
+    /**
+     * Get the average of lost pings within a datetime range filtered by IP
+     * @param ipAddress IP address used to filter the results
+     * @param start Start date and time of the range
+     * @param end End date in the range
+     * @return If successful it returns a number representing the average of lost pings
+     */
+    @ApiResponse(responseCode = "200", description = "a number representing the average of lost pings.")
+    @GetMapping(value = "/pings/{ipAddress}/avg-latency/{start}/{end}", produces = {"application/json"})
+    @Operation(summary = "Get the average of lost pings within a datetime range filtered by IP")
+    public ResponseEntity<AverageResponse> getAvgLatencyByDateTimeRangeByIp(
+            @Parameter(
+                    description = "IP address used to filter the results",
+                    required = true)
+            @PathVariable String ipAddress,
+            @Parameter(
+                    description = "Start date and time of the range",
+                    required = true)
+            @PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime start,
+            @Parameter(
+                    description = "End date in the range",
+                    required = true)
+            @PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime end) throws IOException {
+
+        AverageResponse averageResult = AverageResponse.builder()
+                .ipAddress(ipAddress)
+                .average(connTestService.getAvgLatencyByDateTimeRangeByIp(start, end, ipAddress))
+                .build();
+
+        averageResult.add(
+                linkTo(methodOn(ConnTestController.class).getPingsByDateTimeRangeByIp(ipAddress, start, end))
+                        .withRel(HATEOASLinkRelValueTemplates.GET_BY_IP_BETWEEN.formatted(ipAddress, start, end))
         );
 
         return new ResponseEntity<>(
