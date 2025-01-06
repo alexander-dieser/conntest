@@ -158,6 +158,11 @@ public class ConnTestServiceImpl implements ConnTestService {
     }
 
     @Override
+    public BigDecimal getAvgLatencyByDateTimeRangeByIp(LocalDateTime start, LocalDateTime end, String ipAddress) throws IOException {
+        return pingLogRepository.findAvgLatencyByDateTimeRangeByIp(start, end, ipAddress);
+    }
+
+    @Override
     public List<String> getIpAddressesFromActiveTests(){
         return tests.stream()
                 .map(ConnTest::getIpAddress)

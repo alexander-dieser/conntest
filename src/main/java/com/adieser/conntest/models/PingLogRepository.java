@@ -114,4 +114,14 @@ public interface PingLogRepository {
      * @return average of latency pings
      */
     BigDecimal findAvgLatencyByIp(String ipAddress) throws IOException;
+
+    /**
+     * Calculate and retrieve the average of latency pings within a list of pings within a datetime range filtered
+     * by IP address and not-lost pings
+     * @param start start date and time of the range
+     * @param end end date in the range
+     * @param ipAddress IP address use to filter the results
+     * @return average of latency pings
+     */
+    BigDecimal findAvgLatencyByDateTimeRangeByIp(LocalDateTime start, LocalDateTime end, String ipAddress) throws IOException;
 }
