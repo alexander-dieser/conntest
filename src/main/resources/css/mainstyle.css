@@ -27,7 +27,7 @@
 
 .topbackground{
   -fx-background-color: #095C8A;
-  -fx-background-radius: 0px 0px 10px 10px;
+  -fx-background-radius: 0px 0px 10px 0px;
 }
 
 .root {
@@ -39,7 +39,7 @@
 
 /* Title style */
 .title{
-  -fx-font-size: 40px;
+  -fx-font-size: 45px;
   -fx-font-family: 'Helvetica Neue', sans-serif;
   -fx-font-weight: bold;
   -fx-letter-spacing: -1px;
@@ -100,7 +100,7 @@
   -fx-spacing: 10px;
 }
 
-/* Save buttons style */
+/* Save button style */
 .save-button{
   -fx-padding: 5px 20px;
   -fx-border-color:  #095c8adb;
