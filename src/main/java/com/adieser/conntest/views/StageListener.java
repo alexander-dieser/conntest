@@ -22,7 +22,7 @@ public class StageListener implements ApplicationListener<JavafxApplication.Stag
     private double xOffset = 0;
     private double yOffset = 0;
 
-    public StageListener(@Value("classpath:/ui.fxml") Resource fxml, ApplicationContext applicationContext, Logger logger) {
+    public StageListener(@Value("classpath:/fxml/ui.fxml") Resource fxml, ApplicationContext applicationContext, Logger logger) {
         this.fxml = fxml;
         this.applicationContext = applicationContext;
         this.logger = logger;

@@ -13,7 +13,7 @@
             </HBox.margin>
             <graphic>
                 <ImageView fitHeight="15" fitWidth="15">
-                    <Image url="@image/closebutton.png" />
+                    <Image url="@../image/closebutton.png" />
                 </ImageView>
             </graphic>
         </Button>

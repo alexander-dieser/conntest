@@ -573,7 +573,7 @@ public class UiController {
         Stage ownerStage = (Stage) ((Node) event.getSource()).getScene().getWindow();
         ModalController modalController = new ModalController();
         modalController.setAction(this::clearLogsAction);
-        modalController.showModal(ownerStage,"/confirmClearLogDialog.fxml", "Clear Log Confirmation", 300,150);
+        modalController.showModal(ownerStage, "/fxml/confirmClearLogDialog.fxml", "Clear Log Confirmation", 300,150);
     }
 
     private void clearLogsAction() {
@@ -593,7 +593,7 @@ public class UiController {
     private void openUserManual(ActionEvent event) throws IOException {
         Stage ownerStage = (Stage) ((Node) event.getSource()).getScene().getWindow();
         ModalController modalController = new ModalController();
-        modalController.showModal(ownerStage,"/usermanual.fxml", "User Manual", 300, 400);
+        modalController.showModal(ownerStage, "/fxml/usermanual.fxml", "User Manual", 300, 400);
     }
 
     /**
