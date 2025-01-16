@@ -1,8 +1,9 @@
-package com.adieser.conntest.views;
+package com.adieser.conntest.views.controllers;
 
 import com.adieser.conntest.controllers.responses.PingSessionExtract;
 import com.adieser.conntest.models.PingLog;
 import com.adieser.conntest.service.ConnTestService;
+import com.adieser.conntest.views.models.PingRow;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -21,6 +22,7 @@ import javafx.scene.text.FontWeight;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 import org.slf4j.Logger;
 import javafx.scene.Node;
@@ -39,6 +41,8 @@ public class UiController {
     public final ConnTestService connTestService;
     private ScheduledExecutorService executorService;
     public final Logger logger;
+    private final ApplicationContext applicationContext;
+
     List<String> ipAddress;
     public static final String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
     @FXML
@@ -76,11 +80,14 @@ public class UiController {
     private final List<TableColumn<String, String>> lowestHighestColumnList = new ArrayList<>();
     private final List<TableColumn<String, String>> pingCountColumnList = new ArrayList<>();
 
+    private boolean isCustomIp = false;
+
     @Autowired
-    public UiController(ConnTestService connTestService, Logger logger, ScheduledExecutorService executorService) {
+    public UiController(ConnTestService connTestService, Logger logger, ScheduledExecutorService executorService, ApplicationContext applicationContext) {
         this.connTestService = connTestService;
         this.logger = logger;
         this.executorService = executorService;
+        this.applicationContext = applicationContext;
     }
 
     /**
@@ -98,7 +105,6 @@ public class UiController {
             setOldestPing();
             Platform.runLater(this::updateTables);
         }
-
         timeChoiceBox.getItems().addAll(1, 5, 10, 15);
         this.startButton.setOnAction(actionEvent -> {
             startButton.setDisable(true);
@@ -151,9 +157,12 @@ public class UiController {
      * to load logs and update average lost pings continuously, and updates visual controls afterward.
      */
     public void start() {
-        connTestService.testLocalISPInternet();
-        ipAddress = connTestService.getIpAddressesFromActiveTests();
-
+        if (!isCustomIp) {
+            connTestService.testLocalISPInternet();
+            ipAddress = connTestService.getIpAddressesFromActiveTests();
+        }else{
+            connTestService.testCustomIps(ipAddress);
+        }
         setTables();
 
         createExecutorService();
@@ -182,7 +191,7 @@ public class UiController {
     /**
      * Starts the executor service to update the table
      * */
-    void startExecutorService(Integer timechoice){
+    public void startExecutorService(Integer timechoice){
         executorService.scheduleAtFixedRate(() -> Platform.runLater(this::updateTables), 0, timechoice, TimeUnit.SECONDS);
     }
 
@@ -595,6 +604,29 @@ public class UiController {
         ModalController modalController = new ModalController();
         modalController.showModal(ownerStage, "/fxml/usermanual.fxml", "User Manual", 300, 400);
     }
+
+    /**
+     * Opens a modal dialog to allow the user to set up to three custom IP addresses for testing.
+     * If the user confirms their input, this method triggers the `setCustomIpsAction`,
+     * which validates and processes the custom IP addresses using the service layer.
+     *
+     * @param event The ActionEvent triggered by the user interaction, used to obtain the current stage.
+     * @throws IOException if there is an error loading the modal dialog.
+     */
+    @FXML
+    private void setCustomIps(ActionEvent event) throws IOException {
+        Stage ownerStage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+        CustomIPModalController customIPModalController = applicationContext.getBean(CustomIPModalController.class);
+        customIPModalController.setAction(() -> setCustomIpsAction(customIPModalController.getIpList()));
+        customIPModalController.showModal(ownerStage, "/fxml/customIPsDialog.fxml", "Set Custom IPs", 400, 300);
+    }
+
+    private void setCustomIpsAction(List<String> ipList) {
+        isCustomIp = true;
+        this.ipAddress = ipList;
+        setTables();
+    }
+
 
     /**
      * Closes the current stage.

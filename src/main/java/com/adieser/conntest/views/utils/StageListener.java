@@ -1,5 +1,6 @@
-package com.adieser.conntest.views;
+package com.adieser.conntest.views.utils;
 
+import com.adieser.conntest.views.JavafxApplication;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;

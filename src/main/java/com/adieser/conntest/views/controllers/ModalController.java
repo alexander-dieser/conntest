@@ -1,4 +1,4 @@
-package com.adieser.conntest.views;
+package com.adieser.conntest.views.controllers;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -44,6 +44,10 @@ public class ModalController {
 
         modalController.setAction(this.action);
 
+        setStage(root, ownerStage, title, width, height);
+    }
+
+    public void setStage(Parent root, Stage ownerStage, String title, int width, int height){
         Stage stage = new Stage();
         stage.setScene(new Scene(root));
         stage.setTitle(title);

@@ -1,4 +1,4 @@
-package com.adieser.conntest.views;
+package com.adieser.conntest.views.models;
 
 
 import lombok.Data;

@@ -152,3 +152,11 @@
     -fx-border-color: transparent;
     -fx-border-width: 0;
 }
+
+.table .table-row-cell:nth-child(even) {
+    -fx-background-color: transparent;
+}
+
+.table .table-row-cell:nth-child(odd) {
+    -fx-background-color: transparent;
+}
