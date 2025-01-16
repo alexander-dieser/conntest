@@ -635,6 +635,7 @@ public class UiController {
     private void handleClose(ActionEvent event) {
         Stage stage = (Stage) closeButton.getScene().getWindow();
         stage.close();
+        System.exit(0);
     }
 
     /**
