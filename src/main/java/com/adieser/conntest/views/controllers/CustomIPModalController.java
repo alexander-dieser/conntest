@@ -18,7 +18,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-
 @Component
 public class CustomIPModalController extends ModalController {
 
@@ -32,6 +31,7 @@ public class CustomIPModalController extends ModalController {
     private TextField ipInput3;
     @FXML
     private Label errorInput;
+
     @Setter
     private Runnable action;
 
@@ -41,11 +41,17 @@ public class CustomIPModalController extends ModalController {
     private final List<String> ipList = new ArrayList<>();
 
     private final ApplicationContext applicationContext;
+
     @Autowired
     public CustomIPModalController(ApplicationContext applicationContext) {
         this.applicationContext = applicationContext;
     }
 
+    /**
+     * Handles the "Save" action in the modal.
+     * If the IPs are valid, adds them to the list of IPs and closes the modal window.
+     * @param event the action event triggered by the Save button.
+     */
     @FXML
     public void handleModalAction(ActionEvent event) {
         String ip1 = ipInput1.getText();
@@ -68,21 +74,28 @@ public class CustomIPModalController extends ModalController {
         }
     }
 
-
-
+    /**
+     * Displays a modal window using the specified parameters.
+     * Configures the controller for the modal and sets up the stage.
+     * @param ownerStage the parent stage of the modal window.
+     * @param fxmlFile the FXML file path for the modal layout.
+     * @param title the title of the modal window.
+     * @param width the width of the modal window.
+     * @param height the height of the modal window.
+     * @throws IOException if the FXML file cannot be loaded.
+     */
     @Override
     public void showModal(Stage ownerStage, String fxmlFile, String title, int width, int height) throws IOException {
         FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlFile));
-        loader.setControllerFactory(applicationContext::getBean); // Usa el ApplicationContext de Spring
+        loader.setControllerFactory(applicationContext::getBean); // Use Spring's ApplicationContext
         Parent root = loader.load();
         setStage(root, ownerStage, title, width, height);
     }
 
-
     /**
-     * Validates an IP address using a regex pattern.
-     * @param ip The IP address to validate.
-     * @return True if valid or empty, false otherwise.
+     * Validates an IP address using a regex pattern
+     * @param ip the IP address to validate
+     * @return true if the IP address is valid, false otherwise
      */
     private boolean validateIP(String ip) {
         if (ip == null || ip.isEmpty()) return false;

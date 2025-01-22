@@ -37,14 +37,14 @@ import java.util.concurrent.TimeUnit;
 
 @Component
 public class UiController {
-
     public final ConnTestService connTestService;
     private ScheduledExecutorService executorService;
     public final Logger logger;
     private final ApplicationContext applicationContext;
-
     List<String> ipAddress;
     public static final String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
+    private boolean isCustomIp = false;
+
     @FXML
     private Button closeButton;
     @FXML
@@ -79,8 +79,6 @@ public class UiController {
     private final List<TableColumn<String, String>> averageLatencyColumnList = new ArrayList<>();
     private final List<TableColumn<String, String>> lowestHighestColumnList = new ArrayList<>();
     private final List<TableColumn<String, String>> pingCountColumnList = new ArrayList<>();
-
-    private boolean isCustomIp = false;
 
     @Autowired
     public UiController(ConnTestService connTestService, Logger logger, ScheduledExecutorService executorService, ApplicationContext applicationContext) {
@@ -606,10 +604,7 @@ public class UiController {
     }
 
     /**
-     * Opens a modal dialog to allow the user to set up to three custom IP addresses for testing.
-     * If the user confirms their input, this method triggers the `setCustomIpsAction`,
-     * which validates and processes the custom IP addresses using the service layer.
-     *
+     * Opens a modal dialog to allow the user to set up to three custom IP addresses
      * @param event The ActionEvent triggered by the user interaction, used to obtain the current stage.
      * @throws IOException if there is an error loading the modal dialog.
      */
