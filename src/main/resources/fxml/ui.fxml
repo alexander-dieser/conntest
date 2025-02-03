@@ -67,7 +67,7 @@
                 <!-- START BUTTON -->
                   <VBox alignment="CENTER">
                     <Button fx:id="startButton" alignment="CENTER" contentDisplay="CENTER" styleClass="mainbutton" text="Start analysis" />
-                    <Button onAction="#setCustomIps" styleClass="maincustomipbutton" text="Set custom IPs" underline="true" />
+                    <Button fx:id="customIpsButton" onAction="#setCustomIps" styleClass="maincustomipbutton" text="Set custom IPs" underline="true" />
                     </VBox>
                     <!-- LOADER -->
                   <ProgressIndicator fx:id="progressIndicator" maxHeight="30.0" maxWidth="30.0" styleClass="loader" visible="false" HBox.hgrow="NEVER" />

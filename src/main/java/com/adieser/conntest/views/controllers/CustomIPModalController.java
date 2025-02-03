@@ -59,6 +59,7 @@ public class CustomIPModalController extends ModalController {
         String ip3 = ipInput3.getText();
 
         if (validateIP(ip1) && validateIP(ip2) && validateIP(ip3)) {
+            ipList.clear();
             ipList.add(ip1);
             ipList.add(ip2);
             ipList.add(ip3);
@@ -101,4 +102,16 @@ public class CustomIPModalController extends ModalController {
         if (ip == null || ip.isEmpty()) return false;
         return ip.matches("^((25[0-5]|(2[0-4]|1\\d|[1-9]|)\\d)\\.?\\b){4}$");
     }
+
+    /**
+     * Populates the input fields with the current IPs from ipList.
+     */
+    public void populateIpFields() {
+        if (!ipList.isEmpty()) {
+            ipInput1.setText(ipList.get(0));
+            ipInput2.setText(ipList.size() > 1 ? ipList.get(1) : "");
+            ipInput3.setText(ipList.size() > 2 ? ipList.get(2) : "");
+        }
+    }
+
 }

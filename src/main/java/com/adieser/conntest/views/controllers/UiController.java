@@ -56,6 +56,8 @@ public class UiController {
     @FXML
     private Button stopButton;
     @FXML
+    private Button customIpsButton;
+    @FXML
     private ProgressIndicator progressIndicator;
     @FXML
     private ComboBox<Integer> timeChoiceBox;
@@ -106,6 +108,7 @@ public class UiController {
         timeChoiceBox.getItems().addAll(1, 5, 10, 15);
         this.startButton.setOnAction(actionEvent -> {
             startButton.setDisable(true);
+            customIpsButton.setDisable(true);
             progressIndicator.setVisible(true);
             dayFilterBox.setDisable(true);
             if(timeChoiceBox.getValue() != null) timechoice = timeChoiceBox.getValue();
@@ -229,6 +232,7 @@ public class UiController {
         stopExecutorService();
         connTestService.stopTests();
         startButton.setDisable(false);
+        customIpsButton.setDisable(false);
         dayFilterBox.setDisable(false);
     }
 
@@ -614,6 +618,7 @@ public class UiController {
         CustomIPModalController customIPModalController = applicationContext.getBean(CustomIPModalController.class);
         customIPModalController.setAction(() -> setCustomIpsAction(customIPModalController.getIpList()));
         customIPModalController.showModal(ownerStage, "/fxml/customIPsDialog.fxml", "Set Custom IPs", 400, 300);
+        customIPModalController.populateIpFields();
     }
 
     private void setCustomIpsAction(List<String> ipList) {
