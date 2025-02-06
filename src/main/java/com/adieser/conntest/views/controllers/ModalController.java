@@ -90,7 +90,7 @@ public class ModalController {
      * Closes the current stage.
      */
     @FXML
-    private void handleClose(ActionEvent event) {
+    public void handleClose(ActionEvent event) {
         Stage stage = (Stage) closeButton.getScene().getWindow();
         stage.close();
     }

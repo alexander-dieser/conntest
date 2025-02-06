@@ -177,3 +177,16 @@
   -fx-border-color:  #095C8A;
   -fx-border-radius: 5;
 }
+
+/* Radio button style */
+.radio-button:selected .radio .dot {
+  -fx-background-color: #17255d;
+  -fx-background-insets: 0;
+  -fx-border-color:  transparent;
+}
+
+.radio-button{
+  -fx-background-color: #17255d;
+  -fx-background-insets: 0;
+  -fx-border-color:  transparent;
+}

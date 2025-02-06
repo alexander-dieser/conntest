@@ -63,14 +63,24 @@
               <!-- TITLE -->
               <Label prefWidth="200.0" styleClass="title" text="ConnTest" GridPane.halignment="CENTER" GridPane.valignment="CENTER" />
 
-             <HBox alignment="CENTER" spacing="10.0" GridPane.rowIndex="1">
+             <HBox alignment="TOP_CENTER" spacing="10.0" GridPane.rowIndex="1" GridPane.valignment="TOP">
                 <!-- START BUTTON -->
-                  <VBox alignment="CENTER">
-                    <Button fx:id="startButton" alignment="CENTER" contentDisplay="CENTER" styleClass="mainbutton" text="Start analysis" />
-                    <Button fx:id="customIpsButton" onAction="#setCustomIps" styleClass="maincustomipbutton" text="Set custom IPs" underline="true" />
-                    </VBox>
+                  <VBox>
+                    <Button fx:id="startButton" alignment="CENTER" contentDisplay="CENTER" styleClass="mainbutton" text="Start analysis">
+                     <VBox.margin>
+                        <Insets bottom="5.0" />
+                     </VBox.margin></Button>
+
+                      <RadioButton fx:id="autoDiscoveryButton" onAction="#setAutoDiscovery" selected="true" styleClass="maincustomipbutton" text="Auto-Discovery">
+                      <toggleGroup><ToggleGroup fx:id="toggleGroup" /></toggleGroup></RadioButton>
+                      <RadioButton fx:id="customIpsButton" onAction="#setCustomIps" styleClass="maincustomipbutton" text="Set custom IPs" toggleGroup="$toggleGroup" />
+
+</VBox>
                     <!-- LOADER -->
-                  <ProgressIndicator fx:id="progressIndicator" maxHeight="30.0" maxWidth="30.0" styleClass="loader" visible="false" HBox.hgrow="NEVER" />
+                  <ProgressIndicator fx:id="progressIndicator" maxHeight="30.0" maxWidth="30.0" styleClass="loader" visible="false" HBox.hgrow="NEVER">
+                  <HBox.margin>
+                     <Insets top="10.0" />
+                  </HBox.margin></ProgressIndicator>
                        <padding>
                           <Insets left="40.0" />
                        </padding>

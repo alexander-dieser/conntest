@@ -31,15 +31,10 @@ public class CustomIPModalController extends ModalController {
     private TextField ipInput3;
     @FXML
     private Label errorInput;
-
     @Setter
     private Runnable action;
-
-    public static final String INVALIDIP = "Invalid IP address";
-
     @Getter
     private final List<String> ipList = new ArrayList<>();
-
     private final ApplicationContext applicationContext;
 
     @Autowired
@@ -58,20 +53,24 @@ public class CustomIPModalController extends ModalController {
         String ip2 = ipInput2.getText();
         String ip3 = ipInput3.getText();
 
-        if (validateIP(ip1) && validateIP(ip2) && validateIP(ip3)) {
-            ipList.clear();
-            ipList.add(ip1);
-            ipList.add(ip2);
-            ipList.add(ip3);
+        if (!ip1.isEmpty() && !ip2.isEmpty() && !ip3.isEmpty()) {
+            if (validateIP(ip1) && validateIP(ip2) && validateIP(ip3)) {
+                ipList.clear();
+                ipList.add(ip1);
+                ipList.add(ip2);
+                ipList.add(ip3);
 
-            if (action != null) {
-                action.run();
+                if (action != null) {
+                    action.run();
+                }
+
+                Stage stage = (Stage) closeButton.getScene().getWindow();
+                stage.close();
+            } else {
+                errorInput.setText("One or more IP addresses are invalid. Please check and try again.");
             }
-
-            Stage stage = (Stage) closeButton.getScene().getWindow();
-            stage.close();
-        } else {
-            errorInput.setText("One or more IP addresses are invalid. Please check and try again.");
+        }else{
+            errorInput.setText("At least one valid IP address must be provided");
         }
     }
 
@@ -88,7 +87,7 @@ public class CustomIPModalController extends ModalController {
     @Override
     public void showModal(Stage ownerStage, String fxmlFile, String title, int width, int height) throws IOException {
         FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlFile));
-        loader.setControllerFactory(applicationContext::getBean); // Use Spring's ApplicationContext
+        loader.setControllerFactory(applicationContext::getBean);
         Parent root = loader.load();
         setStage(root, ownerStage, title, width, height);
     }
@@ -99,7 +98,7 @@ public class CustomIPModalController extends ModalController {
      * @return true if the IP address is valid, false otherwise
      */
     private boolean validateIP(String ip) {
-        if (ip == null || ip.isEmpty()) return false;
+        if (ip == null || ip.isEmpty()) return true;
         return ip.matches("^((25[0-5]|(2[0-4]|1\\d|[1-9]|)\\d)\\.?\\b){4}$");
     }
 
@@ -111,6 +110,19 @@ public class CustomIPModalController extends ModalController {
             ipInput1.setText(ipList.get(0));
             ipInput2.setText(ipList.size() > 1 ? ipList.get(1) : "");
             ipInput3.setText(ipList.size() > 2 ? ipList.get(2) : "");
+        }
+    }
+
+    /**
+     * Closes the current stage.
+     */
+    @FXML
+    @Override
+    public void handleClose(ActionEvent event) {
+        Stage stage = (Stage) closeButton.getScene().getWindow();
+        stage.close();
+        if (action != null) {
+            action.run();
         }
     }
 

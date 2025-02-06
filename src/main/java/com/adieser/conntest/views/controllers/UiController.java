@@ -56,7 +56,11 @@ public class UiController {
     @FXML
     private Button stopButton;
     @FXML
-    private Button customIpsButton;
+    private ToggleGroup toggleGroup;
+    @FXML
+    private RadioButton customIpsButton;
+    @FXML
+    private RadioButton autoDiscoveryButton;
     @FXML
     private ProgressIndicator progressIndicator;
     @FXML
@@ -109,6 +113,7 @@ public class UiController {
         this.startButton.setOnAction(actionEvent -> {
             startButton.setDisable(true);
             customIpsButton.setDisable(true);
+            autoDiscoveryButton.setDisable(true);
             progressIndicator.setVisible(true);
             dayFilterBox.setDisable(true);
             if(timeChoiceBox.getValue() != null) timechoice = timeChoiceBox.getValue();
@@ -233,6 +238,7 @@ public class UiController {
         connTestService.stopTests();
         startButton.setDisable(false);
         customIpsButton.setDisable(false);
+        autoDiscoveryButton.setDisable(false);
         dayFilterBox.setDisable(false);
     }
 
@@ -622,9 +628,19 @@ public class UiController {
     }
 
     private void setCustomIpsAction(List<String> ipList) {
-        isCustomIp = true;
-        this.ipAddress = ipList;
-        setTables();
+        if(ipList.isEmpty()){
+            autoDiscoveryButton.setSelected(true);
+        }else {
+            isCustomIp = true;
+            this.ipAddress = ipList;
+            setTables();
+            Platform.runLater(this::updateTables);
+        }
+    }
+
+    @FXML
+    private void setAutoDiscovery(){
+        isCustomIp = false;
     }
 
 
