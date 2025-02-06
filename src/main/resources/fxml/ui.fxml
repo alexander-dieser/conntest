@@ -71,9 +71,15 @@
                         <Insets bottom="5.0" />
                      </VBox.margin></Button>
 
-                      <RadioButton fx:id="autoDiscoveryButton" onAction="#setAutoDiscovery" selected="true" styleClass="maincustomipbutton" text="Auto-Discovery">
-                      <toggleGroup><ToggleGroup fx:id="toggleGroup" /></toggleGroup></RadioButton>
-                      <RadioButton fx:id="customIpsButton" onAction="#setCustomIps" styleClass="maincustomipbutton" text="Set custom IPs" toggleGroup="$toggleGroup" />
+                      <RadioButton fx:id="autoDiscoveryButton" onAction="#setAutoDiscovery" selected="true" styleClass="radio-button" text="Auto-Discovery">
+                      <toggleGroup><ToggleGroup fx:id="toggleGroup" /></toggleGroup>
+                     <VBox.margin>
+                        <Insets bottom="2.0" left="3.0" />
+                     </VBox.margin></RadioButton>
+                      <RadioButton fx:id="customIpsButton" onAction="#setCustomIps" styleClass="maincustomipbutton" text="Set custom IPs" toggleGroup="$toggleGroup">
+                     <VBox.margin>
+                        <Insets left="3.0" />
+                     </VBox.margin></RadioButton>
 
 </VBox>
                     <!-- LOADER -->
