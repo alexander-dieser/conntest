@@ -49,28 +49,28 @@ public class CustomIPModalController extends ModalController {
      */
     @FXML
     public void handleModalAction(ActionEvent event) {
-        String ip1 = ipInput1.getText();
-        String ip2 = ipInput2.getText();
-        String ip3 = ipInput3.getText();
+        String ip1 = ipInput1.getText().trim();
+        String ip2 = ipInput2.getText().trim();
+        String ip3 = ipInput3.getText().trim();
 
-        if (!ip1.isEmpty() && !ip2.isEmpty() && !ip3.isEmpty()) {
-            if (validateIP(ip1) && validateIP(ip2) && validateIP(ip3)) {
-                ipList.clear();
-                ipList.add(ip1);
-                ipList.add(ip2);
-                ipList.add(ip3);
+        List<String> validIPs = new ArrayList<>();
 
-                if (action != null) {
-                    action.run();
-                }
+        if (!ip1.isEmpty() && validateIP(ip1)) validIPs.add(ip1);
+        if (!ip2.isEmpty() && validateIP(ip2)) validIPs.add(ip2);
+        if (!ip3.isEmpty() && validateIP(ip3)) validIPs.add(ip3);
 
-                Stage stage = (Stage) closeButton.getScene().getWindow();
-                stage.close();
-            } else {
-                errorInput.setText("One or more IP addresses are invalid. Please check and try again.");
+        if (!validIPs.isEmpty()) {
+            ipList.clear();
+            ipList.addAll(validIPs);
+
+            if (action != null) {
+                action.run();
             }
-        }else{
-            errorInput.setText("At least one valid IP address must be provided");
+
+            Stage stage = (Stage) closeButton.getScene().getWindow();
+            stage.close();
+        } else {
+            errorInput.setText("At least one valid IP address must be provided.");
         }
     }
 

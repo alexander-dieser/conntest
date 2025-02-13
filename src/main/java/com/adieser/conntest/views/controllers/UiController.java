@@ -43,7 +43,6 @@ public class UiController {
     private final ApplicationContext applicationContext;
     List<String> ipAddress;
     public static final String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
-    private boolean isCustomIp = false;
 
     @FXML
     private Button closeButton;
@@ -51,6 +50,8 @@ public class UiController {
     private Button minimizeButton;
     @FXML
     private Button maximizeRestoreButton;
+    @FXML
+    private VBox startButtonBox;
     @FXML
     private Button startButton;
     @FXML
@@ -111,9 +112,7 @@ public class UiController {
         }
         timeChoiceBox.getItems().addAll(1, 5, 10, 15);
         this.startButton.setOnAction(actionEvent -> {
-            startButton.setDisable(true);
-            customIpsButton.setDisable(true);
-            autoDiscoveryButton.setDisable(true);
+            startButtonBox.setDisable(true);
             progressIndicator.setVisible(true);
             dayFilterBox.setDisable(true);
             if(timeChoiceBox.getValue() != null) timechoice = timeChoiceBox.getValue();
@@ -122,7 +121,7 @@ public class UiController {
         });
         this.stopButton.setOnAction(actionEvent -> this.stop());
         this.timeChoiceBox.setOnAction(actionEvent -> {
-            if(startButton.isDisable()){
+            if(startButtonBox.isDisable()){
                 stopExecutorService();
                 timechoice = timeChoiceBox.getValue();
                 createExecutorService();
@@ -163,7 +162,7 @@ public class UiController {
      * to load logs and update average lost pings continuously, and updates visual controls afterward.
      */
     public void start() {
-        if (!isCustomIp) {
+        if (!customIpsButton.isSelected()) {
             connTestService.testLocalISPInternet();
             ipAddress = connTestService.getIpAddressesFromActiveTests();
         }else{
@@ -236,9 +235,7 @@ public class UiController {
         progressIndicator.setVisible(false);
         stopExecutorService();
         connTestService.stopTests();
-        startButton.setDisable(false);
-        customIpsButton.setDisable(false);
-        autoDiscoveryButton.setDisable(false);
+        startButtonBox.setDisable(false);
         dayFilterBox.setDisable(false);
     }
 
@@ -614,7 +611,7 @@ public class UiController {
     }
 
     /**
-     * Opens a modal dialog to allow the user to set up to three custom IP addresses
+     * Opens a modal dialog to allow the user to set up to one, two or three custom IP addresses
      * @param event The ActionEvent triggered by the user interaction, used to obtain the current stage.
      * @throws IOException if there is an error loading the modal dialog.
      */
@@ -631,7 +628,7 @@ public class UiController {
         if(ipList.isEmpty()){
             autoDiscoveryButton.setSelected(true);
         }else {
-            isCustomIp = true;
+            customIpsButton.setSelected(true);
             this.ipAddress = ipList;
             setTables();
             Platform.runLater(this::updateTables);
@@ -640,7 +637,7 @@ public class UiController {
 
     @FXML
     private void setAutoDiscovery(){
-        isCustomIp = false;
+        autoDiscoveryButton.setSelected(true);
     }
 
 
