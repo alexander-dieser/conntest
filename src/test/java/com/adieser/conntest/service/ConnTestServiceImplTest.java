@@ -516,10 +516,34 @@ class ConnTestServiceImplTest {
         doReturn(
                 List.of(getDefaultPingLog(),
                         getDefaultPingLog()))
-                .when(pingLogRepository).findMaxMinPingLog(LOCAL_IP_ADDRESS);
+                .when(pingLogRepository).findMaxMinPingLogOfAll(LOCAL_IP_ADDRESS);
 
         // then
         PingSessionExtract pings = underTest.getMaxMinPingLog(LOCAL_IP_ADDRESS);
+
+        // assert
+        assertEquals(DEFAULT_PING_TIME, pings.getPingLogs().get(0).getPingTime());
+        assertEquals(DEFAULT_PING_TIME, pings.getPingLogs().get(1).getPingTime());
+        assertEquals(2, pings.getAmountOfPings());
+        assertEquals(LOCAL_IP_ADDRESS, pings.getIpAddress());
+    }
+
+    @Test
+    void testGetMaxMinPingLogByDateTimeRangeByIp() throws IOException {
+        // when
+        ConnTestServiceImpl underTest =
+                new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository, pingUtils);
+        doReturn(
+                List.of(getDefaultPingLog(),
+                        getDefaultPingLog()))
+                .when(pingLogRepository).findMaxMinPingLogByDateTimeRangeByIp(START,
+                        END,
+                        LOCAL_IP_ADDRESS);
+
+        // then
+        PingSessionExtract pings = underTest.getMaxMinPingLogByDateTimeRangeByIp(START,
+                END,
+                LOCAL_IP_ADDRESS);
 
         // assert
         assertEquals(DEFAULT_PING_TIME, pings.getPingLogs().get(0).getPingTime());

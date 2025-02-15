@@ -231,7 +231,7 @@ class CsvPingLogRepositoryIntegrationTest{
         for(Long time : pingTimes)
             writePingLog(DEFAULT_LOG_DATE_TIME, LOCAL_IP_ADDRESS, time);
 
-        List<PingLog> maxMinPingLog = csvPingLogRepository.findMaxMinPingLog(LOCAL_IP_ADDRESS);
+        List<PingLog> maxMinPingLog = csvPingLogRepository.findMaxMinPingLogOfAll(LOCAL_IP_ADDRESS);
 
         if(expectedMinPing != null) {
             assertEquals(expectedMinPing, maxMinPingLog.get(0).getPingTime(), "wrong min ping");
@@ -239,6 +239,54 @@ class CsvPingLogRepositoryIntegrationTest{
         }
         else
             assertTrue(maxMinPingLog.isEmpty());
+    }
+
+    @Test
+    void testFindMaxMinPingLogByDateTimeRangeByIp() throws IOException {
+        // in-range local ping
+        writePingLog(DEFAULT_LOG_DATE_TIME, LOCAL_IP_ADDRESS, 2);
+        // in-range local ping
+        writePingLog(DEFAULT_LOG_DATE_TIME, LOCAL_IP_ADDRESS, 4);
+        // in-range lost local ping
+        writePingLog(DEFAULT_LOG_DATE_TIME, LOCAL_IP_ADDRESS, -1);
+        // in-range cloud ping
+        writePingLog(DEFAULT_LOG_DATE_TIME, CLOUD_IP_ADDRESS, 8);
+        // out-of-range local ping
+        writePingLog(LocalDateTime.of(2023, 10, 5, 0, 0, 0),
+                LOCAL_IP_ADDRESS,
+                10);
+
+        List<PingLog> maxMinPingLog = csvPingLogRepository.findMaxMinPingLogByDateTimeRangeByIp(
+                LocalDateTime.of(2023, 10, 6, 0, 0, 0),
+                LocalDateTime.of(2023, 10, 6, 23, 59, 59),
+                LOCAL_IP_ADDRESS);
+
+        assertEquals(2, maxMinPingLog.size(), "Wrong amount of pings");
+        assertEquals(2, maxMinPingLog.get(0).getPingTime(), "wrong min ping");
+        assertEquals(4, maxMinPingLog.get(1).getPingTime(), "wrong max ping");
+    }
+
+    @Test
+    void testFindMaxMinPingLogByDateTimeRangeByIp_Empty() throws IOException {
+        // in-range local ping
+        writePingLog(DEFAULT_LOG_DATE_TIME, LOCAL_IP_ADDRESS, 2);
+        // in-range local ping
+        writePingLog(DEFAULT_LOG_DATE_TIME, LOCAL_IP_ADDRESS, 4);
+        // in-range lost local ping
+        writePingLog(DEFAULT_LOG_DATE_TIME, LOCAL_IP_ADDRESS, -1);
+        // in-range cloud ping
+        writePingLog(DEFAULT_LOG_DATE_TIME, CLOUD_IP_ADDRESS, 8);
+        // out-of-range local ping
+        writePingLog(LocalDateTime.of(2023, 10, 5, 0, 0, 0),
+                LOCAL_IP_ADDRESS,
+                10);
+
+        List<PingLog> maxMinPingLog = csvPingLogRepository.findMaxMinPingLogByDateTimeRangeByIp(
+                LocalDateTime.of(2023, 10, 7, 0, 0, 0),
+                LocalDateTime.of(2023, 10, 7, 23, 59, 59),
+                LOCAL_IP_ADDRESS);
+
+        assertTrue(maxMinPingLog.isEmpty());
     }
 
     @Test
@@ -329,6 +377,12 @@ class CsvPingLogRepositoryIntegrationTest{
                         List.of(),
                         null,
                         null
+                ),
+                // Lost pinglogs
+                Arguments.of(
+                        List.of(-1L, 1L, 5L),
+                        1L,
+                        5L
                 )
         );
     }
