@@ -15,9 +15,9 @@ import java.math.RoundingMode;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -86,25 +86,13 @@ public class CsvPingLogRepository implements PingLogRepository {
     }
 
     @Override
-    public List<PingLog> findMaxMinPingLog(String ipAddress) throws IOException {
+    public List<PingLog> findMaxMinPingLogOfAll(String ipAddress) throws IOException {
+        return findMaxMinPingLog(getPingLogsByIpStream(readAll().stream(), ipAddress));
+    }
 
-        PingLog lowestLatency = getPingLogsByIpStream(readAll().stream(), ipAddress)
-                .min(Comparator.comparingLong(PingLog::getPingTime))
-                .orElse(null);
-
-        // If one of the pingLogs is null, it means both will (the file is empty). Therefore, it returns and empty list
-        if(lowestLatency == null)
-            return List.of();
-
-        PingLog highestLatency = getPingLogsByIpStream(readAll().stream(), ipAddress)
-                .max(Comparator.comparingLong(PingLog::getPingTime))
-                .orElse(null);
-
-        List<PingLog> highestLowest = new ArrayList<>();
-        highestLowest.add(lowestLatency);
-        highestLowest.add(highestLatency);
-
-        return highestLowest;
+    @Override
+    public List<PingLog> findMaxMinPingLogByDateTimeRangeByIp(LocalDateTime start, LocalDateTime end, String ipAddress) throws IOException {
+        return findMaxMinPingLog(getPingLogsByDateTimeRangeByIpStream(readAll().stream(), start, end, ipAddress));
     }
 
     @Override
@@ -252,5 +240,23 @@ public class CsvPingLogRepository implements PingLogRepository {
                         (pingLog.getDateTime().isAfter(start) && pingLog.getDateTime().isBefore(end))
                         || pingLog.getDateTime().isEqual(start) || pingLog.getDateTime().isEqual(end)
                 );
+    }
+
+    /**
+     * Get the minimum and maximum ping times of a ping list. Lost pings are not taken into account.
+     * If one of the pings is null, it means both are, so an empty list is returned.
+     * @param pingLogStream stream of pings
+     * @return List of two pings, the first one is the minimum and the second one is the maximum ping time
+     */
+    private List<PingLog> findMaxMinPingLog(Stream<PingLog> pingLogStream) {
+        return pingLogStream
+                .filter(pingLog -> pingLog.getPingTime() != -1)
+                .collect(Collectors.teeing(
+                        Collectors.minBy(Comparator.comparingLong(PingLog::getPingTime)),
+                        Collectors.maxBy(Comparator.comparingLong(PingLog::getPingTime)),
+                        (min, max) ->
+                            //if one is empty, return an empty list
+                            min.map(pingLog -> List.of(pingLog, max.get())).orElseGet(List::of)
+                ));
     }
 }

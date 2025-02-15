@@ -298,6 +298,51 @@ public class ConnTestController {
     }
 
     /**
+     * Retrieves the PingLog entries with the highest and lowest latency (pingTime) for a given IP address
+     * within a specified datetime range. This endpoint returns a PingSessionExtract object containing
+     * two PingLog entries: one with the maximum pingTime and another with the minimum pingTime. The results
+     * are filtered based on the provided IP address and datetime range.
+     *
+     * @param ipAddress The IP address used to filter the PingLog entries. This parameter is required.
+     * @param start The start date and time of the range. This parameter is required.
+     * @param end The end date and time of the range. This parameter is required.
+     * @return A ResponseEntity containing a PingSessionExtract object with the max and min PingLog entries.
+     *         Returns HTTP 200 OK if PingLog entries are found, or HTTP 204 No Content if no entries are found.
+     * @throws IOException If there's an error while processing the request or accessing the data.
+     *
+     * @apiNote This endpoint produces JSON output.
+     *
+     * @see PingSessionExtract
+     */
+    @ApiResponse(responseCode = "200", description = "a pinglog with max pingTime and the pingLog with lowest pingTime.")
+    @GetMapping(value = "/pings/{ipAddress}/max-min/{start}/{end}", produces = {"application/json"})
+    @Operation(summary = "Get the pinglog with the highest latency and the pinglog with lowest latency within a datetime range.")
+    public ResponseEntity<PingSessionExtract> getMaxMinPingLogByDateTimeRangeByIp(
+            @Parameter(
+                    description = "IP address used to filter the results",
+                    required = true)
+            @PathVariable String ipAddress,
+            @Parameter(
+                    description = "Start date and time of the range",
+                    required = true)
+            @PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime start,
+            @Parameter(
+                    description = "End date in the range",
+                    required = true)
+            @PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime end
+    ) throws IOException {
+        HttpStatus httpStatus = HttpStatus.OK;
+        PingSessionExtract maxMinPingLog = connTestService.getMaxMinPingLogByDateTimeRangeByIp(start, end, ipAddress);
+
+        if(maxMinPingLog.getPingLogs().isEmpty())
+            httpStatus = HttpStatus.NO_CONTENT;
+        else
+            addHATEOASLinksForPingLogsReturningEndpoints(maxMinPingLog);
+
+        return new ResponseEntity<>(maxMinPingLog, httpStatus);
+    }
+
+    /**
      * Get the average of lost pings within a list of pings filtered by IP
      * @param ipAddress IP address used to filter the results
      * @return If successful it returns a number representing the average of lost pings

@@ -106,7 +106,16 @@ public interface PingLogRepository {
      * @param ipAddress IP address use to filter the results
      * @return List of pings
      */
-    List<PingLog> findMaxMinPingLog(String ipAddress) throws IOException;
+    List<PingLog> findMaxMinPingLogOfAll(String ipAddress) throws IOException;
+
+    /**
+     * Retrieve the lowest latency pinglog and the highest latency pinglog within a datetime range
+     * @param start start date and time of the range
+     * @param end end date in the range
+     * @param ipAddress IP address use to filter the results
+     * @return List of pings
+     */
+    List<PingLog> findMaxMinPingLogByDateTimeRangeByIp(LocalDateTime start, LocalDateTime end, String ipAddress) throws IOException;
 
     /**
      * Calculate and retrieve the average of latency pings within a list of pings filtered by IP address

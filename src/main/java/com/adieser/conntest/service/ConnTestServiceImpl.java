@@ -176,7 +176,15 @@ public class ConnTestServiceImpl implements ConnTestService {
 
     @Override
     public PingSessionExtract getMaxMinPingLog(String ipAddress) throws IOException {
-        PingSessionExtract response = createBasicResponse(pingLogRepository.findMaxMinPingLog(ipAddress));
+        PingSessionExtract response = createBasicResponse(pingLogRepository.findMaxMinPingLogOfAll(ipAddress));
+        response.setIpAddress(ipAddress);
+
+        return response;
+    }
+
+    @Override
+    public PingSessionExtract getMaxMinPingLogByDateTimeRangeByIp(LocalDateTime start, LocalDateTime end, String ipAddress) throws IOException {
+        PingSessionExtract response = createBasicResponse(pingLogRepository.findMaxMinPingLogByDateTimeRangeByIp(start, end, ipAddress));
         response.setIpAddress(ipAddress);
 
         return response;

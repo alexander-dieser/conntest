@@ -526,6 +526,49 @@ class ConnTestControllerIntegrationTest {
                 )
         );
 
+        executeAndAssertGetMaxMinPingLog(pings, requestBuilder);
+
+        verify(connTestService).getMaxMinPingLog(LOCAL_IP_ADDRESS);
+    }
+
+    @Test
+    void testGetMaxMinPingLogIOException() throws Exception {
+        // when
+        when(connTestService.getMaxMinPingLog(LOCAL_IP_ADDRESS)).thenThrow(IOException.class);
+
+        MockHttpServletRequestBuilder requestBuilder = TestUtils.addCustomSessionId(
+                MockMvcRequestBuilders.get("/pings/{ipAddress}/max-min",
+                        LOCAL_IP_ADDRESS
+                )
+        );
+
+        // then assert
+        mockMvc.perform(requestBuilder)
+                .andExpect(status().is5xxServerError())
+                .andExpect(content().string("Internal Server Error"));
+    }
+
+    @ParameterizedTest
+    @MethodSource("maxMinResponseProvider")
+    void testGetMaxMinPingLogByDateTimeRangeByIp(PingSessionExtract pings) throws Exception {
+        // when
+        when(connTestService.getMaxMinPingLogByDateTimeRangeByIp(START, END, LOCAL_IP_ADDRESS)).thenReturn(pings);
+
+        // then assert
+        MockHttpServletRequestBuilder requestBuilder = TestUtils.addCustomSessionId(
+                MockMvcRequestBuilders.get("/pings/{ipAddress}/max-min/{start}/{end}",
+                        LOCAL_IP_ADDRESS,
+                        START.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
+                        END.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+                )
+        );
+
+        executeAndAssertGetMaxMinPingLog(pings, requestBuilder);
+
+        verify(connTestService).getMaxMinPingLogByDateTimeRangeByIp(START, END, LOCAL_IP_ADDRESS);
+    }
+
+    private void executeAndAssertGetMaxMinPingLog(PingSessionExtract pings, MockHttpServletRequestBuilder requestBuilder) throws Exception {
         ResultActions result = mockMvc.perform(requestBuilder);
 
         if(pings.getPingLogs().isEmpty()){
@@ -545,8 +588,6 @@ class ConnTestControllerIntegrationTest {
 
             AssertHATEOASLinks(result, pings.getPingLogs().get(0));
         }
-
-        verify(connTestService).getMaxMinPingLog(LOCAL_IP_ADDRESS);
     }
 
     private ResultActions performRequestAndBasicAssertPingLogControllerResponse(MockHttpServletRequestBuilder requestBuilder,
