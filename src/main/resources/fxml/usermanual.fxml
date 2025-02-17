@@ -29,35 +29,43 @@
         </Button>
     </HBox>
         <ScrollPane id="descriptionScroll" fitToWidth="true">
-            <VBox spacing="6" style="-fx-background-color: white;  -fx-border-color: transparent; -fx-background-radius: 7px 7px 7px 7px;" VBox.vgrow="ALWAYS">
+            <VBox spacing="6" style="-fx-background-color: white; -fx-border-color: transparent; -fx-background-radius: 7px 7px 7px 7px;" VBox.vgrow="ALWAYS">
                 <Label styleClass="description-header-label" text="ConnTest Application User Manual" />
-                <Label styleClass="description-content-label" text="Welcome to the ConnTest Application! This application is designed to help you test and monitor the connectivity to various IP addresses by performing ping tests. The application automatically discovers the hops to local, ISP, and Google IP addresses, and displays the results in a user-friendly interface." wrapText="true" />
+                <Label styleClass="description-content-label" text="Welcome to the ConnTest Application! This application is designed to help you test and monitor the connectivity to various IP addresses by performing ping tests. The application can automatically discover the hops to local, ISP, and Google IP addresses, or you can manually specify custom IPs." wrapText="true" />
 
                 <Label styleClass="description-section-header" text="Starting the Test" />
-                <Label styleClass="description-content-label" text="To begin the test, click the Start button on the main interface. The application will initiate the process of discovering the IP hops to your local network, ISP, and Google." wrapText="true" />
+                <Label styleClass="description-content-label" text="To begin the test, click the Start button on the main interface. The application will either initiate the process of discovering the IP hops or use the custom IPs you have specified." wrapText="true" />
 
-                <Label styleClass="description-section-header" text="Automatic IP Discovery" />
-                <Label styleClass="description-content-label" text="The application will automatically discover the IP hops for Local, ISP, and Google IP addresses. This process will take a few moments." wrapText="true" />
+                <Label styleClass="description-section-header" text="IP Address Selection" />
+                <Label styleClass="description-content-label" text="You have two options for selecting IP addresses:" wrapText="true" />
+                <Label styleClass="description-content-label" text=" - Automatic Discovery: The application will detect and use Local, ISP, and Google IPs." wrapText="true" />
+                <Label styleClass="description-content-label" text=" - Custom IPs: You can manually enter up to three IP addresses. To do so, click the 'Edit' button and enter the desired IPs in the provided fields." wrapText="true" />
 
                 <Label styleClass="description-section-header" text="Viewing Ping Results" />
-                <Label styleClass="description-content-label" text="Once the IPs are discovered, the application will display the ping results in tables. Each one corresponds to an IP address. The columns in the tables include:" wrapText="true" />
+                <Label styleClass="description-content-label" text="Once the IPs are set and the application start, it will display the ping results in tables. Each column corresponds to an IP address. The sub-columns include:" wrapText="true" />
                 <Label styleClass="description-content-label" text=" - Date: The date and time the ping was performed." wrapText="true" />
-                <Label styleClass="description-content-label" text=" - Latency: The time it took for the ping to travel to the IP address and back, measured in milliseconds (ms). If a ping times out, it will be indicated with a value of -1 in the latency column" wrapText="true" />
+                <Label styleClass="description-content-label" text=" - Latency: The time it took for the ping to travel to the IP address and back, measured in milliseconds (ms). If a ping times out, it will be indicated with a value of -1 in the latency column." wrapText="true" />
 
                 <Label styleClass="description-section-header" text="Understanding the Interface" />
                 <Label styleClass="description-content-label" text=" - Start Button: Initiates the ping test." wrapText="true" />
                 <Label styleClass="description-content-label" text=" - Stop Button: Stops the ongoing ping test." wrapText="true" />
+                <Label styleClass="description-content-label" text=" - IP Selection: Choose how the application selects IPs." wrapText="true" />
+                <Label styleClass="description-content-label" text="     - Auto-Discovery: The application automatically detects Local, ISP, and Google IPs." wrapText="true" />
+                <Label styleClass="description-content-label" text="     - Set Custom IPs: Allows you to manually enter specific IP addresses." wrapText="true" />
+                <Label styleClass="description-content-label" text=" - Edit Button: Opens the modal to enter custom IP addresses." wrapText="true" />
                 <Label styleClass="description-content-label" text=" - Time Choice Box: Allows you to select the interval for performing pings." wrapText="true" />
                 <Label styleClass="description-content-label" text=" - Day Filter Box: Enables filtering of results by day." wrapText="true" />
-                <Label styleClass="description-content-label" text=" - Save Button: Save the displayed ping results to a log file." wrapText="true" />
+                <Label styleClass="description-content-label" text=" - Save Button: Saves the displayed ping results to a log file." wrapText="true" />
 
                 <Label styleClass="description-section-header" text="Troubleshooting" />
                 <Label styleClass="description-content-label" text="No Results Displayed: Ensure that your network connection is active. If the problem persists, try restarting the application." wrapText="true" />
                 <Label styleClass="description-content-label" text="Application Freezes: If the application becomes unresponsive, try closing and reopening it. Ensure that your system meets the required specifications for running the application." wrapText="true" />
+                <Label styleClass="description-content-label" text="Invalid IP Address: If you manually enter an IP, make sure it is in the correct format. The application will not accept invalid IP addresses." wrapText="true" />
 
                 <Label styleClass="description-section-header" text="Thank you for using the ConnTest Application." wrapText="true" />
             </VBox>
-      <VBox.margin>
+
+            <VBox.margin>
          <Insets bottom="5.0" left="5.0" top="5.0" />
       </VBox.margin>
         </ScrollPane>
