@@ -1,11 +1,13 @@
 package com.adieser.conntest.views;
 
 import com.adieser.conntest.service.ConnTestService;
+import com.adieser.conntest.views.controllers.UiController;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.Logger;
+import org.springframework.context.ApplicationContext;
 
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
@@ -21,11 +23,13 @@ class UiControllerTest {
     Logger logger;
     @Mock
     ScheduledExecutorService executorService;
+    @Mock
+    ApplicationContext applicationContext;
 
     @Test
     void startTest() {
         //when
-        UiController underTestSpy = spy(new UiController(connTestService, logger, executorService));
+        UiController underTestSpy = spy(new UiController(connTestService, logger, executorService, applicationContext));
         List<String> mockIpAddressList = List.of("192.168.1.1", "192.168.1.2", "8.8.8.8");
         when(connTestService.getIpAddressesFromActiveTests()).thenReturn(mockIpAddressList);
         doNothing().when(underTestSpy).updateVisualControls();
@@ -45,7 +49,7 @@ class UiControllerTest {
     @Test
     void executorServiceTest(){
         // when
-        UiController underTestSpy = spy(new UiController(connTestService, logger, executorService));
+        UiController underTestSpy = spy(new UiController(connTestService, logger, executorService, applicationContext));
 
         // then
         underTestSpy.startExecutorService(1);
@@ -62,7 +66,7 @@ class UiControllerTest {
     @Test
     void stopTest() {
         //when
-        UiController underTest = new UiController(connTestService, logger, executorService);
+        UiController underTest = new UiController(connTestService, logger, executorService, applicationContext);
 
         // then
         underTest.stopExecutorService();
@@ -76,7 +80,7 @@ class UiControllerTest {
     void stopExecutorServiceTest() {
         // Case 1: executorService is null and is shutdown
         //when
-        UiController underTest = new UiController(connTestService, logger, null);
+        UiController underTest = new UiController(connTestService, logger, null, applicationContext);
 
         //then
         underTest.stopExecutorService();
@@ -87,7 +91,7 @@ class UiControllerTest {
         // Case 2: executorService is not null and is shutdown
         //when
         reset(executorService);
-        underTest = new UiController(connTestService, logger, executorService);
+        underTest = new UiController(connTestService, logger, executorService, applicationContext);
         when(executorService.isShutdown()).thenReturn(true);
 
         // then
@@ -113,7 +117,7 @@ class UiControllerTest {
     @Test
     void stopExecutorServiceTest2() {
         //when
-        UiController underTest = new UiController(connTestService, logger, executorService);
+        UiController underTest = new UiController(connTestService, logger, executorService, applicationContext);
 
         // then
         underTest.stopExecutorService();

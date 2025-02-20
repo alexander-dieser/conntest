@@ -1,8 +1,9 @@
-package com.adieser.conntest.views;
+package com.adieser.conntest.views.controllers;
 
 import com.adieser.conntest.controllers.responses.PingSessionExtract;
 import com.adieser.conntest.models.PingLog;
 import com.adieser.conntest.service.ConnTestService;
+import com.adieser.conntest.views.models.PingRow;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -21,6 +22,7 @@ import javafx.scene.text.FontWeight;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 import org.slf4j.Logger;
 import javafx.scene.Node;
@@ -35,12 +37,13 @@ import java.util.concurrent.TimeUnit;
 
 @Component
 public class UiController {
-
     public final ConnTestService connTestService;
     private ScheduledExecutorService executorService;
     public final Logger logger;
+    private final ApplicationContext applicationContext;
     List<String> ipAddress;
     public static final String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
+
     @FXML
     private Button closeButton;
     @FXML
@@ -48,9 +51,17 @@ public class UiController {
     @FXML
     private Button maximizeRestoreButton;
     @FXML
+    private VBox startButtonBox;
+    @FXML
     private Button startButton;
     @FXML
     private Button stopButton;
+    @FXML
+    private ToggleGroup toggleGroup;
+    @FXML
+    private RadioButton customIpsButton;
+    @FXML
+    private RadioButton autoDiscoveryButton;
     @FXML
     private ProgressIndicator progressIndicator;
     @FXML
@@ -77,10 +88,11 @@ public class UiController {
     private final List<TableColumn<String, String>> pingCountColumnList = new ArrayList<>();
 
     @Autowired
-    public UiController(ConnTestService connTestService, Logger logger, ScheduledExecutorService executorService) {
+    public UiController(ConnTestService connTestService, Logger logger, ScheduledExecutorService executorService, ApplicationContext applicationContext) {
         this.connTestService = connTestService;
         this.logger = logger;
         this.executorService = executorService;
+        this.applicationContext = applicationContext;
     }
 
     /**
@@ -98,10 +110,9 @@ public class UiController {
             setOldestPing();
             Platform.runLater(this::updateTables);
         }
-
         timeChoiceBox.getItems().addAll(1, 5, 10, 15);
         this.startButton.setOnAction(actionEvent -> {
-            startButton.setDisable(true);
+            startButtonBox.setDisable(true);
             progressIndicator.setVisible(true);
             dayFilterBox.setDisable(true);
             if(timeChoiceBox.getValue() != null) timechoice = timeChoiceBox.getValue();
@@ -110,7 +121,7 @@ public class UiController {
         });
         this.stopButton.setOnAction(actionEvent -> this.stop());
         this.timeChoiceBox.setOnAction(actionEvent -> {
-            if(startButton.isDisable()){
+            if(startButtonBox.isDisable()){
                 stopExecutorService();
                 timechoice = timeChoiceBox.getValue();
                 createExecutorService();
@@ -151,9 +162,12 @@ public class UiController {
      * to load logs and update average lost pings continuously, and updates visual controls afterward.
      */
     public void start() {
-        connTestService.testLocalISPInternet();
-        ipAddress = connTestService.getIpAddressesFromActiveTests();
-
+        if (!customIpsButton.isSelected()) {
+            connTestService.testLocalISPInternet();
+            ipAddress = connTestService.getIpAddressesFromActiveTests();
+        }else{
+            connTestService.testCustomIps(ipAddress);
+        }
         setTables();
 
         createExecutorService();
@@ -182,7 +196,7 @@ public class UiController {
     /**
      * Starts the executor service to update the table
      * */
-    void startExecutorService(Integer timechoice){
+    public void startExecutorService(Integer timechoice){
         executorService.scheduleAtFixedRate(() -> Platform.runLater(this::updateTables), 0, timechoice, TimeUnit.SECONDS);
     }
 
@@ -221,7 +235,7 @@ public class UiController {
         progressIndicator.setVisible(false);
         stopExecutorService();
         connTestService.stopTests();
-        startButton.setDisable(false);
+        startButtonBox.setDisable(false);
         dayFilterBox.setDisable(false);
     }
 
@@ -573,7 +587,7 @@ public class UiController {
         Stage ownerStage = (Stage) ((Node) event.getSource()).getScene().getWindow();
         ModalController modalController = new ModalController();
         modalController.setAction(this::clearLogsAction);
-        modalController.showModal(ownerStage,"/confirmClearLogDialog.fxml", "Clear Log Confirmation", 300,150);
+        modalController.showModal(ownerStage, "/fxml/confirmClearLogDialog.fxml", "Clear Log Confirmation", 300,150);
     }
 
     private void clearLogsAction() {
@@ -593,8 +607,39 @@ public class UiController {
     private void openUserManual(ActionEvent event) throws IOException {
         Stage ownerStage = (Stage) ((Node) event.getSource()).getScene().getWindow();
         ModalController modalController = new ModalController();
-        modalController.showModal(ownerStage,"/usermanual.fxml", "User Manual", 300, 400);
+        modalController.showModal(ownerStage, "/fxml/usermanual.fxml", "User Manual", 300, 400);
     }
+
+    /**
+     * Opens a modal dialog to allow the user to set up to one, two or three custom IP addresses
+     * @param event The ActionEvent triggered by the user interaction, used to obtain the current stage.
+     * @throws IOException if there is an error loading the modal dialog.
+     */
+    @FXML
+    private void setCustomIps(ActionEvent event) throws IOException {
+        Stage ownerStage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+        CustomIPModalController customIPModalController = applicationContext.getBean(CustomIPModalController.class);
+        customIPModalController.setAction(() -> setCustomIpsAction(customIPModalController.getIpList()));
+        customIPModalController.showModal(ownerStage, "/fxml/customIPsDialog.fxml", "Set Custom IPs", 400, 300);
+        customIPModalController.populateIpFields();
+    }
+
+    private void setCustomIpsAction(List<String> ipList) {
+        if(ipList.isEmpty()){
+            autoDiscoveryButton.setSelected(true);
+        }else {
+            customIpsButton.setSelected(true);
+            this.ipAddress = ipList;
+            setTables();
+            Platform.runLater(this::updateTables);
+        }
+    }
+
+    @FXML
+    private void setAutoDiscovery(){
+        autoDiscoveryButton.setSelected(true);
+    }
+
 
     /**
      * Closes the current stage.
@@ -603,6 +648,7 @@ public class UiController {
     private void handleClose(ActionEvent event) {
         Stage stage = (Stage) closeButton.getScene().getWindow();
         stage.close();
+        System.exit(0);
     }
 
     /**

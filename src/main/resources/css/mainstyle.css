@@ -27,7 +27,7 @@
 
 .topbackground{
   -fx-background-color: #095C8A;
-  -fx-background-radius: 0px 0px 10px 10px;
+  -fx-background-radius: 0px 0px 10px 0px;
 }
 
 .root {
@@ -39,12 +39,12 @@
 
 /* Title style */
 .title{
-  -fx-font-size: 40px;
+  -fx-font-size: 45px;
   -fx-font-family: 'Helvetica Neue', sans-serif;
   -fx-font-weight: bold;
   -fx-letter-spacing: -1px;
   -fx-text-fill: #f1f1f1;
-  -fx-effect: dropshadow( gaussian , #9E9E9E , 0,0,0.8,0.8 );
+  -fx-effect: dropshadow( gaussian , #838383 , 0,0,1.2,1.2 );
 }
 
 /* Start and Stop buttons style */
@@ -56,23 +56,25 @@
   -fx-text-fill: #3B4856;
   -fx-font-weight: bold;
   -fx-font-size: 15px;
-  -fx-transition: all 0.5s;
+  -fx-transition: all 0.3s;
+  -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.2), 5, 0, 0, 2);
 }
 
 .mainbutton:hover {
   -fx-background-color: #f3faff;
-  -fx-effect: dropshadow(gaussian, #dff1fd, 3, 0.06, 0, 0);
-  -fx-scale-x: 1.03;
-  -fx-scale-y: 1.03;
+  -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.3), 8, 0.1, 0, 3);
+  -fx-scale-x: 1.05;
+  -fx-scale-y: 1.05;
 }
 
 .mainbutton:pressed {
   -fx-background-color: #dff1fd;
-  -fx-transition: all 0.25s;
-  -fx-effect: null;
+  -fx-transition: all 0.2s;
+  -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.15), 4, 0, 0, 1);
   -fx-scale-x: 1;
   -fx-scale-y: 1;
 }
+
 
 /* Loader style */
 .loader {
@@ -100,7 +102,7 @@
   -fx-spacing: 10px;
 }
 
-/* Save buttons style */
+/* Save button style */
 .save-button{
   -fx-padding: 5px 20px;
   -fx-border-color:  #095c8adb;
@@ -156,6 +158,12 @@
   -fx-border-color: #dff1fd;
 }
 
+/* Only text button */
+.onlytextbutton{
+  -fx-font-weight: bold;
+  -fx-color: white;
+  -fx-background-color: transparent;
+}
 
 /* Check Box style */
 .check-box .box {
@@ -177,3 +185,40 @@
   -fx-border-color:  #095C8A;
   -fx-border-radius: 5;
 }
+
+/* Radio button style */
+.radio-button .radio{
+  -fx-background-color: #ffffff;
+  -fx-background-insets: 0;
+  -fx-border-color:  transparent;
+  -fx-pref-height: 15px;
+  -fx-pref-width: 15px;
+}
+
+.radio-button .radio .dot{
+  -fx-pref-height: 6px;
+  -fx-pref-width: 6px;
+}
+
+.radio-button:selected .radio .dot {
+  -fx-background-color: #095C8A;
+  -fx-background-insets: 0;
+  -fx-border-color:  transparent;
+}
+
+.radio-button {
+  -fx-background-color: transparent;
+  -fx-border-color: transparent;
+  -fx-font-weight: bold;
+  -fx-font-size: 12px;
+  -fx-text-fill: #ffffff;
+  -fx-padding: 0;
+}
+
+.radio-button:hover {
+  -fx-text-fill: #ffffff;
+  -fx-effect: dropshadow(gaussian, #dff1fd, 1, 0.06, 0, 0);
+  -fx-scale-x: 1.0005;
+  -fx-scale-y: 1.0005;
+}
+

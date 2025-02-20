@@ -1,5 +1,6 @@
-package com.adieser.conntest.views;
+package com.adieser.conntest.views.utils;
 
+import com.adieser.conntest.views.JavafxApplication;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -22,7 +23,7 @@ public class StageListener implements ApplicationListener<JavafxApplication.Stag
     private double xOffset = 0;
     private double yOffset = 0;
 
-    public StageListener(@Value("classpath:/ui.fxml") Resource fxml, ApplicationContext applicationContext, Logger logger) {
+    public StageListener(@Value("classpath:/fxml/ui.fxml") Resource fxml, ApplicationContext applicationContext, Logger logger) {
         this.fxml = fxml;
         this.applicationContext = applicationContext;
         this.logger = logger;
@@ -40,7 +41,7 @@ public class StageListener implements ApplicationListener<JavafxApplication.Stag
             fxmlLoader.setControllerFactory(applicationContext::getBean);
             Parent root = fxmlLoader.load();
 
-            Scene scene = new Scene(root, 1000, 750);
+            Scene scene = new Scene(root, 1000, 700);
 
             // Handle drag event
             root.setOnMousePressed(event -> {
@@ -54,7 +55,7 @@ public class StageListener implements ApplicationListener<JavafxApplication.Stag
 
             stage.setScene(scene);
             stage.setMinWidth(800);
-            stage.setMinHeight(750);
+            stage.setMinHeight(700);
             stage.setTitle("ConnTest");
             stage.getIcons().add(new Image("image/logo.png"));
 
