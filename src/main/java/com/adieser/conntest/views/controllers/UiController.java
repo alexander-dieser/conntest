@@ -479,7 +479,7 @@ public class UiController {
         if (!dayFilterBox.isSelected() && !lostPingsFilterBox.isSelected()) {
             column.setText(connTestService.getAvgLatencyByIp(ip) + " ms");
         } else if (dayFilterBox.isSelected()  && !lostPingsFilterBox.isSelected() ) {
-            column.setText("in process");
+            column.setText(connTestService.getAvgLatencyByDateTimeRangeByIp(getStartOfDay(), getEndOfDay(), ip) + " ms");
         } else if (lostPingsFilterBox.isSelected()) {
             column.setText("-1 ms");
         }
@@ -489,19 +489,21 @@ public class UiController {
      * Sets the lowest latency pinglog and the highest latency pinglog for each IP address to corresponding labels.
      */
     public void setLowestHighest(String ip, TableColumn<String, String> column) throws IOException {
+        PingSessionExtract extract = connTestService.getMaxMinPingLog(ip);
         if (!dayFilterBox.isSelected() && !lostPingsFilterBox.isSelected()) {
-            PingSessionExtract extract = connTestService.getMaxMinPingLog(ip);
-            if (extract.getPingLogs() != null && extract.getPingLogs().size() >= 2) {
-                PingLog lowest = extract.getPingLogs().get(0);
-                PingLog highest = extract.getPingLogs().get(1);
-                column.setText(lowest.getPingTime() + " / " + highest.getPingTime() + " ms");
-            }else{
-                column.setText("0 / 0 ms");
-            }
+            extract = connTestService.getMaxMinPingLog(ip);
         } else if (dayFilterBox.isSelected()  && !lostPingsFilterBox.isSelected() ) {
-            column.setText("in process");
+            extract = connTestService.getMaxMinPingLogByDateTimeRangeByIp(getStartOfDay(), getEndOfDay(), ip);
         } else if (lostPingsFilterBox.isSelected()) {
             column.setText("-1 / -1 ms");
+            return;
+        }
+        if (extract.getPingLogs() != null && extract.getPingLogs().size() >= 2) {
+            PingLog lowest = extract.getPingLogs().get(0);
+            PingLog highest = extract.getPingLogs().get(1);
+            column.setText(lowest.getPingTime() + " / " + highest.getPingTime() + " ms");
+        }else{
+            column.setText("0 / 0 ms");
         }
     }
 
