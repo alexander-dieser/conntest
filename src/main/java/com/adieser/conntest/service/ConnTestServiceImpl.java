@@ -163,6 +163,11 @@ public class ConnTestServiceImpl implements ConnTestService {
     }
 
     @Override
+    public void changeDataSource(Object newDataSource) throws IOException {
+        pingLogRepository.changeDatasource(newDataSource);
+    }
+
+    @Override
     public List<String> getIpAddressesFromActiveTests(){
         return tests.stream()
                 .map(ConnTest::getIpAddress)

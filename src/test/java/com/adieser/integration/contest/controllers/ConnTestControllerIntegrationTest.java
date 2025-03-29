@@ -53,7 +53,7 @@ class ConnTestControllerIntegrationTest {
     @Autowired
     private MockMvc mockMvc;
     @MockBean
-    private ConnTestService connTestService;
+    private ConnTestService mockedConnTestService;
 
     private static final LocalDateTime START = DEFAULT_LOG_DATE_TIME.minusHours(1);
     private static final LocalDateTime END = DEFAULT_LOG_DATE_TIME.plusHours(1);
@@ -73,7 +73,7 @@ class ConnTestControllerIntegrationTest {
                                 .stopTests()).toString()));
 
         // assert
-        verify(connTestService).testLocalISPInternet();
+        verify(mockedConnTestService).testLocalISPInternet();
     }
 
     @ParameterizedTest
@@ -100,7 +100,7 @@ class ConnTestControllerIntegrationTest {
                             .value(linkTo(methodOn(ConnTestController.class)
                                     .stopTests()).toString()));
 
-            verify(connTestService).testCustomIps(ipAddresses);
+            verify(mockedConnTestService).testCustomIps(ipAddresses);
         } else{
             resultActions
                     .andExpect(status().isBadRequest())
@@ -127,14 +127,14 @@ class ConnTestControllerIntegrationTest {
                                 .clearPingLogs()).toString()));
 
         // assert
-        verify(connTestService).stopTests();
+        verify(mockedConnTestService).stopTests();
     }
 
     @ParameterizedTest
     @MethodSource("responseProvider")
     void getPings(PingSessionExtract pings) throws Exception {
         // when
-        when(connTestService.getPings()).thenReturn(pings);
+        when(mockedConnTestService.getPings()).thenReturn(pings);
 
         // then assert
         MockHttpServletRequestBuilder requestBuilder = TestUtils.addCustomSessionId(
@@ -145,13 +145,13 @@ class ConnTestControllerIntegrationTest {
         if(!pings.getPingLogs().isEmpty())
             AssertHATEOASLinks(resultActions, pings.getPingLogs().get(0));
 
-        verify(connTestService).getPings();
+        verify(mockedConnTestService).getPings();
     }
 
     @Test
     void testGetPingsIOException() throws Exception {
         // when
-        when(connTestService.getPings()).thenThrow(IOException.class);
+        when(mockedConnTestService.getPings()).thenThrow(IOException.class);
         MockHttpServletRequestBuilder requestBuilder = TestUtils.addCustomSessionId(
                 MockMvcRequestBuilders.get("/pings")
         );
@@ -166,7 +166,7 @@ class ConnTestControllerIntegrationTest {
     @MethodSource("responseProvider")
     void getPingsByDateTimeRange(PingSessionExtract pings) throws Exception {
         // when
-        when(connTestService.getPingsByDateTimeRange(START, END))
+        when(mockedConnTestService.getPingsByDateTimeRange(START, END))
                 .thenReturn(pings);
 
         MockHttpServletRequestBuilder requestBuilder = TestUtils.addCustomSessionId(
@@ -180,13 +180,13 @@ class ConnTestControllerIntegrationTest {
         if(!pings.getPingLogs().isEmpty())
             AssertHATEOASLinks(resultActions, pings.getPingLogs().get(0));
 
-        verify(connTestService).getPingsByDateTimeRange(START, END);
+        verify(mockedConnTestService).getPingsByDateTimeRange(START, END);
     }
 
     @Test
     void testGetPingsByDateTimeRangeIOException() throws Exception {
         // when
-        when(connTestService.getPingsByDateTimeRange(any(), any())).thenThrow(IOException.class);
+        when(mockedConnTestService.getPingsByDateTimeRange(any(), any())).thenThrow(IOException.class);
 
         MockHttpServletRequestBuilder requestBuilder = TestUtils.addCustomSessionId(
                 MockMvcRequestBuilders.get("/pings/{start}/{end}",
@@ -204,7 +204,7 @@ class ConnTestControllerIntegrationTest {
     @MethodSource("responseProvider")
     void getPingsByIp(PingSessionExtract pings) throws Exception {
         // when
-        when(connTestService.getPingsByIp(LOCAL_IP_ADDRESS))
+        when(mockedConnTestService.getPingsByIp(LOCAL_IP_ADDRESS))
                 .thenReturn(pings);
 
         MockHttpServletRequestBuilder requestBuilder = TestUtils.addCustomSessionId(
@@ -216,13 +216,13 @@ class ConnTestControllerIntegrationTest {
         if(!pings.getPingLogs().isEmpty())
             AssertHATEOASLinks(resultActions, pings.getPingLogs().get(0));
 
-        verify(connTestService).getPingsByIp(LOCAL_IP_ADDRESS);
+        verify(mockedConnTestService).getPingsByIp(LOCAL_IP_ADDRESS);
     }
 
     @Test
     void testGetPingsByIpIOException() throws Exception {
         // when
-        when(connTestService.getPingsByIp(LOCAL_IP_ADDRESS)).thenThrow(IOException.class);
+        when(mockedConnTestService.getPingsByIp(LOCAL_IP_ADDRESS)).thenThrow(IOException.class);
 
         MockHttpServletRequestBuilder requestBuilder = TestUtils.addCustomSessionId(
                 MockMvcRequestBuilders.get("/pings/{ipAddress}", LOCAL_IP_ADDRESS)
@@ -238,7 +238,7 @@ class ConnTestControllerIntegrationTest {
     @MethodSource("responseProvider")
     void getPingsByDateTimeRangeByIp(PingSessionExtract pings) throws Exception {
         // when
-        when(connTestService.getPingsByDateTimeRangeByIp(START, END, LOCAL_IP_ADDRESS))
+        when(mockedConnTestService.getPingsByDateTimeRangeByIp(START, END, LOCAL_IP_ADDRESS))
                 .thenReturn(pings);
 
         MockHttpServletRequestBuilder requestBuilder = TestUtils.addCustomSessionId(
@@ -253,13 +253,13 @@ class ConnTestControllerIntegrationTest {
         if(!pings.getPingLogs().isEmpty())
             AssertHATEOASLinks(resultActions, pings.getPingLogs().get(0));
 
-        verify(connTestService).getPingsByDateTimeRangeByIp(START, END, LOCAL_IP_ADDRESS);
+        verify(mockedConnTestService).getPingsByDateTimeRangeByIp(START, END, LOCAL_IP_ADDRESS);
     }
 
     @Test
     void testGetPingsByDateTimeRangeByIpIOException() throws Exception {
         // when
-        when(connTestService.getPingsByDateTimeRangeByIp(any(), any(), anyString())).thenThrow(IOException.class);
+        when(mockedConnTestService.getPingsByDateTimeRangeByIp(any(), any(), anyString())).thenThrow(IOException.class);
 
         MockHttpServletRequestBuilder requestBuilder = TestUtils.addCustomSessionId(
                 MockMvcRequestBuilders.get("/pings/{ipAddress}/{start}/{end}",
@@ -278,7 +278,7 @@ class ConnTestControllerIntegrationTest {
     @MethodSource("lostPingResponseProvider")
     void testGetLostPingsByIp(PingSessionExtract pings) throws Exception {
         // when
-        when(connTestService.getLostPingsByIp(LOCAL_IP_ADDRESS))
+        when(mockedConnTestService.getLostPingsByIp(LOCAL_IP_ADDRESS))
                 .thenReturn(pings);
 
         MockHttpServletRequestBuilder requestBuilder = TestUtils.addCustomSessionId(
@@ -291,13 +291,13 @@ class ConnTestControllerIntegrationTest {
         if(!pings.getPingLogs().isEmpty())
             AssertHATEOASLinks(resultActions, pings.getPingLogs().get(0));
 
-        verify(connTestService).getLostPingsByIp(LOCAL_IP_ADDRESS);
+        verify(mockedConnTestService).getLostPingsByIp(LOCAL_IP_ADDRESS);
     }
 
     @Test
     void testGetLostPingsByIpIOException() throws Exception {
         // when
-        when(connTestService.getLostPingsByIp(LOCAL_IP_ADDRESS)).thenThrow(IOException.class);
+        when(mockedConnTestService.getLostPingsByIp(LOCAL_IP_ADDRESS)).thenThrow(IOException.class);
 
         MockHttpServletRequestBuilder requestBuilder = TestUtils.addCustomSessionId(
                 MockMvcRequestBuilders.get("/pings/{ipAddress}/lost", LOCAL_IP_ADDRESS)
@@ -313,7 +313,7 @@ class ConnTestControllerIntegrationTest {
     @MethodSource("lostPingResponseProvider")
     void getLostPingsByDateTimeRangeByIp(PingSessionExtract pings) throws Exception {
         // when
-        when(connTestService.getLostPingsByDateTimeRangeByIp(START, END, LOCAL_IP_ADDRESS))
+        when(mockedConnTestService.getLostPingsByDateTimeRangeByIp(START, END, LOCAL_IP_ADDRESS))
                 .thenReturn(pings);
 
         MockHttpServletRequestBuilder requestBuilder = TestUtils.addCustomSessionId(
@@ -328,13 +328,13 @@ class ConnTestControllerIntegrationTest {
         if(!pings.getPingLogs().isEmpty())
             AssertHATEOASLinks(resultActions, pings.getPingLogs().get(0));
 
-        verify(connTestService).getLostPingsByDateTimeRangeByIp(START, END, LOCAL_IP_ADDRESS);
+        verify(mockedConnTestService).getLostPingsByDateTimeRangeByIp(START, END, LOCAL_IP_ADDRESS);
     }
 
     @Test
     void testGetLostPingsByDateTimeRangeByIpIOException() throws Exception {
         // when
-        when(connTestService.getLostPingsByDateTimeRangeByIp(any(), any(), anyString())).thenThrow(IOException.class);
+        when(mockedConnTestService.getLostPingsByDateTimeRangeByIp(any(), any(), anyString())).thenThrow(IOException.class);
 
         MockHttpServletRequestBuilder requestBuilder = TestUtils.addCustomSessionId(
                 MockMvcRequestBuilders.get("/pings/{ipAddress}/lost/{start}/{end}",
@@ -352,7 +352,7 @@ class ConnTestControllerIntegrationTest {
     @Test
     void getPingsLostAvgByIp() throws Exception {
         // when
-        when(connTestService.getPingsLostAvgByIp(LOCAL_IP_ADDRESS))
+        when(mockedConnTestService.getPingsLostAvgByIp(LOCAL_IP_ADDRESS))
                 .thenReturn(BigDecimal.valueOf(0.3));
 
         MockHttpServletRequestBuilder requestBuilder = TestUtils.addCustomSessionId(
@@ -371,13 +371,13 @@ class ConnTestControllerIntegrationTest {
                 );
 
         assertAverage(resultActions);
-        verify(connTestService).getPingsLostAvgByIp(LOCAL_IP_ADDRESS);
+        verify(mockedConnTestService).getPingsLostAvgByIp(LOCAL_IP_ADDRESS);
     }
 
     @Test
     void testGetPingsLostAvgByIpIOException() throws Exception {
         // when
-        when(connTestService.getPingsLostAvgByIp(LOCAL_IP_ADDRESS)).thenThrow(IOException.class);
+        when(mockedConnTestService.getPingsLostAvgByIp(LOCAL_IP_ADDRESS)).thenThrow(IOException.class);
 
         MockHttpServletRequestBuilder requestBuilder = TestUtils.addCustomSessionId(
                 MockMvcRequestBuilders.get("/pings/{ipAddress}/avg", LOCAL_IP_ADDRESS)
@@ -392,7 +392,7 @@ class ConnTestControllerIntegrationTest {
     @Test
     void getAvgLatencyByIp() throws Exception {
         // when
-        when(connTestService.getAvgLatencyByIp(LOCAL_IP_ADDRESS))
+        when(mockedConnTestService.getAvgLatencyByIp(LOCAL_IP_ADDRESS))
                 .thenReturn(BigDecimal.valueOf(0.3));
 
         MockHttpServletRequestBuilder requestBuilder = TestUtils.addCustomSessionId(
@@ -411,13 +411,13 @@ class ConnTestControllerIntegrationTest {
                 );
 
         assertAverage(resultActions);
-        verify(connTestService).getAvgLatencyByIp(LOCAL_IP_ADDRESS);
+        verify(mockedConnTestService).getAvgLatencyByIp(LOCAL_IP_ADDRESS);
     }
 
     @Test
     void testGetAvgLatencyByDateTimeRangeByIp() throws Exception {
         // when
-        when(connTestService.getAvgLatencyByDateTimeRangeByIp(START, END, LOCAL_IP_ADDRESS))
+        when(mockedConnTestService.getAvgLatencyByDateTimeRangeByIp(START, END, LOCAL_IP_ADDRESS))
                 .thenReturn(BigDecimal.valueOf(0.3));
 
         MockHttpServletRequestBuilder requestBuilder = TestUtils.addCustomSessionId(
@@ -439,14 +439,14 @@ class ConnTestControllerIntegrationTest {
                 );
 
         assertAverage(resultActions);
-        verify(connTestService)
+        verify(mockedConnTestService)
                 .getAvgLatencyByDateTimeRangeByIp(START, END, LOCAL_IP_ADDRESS);
     }
 
     @Test
     void getPingsLostAvgByDateTimeRangeByIp() throws Exception {
         // when
-        when(connTestService.getPingsLostAvgByDateTimeRangeByIp(START, END, LOCAL_IP_ADDRESS))
+        when(mockedConnTestService.getPingsLostAvgByDateTimeRangeByIp(START, END, LOCAL_IP_ADDRESS))
                 .thenReturn(BigDecimal.valueOf(0.3));
 
         MockHttpServletRequestBuilder requestBuilder = TestUtils.addCustomSessionId(
@@ -468,14 +468,14 @@ class ConnTestControllerIntegrationTest {
 
         assertAverage(resultActions);
 
-        verify(connTestService)
+        verify(mockedConnTestService)
                 .getPingsLostAvgByDateTimeRangeByIp(START, END, LOCAL_IP_ADDRESS);
     }
 
     @Test
     void testGetPingsLostAvgByDateTimeRangeByIp() throws Exception {
         // when
-        when(connTestService.getPingsLostAvgByDateTimeRangeByIp(any(), any(), anyString())).thenThrow(IOException.class);
+        when(mockedConnTestService.getPingsLostAvgByDateTimeRangeByIp(any(), any(), anyString())).thenThrow(IOException.class);
 
         MockHttpServletRequestBuilder requestBuilder = TestUtils.addCustomSessionId(
                 MockMvcRequestBuilders.get("/pings/{ipAddress}/avg/{start}/{end}",
@@ -493,7 +493,7 @@ class ConnTestControllerIntegrationTest {
     @Test
     void testClearPingLogs() throws InterruptedException {
         // when
-        doNothing().when(connTestService).clearPingLogFile();
+        doNothing().when(mockedConnTestService).clearPingLogFile();
 
         MockHttpServletRequestBuilder requestBuilder = TestUtils.addCustomSessionId(
                 MockMvcRequestBuilders.delete("/pings")
@@ -510,14 +510,14 @@ class ConnTestControllerIntegrationTest {
             throw new RuntimeException(e);
         }
 
-        verify(connTestService).clearPingLogFile();
+        verify(mockedConnTestService).clearPingLogFile();
     }
 
     @ParameterizedTest
     @MethodSource("maxMinResponseProvider")
     void testGetMaxMinPingLog(PingSessionExtract pings) throws Exception {
         // when
-        when(connTestService.getMaxMinPingLog(LOCAL_IP_ADDRESS)).thenReturn(pings);
+        when(mockedConnTestService.getMaxMinPingLog(LOCAL_IP_ADDRESS)).thenReturn(pings);
 
         // then assert
         MockHttpServletRequestBuilder requestBuilder = TestUtils.addCustomSessionId(
@@ -528,13 +528,13 @@ class ConnTestControllerIntegrationTest {
 
         executeAndAssertGetMaxMinPingLog(pings, requestBuilder);
 
-        verify(connTestService).getMaxMinPingLog(LOCAL_IP_ADDRESS);
+        verify(mockedConnTestService).getMaxMinPingLog(LOCAL_IP_ADDRESS);
     }
 
     @Test
     void testGetMaxMinPingLogIOException() throws Exception {
         // when
-        when(connTestService.getMaxMinPingLog(LOCAL_IP_ADDRESS)).thenThrow(IOException.class);
+        when(mockedConnTestService.getMaxMinPingLog(LOCAL_IP_ADDRESS)).thenThrow(IOException.class);
 
         MockHttpServletRequestBuilder requestBuilder = TestUtils.addCustomSessionId(
                 MockMvcRequestBuilders.get("/pings/{ipAddress}/max-min",
@@ -552,7 +552,7 @@ class ConnTestControllerIntegrationTest {
     @MethodSource("maxMinResponseProvider")
     void testGetMaxMinPingLogByDateTimeRangeByIp(PingSessionExtract pings) throws Exception {
         // when
-        when(connTestService.getMaxMinPingLogByDateTimeRangeByIp(START, END, LOCAL_IP_ADDRESS)).thenReturn(pings);
+        when(mockedConnTestService.getMaxMinPingLogByDateTimeRangeByIp(START, END, LOCAL_IP_ADDRESS)).thenReturn(pings);
 
         // then assert
         MockHttpServletRequestBuilder requestBuilder = TestUtils.addCustomSessionId(
@@ -565,7 +565,27 @@ class ConnTestControllerIntegrationTest {
 
         executeAndAssertGetMaxMinPingLog(pings, requestBuilder);
 
-        verify(connTestService).getMaxMinPingLogByDateTimeRangeByIp(START, END, LOCAL_IP_ADDRESS);
+        verify(mockedConnTestService).getMaxMinPingLogByDateTimeRangeByIp(START, END, LOCAL_IP_ADDRESS);
+    }
+
+    @Test
+    void testChangePinglogsFile() throws Exception {
+        // when
+        doNothing().when(mockedConnTestService).changeDataSource(anyString());
+
+        // then assert
+        MockHttpServletRequestBuilder requestBuilder = TestUtils.addCustomSessionId(
+                MockMvcRequestBuilders.post("/change-datasource")
+                        .content("newPingLogFileName.log")
+        );
+
+        mockMvc.perform(requestBuilder)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$._links.undoFilenameChange.href")
+                        .value(linkTo(methodOn(ConnTestController.class)
+                                .changePinglogsFile("dummyText")).toString()));
+
+        verify(mockedConnTestService).changeDataSource(anyString());
     }
 
     private void executeAndAssertGetMaxMinPingLog(PingSessionExtract pings, MockHttpServletRequestBuilder requestBuilder) throws Exception {

@@ -1,5 +1,6 @@
 package com.adieser.conntest.controllers;
 
+import com.adieser.conntest.configurations.AppProperties;
 import com.adieser.conntest.controllers.responses.AverageResponse;
 import com.adieser.conntest.controllers.responses.PingSessionExtract;
 import com.adieser.conntest.controllers.responses.PingTestResponse;
@@ -24,6 +25,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static com.adieser.conntest.controllers.responses.ErrorResponse.MAX_IP_ADDRESSES_EXCEEDED;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.afford;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
@@ -40,9 +42,11 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 public class ConnTestController {
 
     private final ConnTestService connTestService;
+    private final AppProperties appProperties;
 
-    public ConnTestController(ConnTestService connTestService) {
+    public ConnTestController(ConnTestService connTestService, AppProperties appProperties) {
         this.connTestService = connTestService;
+        this.appProperties = appProperties;
     }
 
     /**
@@ -485,6 +489,31 @@ public class ConnTestController {
         PingTestResponse response = new PingTestResponse();
         response.add(linkTo(methodOn(ConnTestController.class).testLocalIspCloud())
                 .withRel(HATEOASLinkRelValueTemplates.START_TEST_SESSION));
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @PostMapping(value = "/change-datasource", produces = {"application/json"})
+    @Operation(summary = "Change the place where pings are located")
+    public ResponseEntity<PingTestResponse> changePinglogsFile(
+            @Parameter(
+                    description = "The new pinglogs file name",
+                    required = true)
+            @RequestBody String newDatasource
+    ) throws IOException {
+        String currentFilename = appProperties.getPinglogsFilename();
+        connTestService.changeDataSource(newDatasource);
+
+        PingTestResponse response = new PingTestResponse();
+        response.add(linkTo(methodOn(ConnTestController.class).changePinglogsFile(currentFilename))
+                .withRel(HATEOASLinkRelValueTemplates.CHANGE_DATASOURCE)
+                .andAffordance(afford(methodOn(ConnTestController.class)
+                        .changePinglogsFile(currentFilename))) // add body
+                .withType("text/plain")  // Specify content type
+                .withTitle("Change datasource")  // Optional description
+                .withMedia("text/plain") // Expected request media type
+                .withType("POST") // Specify HTTP method
+        );
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

@@ -14,7 +14,9 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "conntest")
 public class AppProperties {
     private String pingLogsPath;
-    private Long fileMaxSize;
+    private String pinglogsFilename;
+    private Long fileMaxSizeRows;
+    private Long fileMaxSizeKbytes;
     private String simulator;
 }
 

@@ -32,11 +32,13 @@ import java.util.stream.Stream;
 
 import static com.adieser.conntest.models.CsvPingLogRepository.SAVE_PING_ERROR_MSG;
 
+/**
+ * Service to write pings to a file.
+ */
 @Slf4j
 @Service
 public class FileWriterService {
 
-    public static final String PING_LOG_NAME = "/ping.log";
     public static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss");
     public static final String ROTATED_FILENAME_FORMAT = "ping_%s_%d.log";
 
@@ -56,13 +58,14 @@ public class FileWriterService {
                              AppProperties appProperties,
                              Clock clock) {
         this.logger = logger;
-        this.filePath = Paths.get(appProperties.getPingLogsPath() + PING_LOG_NAME);
         this.threadPoolExecutor = threadPoolExecutor;
         this.appProperties = appProperties;
         this.clock = clock;
         this.queue = new LinkedBlockingQueue<>();
         this.running = true;
         this.fileCount = 1;
+
+        setFilePathFromProperties();
     }
 
     /**
@@ -81,10 +84,7 @@ public class FileWriterService {
     @PostConstruct
     public void init() throws IOException {
         createPingLogsDirectory();
-
-        writer = getWriter();
-        sbc = getStatefulBeanToCsv(getCsvWriter(writer));
-
+        setWriter();
         threadPoolExecutor.execute(this::startWriting);
     }
 
@@ -115,8 +115,10 @@ public class FileWriterService {
      * It also handles the IOException.
      */
     protected void checkFileSizeAndRotate() throws IOException {
-        try(final Stream<String> stream = Files.lines(Path.of(appProperties.getPingLogsPath() + "/" + PING_LOG_NAME))) {
-            if (stream.count() >= appProperties.getFileMaxSize()) {
+        try(final Stream<String> stream =
+                    Files.lines(Path.of(appProperties.getPingLogsPath() + "/" + appProperties.getPinglogsFilename()))
+        ) {
+            if (stream.count() >= appProperties.getFileMaxSizeRows()) {
                 writer.close();
                 String timestamp = LocalDateTime.now(clock).format(FORMATTER);
 
@@ -124,8 +126,7 @@ public class FileWriterService {
                         String.format(ROTATED_FILENAME_FORMAT, timestamp, fileCount++));
                 Files.move(filePath, rotatedFile, StandardCopyOption.REPLACE_EXISTING);
 
-                writer = getWriter();
-                sbc = getStatefulBeanToCsv(getCsvWriter(writer));
+                setWriter();
 
                 log.info("Rotated file: {}", rotatedFile);
             }
@@ -199,5 +200,35 @@ public class FileWriterService {
             logger.warn("Property 'conntest.pinglogs-path' is not set. Ping logs will not be saved.");
             throw new IOException("Ping logs path not set");
         }
+    }
+
+    /**
+     * Method to reset the file path on runtime.
+     * It sets the file path from the properties and initializes the file.
+     * It handles the IOException.
+     * @throws IOException If an I/O error occurs.
+     */
+    public void resetPath() throws IOException {
+        setFilePathFromProperties();
+        setWriter();
+    }
+
+    /**
+     * Method to set the file path from the properties.
+     * It sets the file path from the properties and initializes the file.
+     * It handles the IOException.
+     */
+    public void setFilePathFromProperties(){
+        this.filePath = Paths.get(appProperties.getPingLogsPath() + appProperties.getPinglogsFilename());
+    }
+
+    /**
+     * Method to set the writer and the StatefulBeanToCsv instance.
+     * It handles the IOException.
+     * @throws IOException If an I/O error occurs.
+     */
+    private void setWriter() throws IOException {
+        writer = getWriter();
+        sbc = getStatefulBeanToCsv(getCsvWriter(writer));
     }
 }

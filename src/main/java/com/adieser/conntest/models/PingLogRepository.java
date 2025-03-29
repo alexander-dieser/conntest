@@ -133,4 +133,10 @@ public interface PingLogRepository {
      * @return average of latency pings
      */
     BigDecimal findAvgLatencyByDateTimeRangeByIp(LocalDateTime start, LocalDateTime end, String ipAddress) throws IOException;
+
+    /**
+     * Change the datasource of the repository
+     * @param newDatasource new datasource to be used
+     */
+    void changeDatasource(Object newDatasource) throws IOException;
 }

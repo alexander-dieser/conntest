@@ -591,6 +591,20 @@ class ConnTestServiceImplTest {
         assertEquals(avg, resultAvg);
     }
 
+    @Test
+    void testChangeDataSource() throws IOException {
+        // when
+        ConnTestServiceImpl underTest =
+                new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository, pingUtils);
+        Object newDataSource = "newFileName";
+
+        // then
+        underTest.changeDataSource(newDataSource);
+
+        // assert
+        verify(pingLogRepository).changeDatasource(newDataSource);
+    }
+
     static Stream<Boolean> areTestsRunningProvider() {
         return Stream.of(
                 true,
