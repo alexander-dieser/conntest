@@ -1,5 +1,7 @@
 package com.adieser.conntest.models;
 
+import com.adieser.conntest.configurations.AppProperties;
+import com.adieser.conntest.models.utils.PingLogFileValidator;
 import com.adieser.conntest.service.writer.FileWriterService;
 import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
@@ -33,14 +35,16 @@ import java.util.stream.Stream;
 public class CsvPingLogRepository implements PingLogRepository {
     public static final String SAVE_PING_ERROR_MSG = "Save Ping error";
     public static final String CLEAN_PINGLOG_FILE_MSG = "Clear pinglog file error";
-    public static final String PING_LOG_NAME = "ping.log";
-    private final String path;
 
+    private final PingLogFileValidator pingLogFileValidator;
+
+    private final AppProperties appProperties;
     private final Logger logger;
     private final FileWriterService fileWriterService;
 
-    public CsvPingLogRepository(String path, Logger logger, FileWriterService fileWriterService) {
-        this.path = path;
+    public CsvPingLogRepository(PingLogFileValidator pingLogFileValidator, AppProperties appProperties, Logger logger, FileWriterService fileWriterService) {
+        this.pingLogFileValidator = pingLogFileValidator;
+        this.appProperties = appProperties;
         this.logger = logger;
         this.fileWriterService = fileWriterService;
     }
@@ -118,6 +122,23 @@ public class CsvPingLogRepository implements PingLogRepository {
         return BigDecimal.valueOf(averagePingTime).setScale(2, RoundingMode.HALF_UP);
     }
 
+    /**
+     * Change the ping logs repository file
+     * @param newFileName new ping logs repository file to be used
+     */
+    @Override
+    public void changeDatasource(Object newFileName) throws IOException, IllegalArgumentException, SecurityException {
+        String fileName = pingLogFileValidator.validateFileName(newFileName);
+        Path resolvedPath = pingLogFileValidator.resolveAndValidatePath(Path.of(appProperties.getPingLogsPath()), fileName);
+
+        pingLogFileValidator.validateFileProperties(resolvedPath);
+        appProperties.setPinglogsFilename(resolvedPath.getFileName().toString());
+        // bind the file again
+        fileWriterService.resetPath();
+
+        logger.info("Successfully changed ping log repository to: {}", resolvedPath.getFileName());
+    }
+
     @Override
     public BigDecimal findLostPingLogsAvgByIP(String ipAddress) throws IOException {
 
@@ -164,7 +185,7 @@ public class CsvPingLogRepository implements PingLogRepository {
     }
 
     FileWriter getFileWriter(boolean append) throws IOException {
-        return new FileWriter(path + "/" + PING_LOG_NAME, append);
+        return new FileWriter(appProperties.getPingLogsPath() + "/" + appProperties.getPinglogsFilename(), append);
     }
 
     /**
@@ -179,7 +200,7 @@ public class CsvPingLogRepository implements PingLogRepository {
     }
 
     BufferedReader getReader() throws IOException {
-        return Files.newBufferedReader(Path.of(path + "/" + PING_LOG_NAME));
+        return Files.newBufferedReader(Path.of(appProperties.getPingLogsPath() + "/" + appProperties.getPinglogsFilename()));
     }
 
     CsvToBean<PingLog> getCsvToBean(Reader reader) {

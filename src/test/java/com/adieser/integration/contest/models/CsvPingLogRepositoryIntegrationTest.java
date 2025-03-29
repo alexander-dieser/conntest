@@ -3,6 +3,7 @@ package com.adieser.integration.contest.models;
 import com.adieser.conntest.configurations.AppProperties;
 import com.adieser.conntest.models.CsvPingLogRepository;
 import com.adieser.conntest.models.PingLog;
+import com.adieser.conntest.models.utils.PingLogFileValidator;
 import com.adieser.conntest.service.writer.FileWriterService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,7 +32,6 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
-import static com.adieser.conntest.models.CsvPingLogRepository.PING_LOG_NAME;
 import static com.adieser.utils.TestUtils.CLOUD_IP_ADDRESS;
 import static com.adieser.utils.TestUtils.DEFAULT_LOG_DATE_TIME;
 import static com.adieser.utils.TestUtils.DEFAULT_PING_TIME;
@@ -44,7 +44,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class CsvPingLogRepositoryIntegrationTest{
-    private static final String PINGLOGS_DIR = "src/test/resources/pingLogs";
+    private static final String PINGLOGS_DIR = "src/test/resources/pingLogs/";
+    private static final String PING_LOG_NAME = "ping.log";
 
     AppProperties appProperties;
     private CsvPingLogRepository csvPingLogRepository;
@@ -53,10 +54,14 @@ class CsvPingLogRepositoryIntegrationTest{
     void setUp() throws IOException {
         appProperties = new AppProperties();
         appProperties.setPingLogsPath(PINGLOGS_DIR);
-        appProperties.setFileMaxSize(50000L);
+        appProperties.setPinglogsFilename(PING_LOG_NAME);
+        appProperties.setFileMaxSizeRows(50000L);
+        appProperties.setFileMaxSizeKbytes(2000L);
 
         Files.createDirectories(Paths.get(PINGLOGS_DIR));
         Files.createFile(Paths.get(PINGLOGS_DIR + "/" + PING_LOG_NAME));
+
+        PingLogFileValidator pingLogFileValidator = new PingLogFileValidator(appProperties);
 
         FileWriterService fileWriterService = new FileWriterService(
                 LoggerFactory.getLogger("testLogger"),
@@ -72,7 +77,8 @@ class CsvPingLogRepositoryIntegrationTest{
         fileWriterService.init();
 
         csvPingLogRepository = new CsvPingLogRepository(
-                PINGLOGS_DIR,
+                pingLogFileValidator,
+                appProperties,
                 LoggerFactory.getLogger("testLogger"),
                 fileWriterService
         );
@@ -337,11 +343,21 @@ class CsvPingLogRepositoryIntegrationTest{
         assertEquals(0, readPingLog().size(), "Failed to clear ping log file");
     }
 
+    @Test
+    void changeDatasource_Success()throws Exception {
+        writePingLog();
+        csvPingLogRepository.changeDatasource("newDatasource.log");
+        writePingLog();
+
+        assertEquals(1, readPingLog().size(), "Failed to change datasource");
+        assertEquals("newDatasource.log", appProperties.getPinglogsFilename(), "Failed to change datasource");
+    }
+
     /**
      * remove directories and ping.log file
      */
     @AfterEach
-    public void clean() throws IOException {
+    void clean() throws IOException {
         deleteDir(Paths.get(PINGLOGS_DIR).toFile());
     }
 
@@ -412,7 +428,7 @@ class CsvPingLogRepositoryIntegrationTest{
     private void writePingLog(LocalDateTime pingDateTime, String ipAddress, long pingTime) throws IOException{
         String pingLogDate = pingDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
 
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(PINGLOGS_DIR + "/" + PING_LOG_NAME, true))) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(PINGLOGS_DIR + "/" + appProperties.getPinglogsFilename(), true))) {
             writer.write(pingLogDate + "," + ipAddress + "," + pingTime + "\n");
         }
     }
@@ -423,7 +439,7 @@ class CsvPingLogRepositoryIntegrationTest{
     private List<PingLog> readPingLog() throws IOException {
         List<PingLog> pingLogList = new ArrayList<>();
 
-        try (BufferedReader reader = new BufferedReader(new FileReader(PINGLOGS_DIR + "/" + PING_LOG_NAME))) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(PINGLOGS_DIR + "/" + appProperties.getPinglogsFilename()))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 String[] pinLogLine = line.split(",");

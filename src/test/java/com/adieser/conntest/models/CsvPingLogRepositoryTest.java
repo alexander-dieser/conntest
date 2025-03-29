@@ -1,5 +1,7 @@
 package com.adieser.conntest.models;
 
+import com.adieser.conntest.configurations.AppProperties;
+import com.adieser.conntest.models.utils.PingLogFileValidator;
 import com.adieser.conntest.service.writer.FileWriterService;
 import com.opencsv.bean.CsvToBean;
 import org.junit.jupiter.api.Test;
@@ -18,6 +20,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.nio.file.FileSystemException;
+import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collections;
@@ -49,6 +53,12 @@ class CsvPingLogRepositoryTest {
 
     @Mock
     FileWriterService  fileWriterServiceMock;
+
+    @Mock
+    PingLogFileValidator pingLogFileValidatorMock;
+
+    @Mock
+    AppProperties appPropertiesMock;
 
     @InjectMocks
     @Spy
@@ -124,7 +134,7 @@ class CsvPingLogRepositoryTest {
                                             String ipAddress,
                                             boolean pingFound){
         // when
-        CsvPingLogRepository underTest = new CsvPingLogRepository("test", logger, fileWriterServiceMock);
+        CsvPingLogRepository underTest = new CsvPingLogRepository(pingLogFileValidatorMock, appPropertiesMock, logger, fileWriterServiceMock);
         PingLog pingLog = getDefaultPingLog();
         pingLog.setDateTime(pingDate);
         Stream<PingLog> stream = Stream.of(pingLog);
@@ -146,7 +156,7 @@ class CsvPingLogRepositoryTest {
     @MethodSource("getLostPingLogsStreamProvider")
     void testGetLostPingLogsStream(long pingTime, boolean pingFound){
         // when
-        CsvPingLogRepository underTest = new CsvPingLogRepository("test", logger, fileWriterServiceMock);
+        CsvPingLogRepository underTest = new CsvPingLogRepository(pingLogFileValidatorMock, appPropertiesMock, logger, fileWriterServiceMock);
         PingLog pingLog = getDefaultPingLog();
         pingLog.setPingTime(pingTime);
         Stream<PingLog> stream = Stream.of(pingLog);
@@ -168,7 +178,7 @@ class CsvPingLogRepositoryTest {
                                                LocalDateTime end,
                                                boolean pingFound){
         // when
-        CsvPingLogRepository underTest = new CsvPingLogRepository("test", logger, fileWriterServiceMock);
+        CsvPingLogRepository underTest = new CsvPingLogRepository(pingLogFileValidatorMock, appPropertiesMock, logger, fileWriterServiceMock);
         PingLog pingLog = getDefaultPingLog();
         pingLog.setDateTime(pingDate);
         Stream<PingLog> stream = Stream.of(pingLog);
@@ -253,6 +263,76 @@ class CsvPingLogRepositoryTest {
         // Assert
         verify(underTestSpy).getPingLogsByDateTimeRangeByIpStream(any(),  eq(start), eq(end), eq(LOCAL_IP_ADDRESS));
         assertEquals(expectedAvg, result);
+    }
+
+    @Test
+    void testChangeDatasource_Success() throws IOException {
+        // given
+        String newFileName = "newFileName";
+        String logPath = "log/path/";
+        when(appPropertiesMock.getPingLogsPath()).thenReturn(logPath);
+        when(pingLogFileValidatorMock.validateFileName(newFileName)).thenReturn(newFileName);
+        when(pingLogFileValidatorMock.resolveAndValidatePath(Path.of(logPath), newFileName)).thenReturn(Path.of(logPath+newFileName));
+
+        // when
+        underTestSpy.changeDatasource(newFileName);
+
+        // then
+        verify(pingLogFileValidatorMock).validateFileProperties(Path.of(logPath+newFileName));
+        verify(appPropertiesMock).setPinglogsFilename(newFileName);
+        verify(fileWriterServiceMock).resetPath();
+
+        verify(logger).info("Successfully changed ping log repository to: {}", Path.of(newFileName));
+    }
+
+    @Test
+    void testChangeDatasource_IllegalArgumentException(){
+        // given
+        String newFileName = "newFileName";
+        when(pingLogFileValidatorMock.validateFileName(newFileName)).thenThrow(new IllegalArgumentException("Invalid file name"));
+
+        // when
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> underTestSpy.changeDatasource(newFileName));
+
+        // then
+        assertEquals("Invalid file name", exception.getMessage());
+    }
+
+    @Test
+    void testChangeDatasource_SecurityException() throws FileSystemException {
+        // given
+        String newFileName = "newFileName";
+        String logPath = "log/path/";
+        when(appPropertiesMock.getPingLogsPath()).thenReturn(logPath);
+        when(pingLogFileValidatorMock.validateFileName(newFileName)).thenReturn(newFileName);
+        when(pingLogFileValidatorMock.resolveAndValidatePath(Path.of(logPath), newFileName)).thenReturn(Path.of(logPath+newFileName));
+        doThrow(new SecurityException("Security exception")).when(pingLogFileValidatorMock).validateFileProperties(Path.of(logPath+newFileName));
+
+        // when
+        SecurityException exception = assertThrows(SecurityException.class,
+                () -> underTestSpy.changeDatasource(newFileName));
+
+        // then
+        assertEquals("Security exception", exception.getMessage());
+    }
+
+    @Test
+    void testChangeDatasource_IOException() throws IOException {
+        // given
+        String newFileName = "newFileName";
+        String logPath = "log/path/";
+        when(appPropertiesMock.getPingLogsPath()).thenReturn(logPath);
+        when(pingLogFileValidatorMock.validateFileName(newFileName)).thenReturn(newFileName);
+        when(pingLogFileValidatorMock.resolveAndValidatePath(Path.of(logPath), newFileName)).thenReturn(Path.of(logPath+newFileName));
+        doThrow(new IOException("IOException")).when(fileWriterServiceMock).resetPath();
+
+        // when
+        IOException exception = assertThrows(IOException.class,
+                () -> underTestSpy.changeDatasource(newFileName));
+
+        // then
+        assertEquals("IOException", exception.getMessage());
     }
 
     static Stream<Arguments> findAvgLatencyByIpPingLogProvider() {

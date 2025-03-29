@@ -2,6 +2,7 @@ package com.adieser.conntest.configurations;
 
 import com.adieser.conntest.models.CsvPingLogRepository;
 import com.adieser.conntest.models.PingLogRepository;
+import com.adieser.conntest.models.utils.PingLogFileValidator;
 import com.adieser.conntest.service.writer.FileWriterService;
 import org.slf4j.Logger;
 import org.springframework.context.annotation.Bean;
@@ -15,13 +16,15 @@ public class PingLogRepositoryConfiguration {
     private final Logger logger;
     private final FileWriterService fileWriterService;
     private final AppProperties appProperties;
+    private final PingLogFileValidator pingLogFileValidator;
 
     public PingLogRepositoryConfiguration(Logger logger,
                                           FileWriterService fileWriterService,
-                                          AppProperties appProperties) {
+                                          AppProperties appProperties, PingLogFileValidator pingLogFileValidator) {
         this.logger = logger;
         this.fileWriterService = fileWriterService;
         this.appProperties = appProperties;
+        this.pingLogFileValidator = pingLogFileValidator;
     }
 
     /**
@@ -30,6 +33,6 @@ public class PingLogRepositoryConfiguration {
      */
     @Bean
     public PingLogRepository csvPingLogRepository(){
-        return new CsvPingLogRepository(appProperties.getPingLogsPath(), logger, fileWriterService);
+        return new CsvPingLogRepository(pingLogFileValidator, appProperties, logger, fileWriterService);
     }
 }

@@ -131,4 +131,10 @@ public interface ConnTestService {
      * @return average latency of all the ping logs
      */
     BigDecimal getAvgLatencyByDateTimeRangeByIp(LocalDateTime start, LocalDateTime end, String ipAddress) throws IOException;
+
+    /**
+     * Change the datasource where the pinglogs are located
+     * @param newDatasource new datasource to be used
+     */
+    void changeDataSource(Object newDatasource) throws IOException;
 }

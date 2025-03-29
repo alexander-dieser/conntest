@@ -235,8 +235,9 @@ class FileWriterServiceTest {
         String content = "Test content\n";
         Files.write(testFilePath, content.getBytes());
 
-        when(appProperties.getFileMaxSize()).thenReturn(10L);
+        when(appProperties.getFileMaxSizeRows()).thenReturn(10L);
         when(appProperties.getPingLogsPath()).thenReturn(tempDir.toString());
+        when(appProperties.getPinglogsFilename()).thenReturn("ping.log");
 
         // When
         fileWriterService.checkFileSizeAndRotate();
@@ -257,8 +258,9 @@ class FileWriterServiceTest {
         String content = "Test content\nTest content\nTest content\n";
         Files.write(testFilePath, content.getBytes());
 
-        when(appProperties.getFileMaxSize()).thenReturn(2L);
+        when(appProperties.getFileMaxSizeRows()).thenReturn(2L);
         when(appProperties.getPingLogsPath()).thenReturn(tempDir.toString());
+        when(appProperties.getPinglogsFilename()).thenReturn("ping.log");
 
         fileWriterService.filePath = testFilePath;
         fileWriterService.writer = mockedWriter;
