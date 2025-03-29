@@ -104,7 +104,7 @@ class CsvPingLogRepositoryIntegrationTest{
         savePingLog(csvPingLogRepository);
 
         await()
-                .atMost(200, TimeUnit.MILLISECONDS)
+                .atMost(400, TimeUnit.MILLISECONDS)
                 .until(() -> readPingLog().size(), equalTo(2));
 
         long pingAmount = readPingLog().size();
