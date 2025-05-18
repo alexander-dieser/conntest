@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox alignment="TOP_CENTER" maxWidth="-Infinity" minWidth="-Infinity" stylesheets="@/css/mainstyle.css, @/css/comboboxstyle.css, @/css/tablestyle.css, @/css/usermanualstyle.css, @/css/customIPDialog.css" xmlns="http://javafx.com/javafx/11.0.14-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.adieser.conntest.views.controllers.UiController">
+    <HBox alignment="CENTER_RIGHT" prefHeight="28.0" styleClass="tittlebar">
+        <Button fx:id="minimizeButton" onAction="#handleMinimize">
+            <HBox.margin>
+                <Insets bottom="5.0" top="3.0" />
+            </HBox.margin>
+            <graphic>
+                <ImageView fitHeight="18" fitWidth="18">
+                    <Image url="@../image/minimizebutton.png" />
+               <cursor>
+                  <Cursor fx:constant="HAND" />
+               </cursor>
+                </ImageView>
+            </graphic>
+        </Button>
+        <Button fx:id="maximizeRestoreButton" onAction="#handleMaximizeRestore">
+            <HBox.margin>
+                <Insets top="3.0" />
+            </HBox.margin>
+            <graphic>
+                <ImageView fitHeight="18" fitWidth="18">
+                    <Image url="@../image/maximizeRestorebutton1.png" />
+               <cursor>
+                  <Cursor fx:constant="HAND" />
+               </cursor>
+                </ImageView>
+            </graphic>
+        </Button>
+        <Button fx:id="closeButton" onAction="#handleClose">
+            <HBox.margin>
+                <Insets left="5.0" right="5.0" top="3.0" />
+            </HBox.margin>
+            <graphic>
+                <ImageView fitHeight="18" fitWidth="18">
+                    <Image url="@../image/closebutton.png" />
+               <cursor>
+                  <Cursor fx:constant="HAND" />
+               </cursor>
+                </ImageView>
+            </graphic>
+        </Button>
+    </HBox>
+   <HBox spacing="15.0" VBox.vgrow="ALWAYS">
+      <children>
+          <!-- FIRST DIVISION -->
+          <GridPane alignment="TOP_CENTER" styleClass="topbackground" vgap="10.0">
+              <columnConstraints>
+                  <ColumnConstraints hgrow="SOMETIMES" maxWidth="310.0" minWidth="290.0" prefWidth="300.0" />
+              </columnConstraints>
+              <rowConstraints>
+                  <RowConstraints vgrow="NEVER" />
+                  <RowConstraints vgrow="NEVER" />
+                  <RowConstraints vgrow="NEVER" />
+                  <RowConstraints vgrow="ALWAYS" />
+                  <RowConstraints vgrow="ALWAYS" />
+                  <RowConstraints vgrow="ALWAYS" />
+                  <RowConstraints vgrow="ALWAYS" />
+                  <RowConstraints vgrow="ALWAYS" />
+                  <RowConstraints vgrow="ALWAYS" />
+               <RowConstraints />
+              </rowConstraints>
+              <padding>
+                  <Insets bottom="20.0" />
+              </padding>
+              <!-- TITLE -->
+              <Label prefWidth="200.0" styleClass="title" text="ConnTest" GridPane.halignment="CENTER" GridPane.valignment="CENTER" />
+
+             <HBox alignment="TOP_CENTER" spacing="10.0" GridPane.rowIndex="1" GridPane.valignment="TOP">
+                  <!-- START BUTTON -->
+                  <VBox fx:id="startButtonBox">
+                        <Button fx:id="startButton" alignment="CENTER" contentDisplay="CENTER" styleClass="mainbutton" text="Start analysis">
+                             <VBox.margin><Insets bottom="5.0" /></VBox.margin>
+                             <cursor><Cursor fx:constant="HAND" /></cursor>
+                        </Button>
+
+                        <RadioButton fx:id="autoDiscoveryButton" onAction="#setAutoDiscovery" selected="true" styleClass="radio-button" text="Auto-Discovery">
+                             <toggleGroup><ToggleGroup fx:id="toggleGroup" /></toggleGroup>
+                             <VBox.margin><Insets bottom="2.0" left="3.0" /></VBox.margin>
+                             <cursor><Cursor fx:constant="HAND" /></cursor>
+                        </RadioButton>
+
+                        <HBox>
+                            <RadioButton fx:id="customIpsButton" onAction="#setCustomIps" styleClass="maincustomipbutton" text="Set custom IPs" textFill="WHITE" toggleGroup="$toggleGroup">
+                                <cursor> <Cursor fx:constant="HAND" /></cursor>
+                                <HBox.margin><Insets left="3.0" right="5.0" /></HBox.margin>
+                            </RadioButton>
+                            <Button onAction="#setCustomIps" styleClass="onlytextbutton" text="edit" textFill="WHITE" underline="true">
+                                <cursor> <Cursor fx:constant="HAND" /></cursor>
+                                <padding><Insets top="1.0" /></padding>
+                            </Button>
+                        </HBox>
+
+                  </VBox>
+                    <!-- LOADER -->
+                  <ProgressIndicator fx:id="progressIndicator" maxHeight="30.0" maxWidth="30.0" styleClass="loader" visible="false" HBox.hgrow="NEVER">
+                    <HBox.margin><Insets top="10.0" /></HBox.margin>
+                  </ProgressIndicator>
+                  <padding><Insets left="40.0" /></padding>
+             </HBox>
+              <!-- STOP BUTTON -->
+              <Button fx:id="stopButton" disable="true" styleClass="mainbutton" text="Stop analysis" GridPane.columnIndex="0" GridPane.halignment="CENTER" GridPane.rowIndex="2">
+                    <cursor><Cursor fx:constant="HAND" /></cursor>
+              </Button>
+
+          </GridPane>
+
+
+             <!-- SECOND DIVISION -->
+          <GridPane alignment="TOP_CENTER" vgap="10.0" HBox.hgrow="ALWAYS">
+              <columnConstraints>
+                  <ColumnConstraints hgrow="SOMETIMES" />
+              </columnConstraints>
+              <rowConstraints>
+                  <RowConstraints vgrow="NEVER" />
+                  <RowConstraints prefHeight="520" vgrow="ALWAYS" />
+              </rowConstraints>
+              <!-- 0  0 -->
+              <VBox prefWidth="269.0" spacing="5.0" styleClass="h3-label" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                  <HBox prefHeight="30.0" prefWidth="190.0" VBox.vgrow="NEVER">
+                      <Label style="-fx-font-size: 16px; -fx-font-weight: bold;" text="Configurations" />
+                      <Region HBox.hgrow="ALWAYS" />
+                      <Button onAction="#openUserManual" styleClass="usermanualbutton" text="?">
+                          <HBox.margin> <Insets right="15.0" /></HBox.margin>
+                          <cursor><Cursor fx:constant="HAND" /></cursor>
+                      </Button>
+                  </HBox>
+
+                     <!-- TIME CHOICE BOX -->
+                  <HBox alignment="CENTER_LEFT" prefHeight="30.0" prefWidth="190.0" styleClass="combo-box">
+                      <Label text="Refresh time: ">
+                         <HBox.margin><Insets right="5.0" /></HBox.margin>
+                      </Label>
+                      <ComboBox fx:id="timeChoiceBox" promptText="5" style="-fx-background-color: transparent;" HBox.hgrow="SOMETIMES">
+                      <cursor><Cursor fx:constant="HAND" /></cursor></ComboBox>
+                      <Label text="  s" />
+                  </HBox>
+                  <HBox prefHeight="26.0" prefWidth="1000.0" spacing="9">
+                     <!-- FILTERS -->
+                     <Label text="Filters: " />
+                      <CheckBox fx:id="dayFilterBox" mnemonicParsing="false" onAction="#updateTables" text=" Current day only">
+                            <cursor><Cursor fx:constant="HAND" /></cursor>
+                      </CheckBox>
+                      <CheckBox fx:id="lostPingsFilterBox" mnemonicParsing="false" onAction="#updateTables" text=" Show lost pings only">
+                          <cursor><Cursor fx:constant="HAND" /></cursor>
+                      </CheckBox>
+                  </HBox>
+               <padding><Insets left="15.0" /></padding>
+
+              </VBox>
+
+                 <!-- 0  1 -->
+              <!-- Table -->
+              <VBox alignment="TOP_CENTER" prefHeight="700.0" prefWidth="1000.0" spacing="10.0" GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.vgrow="ALWAYS" HBox.hgrow="ALWAYS">
+
+                     <VBox fx:id="tableVBox" alignment="CENTER" maxHeight="600.0" styleClass="table-vbox" VBox.vgrow="ALWAYS">
+                      <TableView fx:id="tableView" prefHeight="5.0" prefWidth="5.0" styleClass="table" VBox.vgrow="ALWAYS" />
+                      <TableView fx:id="footerTable" prefHeight="5.0" prefWidth="5.0" styleClass="footer_table" VBox.vgrow="NEVER" />
+                  <VBox.margin>
+                     <Insets left="15.0" right="15.0" />
+                  </VBox.margin>
+                  </VBox>
+
+                     <!-- Label oldest pinglog  -->
+                  <HBox alignment="TOP_LEFT" spacing="10">
+                      <Label fx:id="oldestPingLabel" text="Oldest ping: ">
+                     <HBox.margin>
+                        <Insets left="15.0" />
+                     </HBox.margin></Label>
+                  <VBox.margin>
+                     <Insets top="10.0" />
+                  </VBox.margin>
+                  </HBox>
+                     <HBox alignment="CENTER" spacing="10" styleClass="buttons-box">
+                      <Button onAction="#clearLogs" styleClass="clear-button" text="Clear">
+                     <cursor>
+                        <Cursor fx:constant="HAND" />
+                     </cursor></Button>
+                      <Button fx:id="saveButton" styleClass="save-button" text="Save">
+                     <cursor>
+                        <Cursor fx:constant="HAND" />
+                     </cursor></Button>
+                  </HBox>
+      
+                     <GridPane.margin>
+                      <Insets top="15.0" />
+                  </GridPane.margin>
+              </VBox>
+            <HBox.margin>
+               <Insets bottom="20.0" left="5.0" right="20.0" top="20.0" />
+            </HBox.margin>
+      
+             </GridPane>
+      </children>
+      <VBox.margin>
+         <Insets />
+      </VBox.margin>
+   </HBox>
+</VBox>

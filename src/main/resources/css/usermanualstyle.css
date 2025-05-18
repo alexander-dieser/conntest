@@ -1,0 +1,66 @@
+.root_usermanual{
+    -fx-border-width: 1px;
+    -fx-border-color: #c9c5c5;
+    -fx-border-radius: 5px;
+
+}
+
+/* User manual button */
+.usermanualbutton {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-font-weight: bold;
+    -fx-font-size: 18px;
+    -fx-text-fill: black;
+    -fx-padding: 0;
+}
+
+.usermanualbutton:hover {
+    -fx-text-fill: #074f75;
+    -fx-font-size: 19px;
+}
+
+/* Descrption labels style */
+.description-header-label {
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #555555c5;
+    -fx-font-style: italic;
+}
+
+.description-section-header {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #555555c5;
+    -fx-font-style: italic;
+}
+
+.description-content-label {
+    -fx-font-size: 14px;
+    -fx-text-fill: #666666cb;
+    -fx-wrap-text: true;
+    -fx-font-style: italic;
+}
+
+#descriptionScroll {
+    -fx-background-color: white;
+    -fx-padding: 10px 10px 0px 10px;
+}
+
+#descriptionScroll .track {
+    -fx-background-color: white;
+}
+
+#descriptionScroll .track-background {
+    -fx-background-color: white;
+}
+
+#descriptionScroll .thumb {
+    -fx-background-color: #acababb6;
+}
+
+#descriptionScroll .increment-button,
+#descriptionScroll .decrement-button {
+    -fx-opacity: 0;
+    -fx-padding: 2;
+}

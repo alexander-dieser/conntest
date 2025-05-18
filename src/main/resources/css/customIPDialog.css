@@ -1,0 +1,71 @@
+.root_customip{
+    -fx-border-width: 1px;
+    -fx-border-color: #c9c5c5;
+    -fx-border-radius: 5px;
+
+}
+
+.tittlebar_customip{
+    -fx-background-color: #095C8A;
+    -fx-border-width: 4px;
+    -fx-border-color: #095C8A;
+}
+
+.tittlebar_customip .button{
+    -fx-background-color: transparent;
+    -fx-font-weight: bold;
+    -fx-font-size: 10px;
+}
+
+.tittlebar_customip .button:hover {
+    -fx-background-color: #074f75;
+    -fx-effect: dropshadow(gaussian, #07486b, 2, 0.04, 0, 0);
+    -fx-scale-x: 1.03;
+    -fx-scale-y: 1.03;
+}
+
+.tittlebar .button:pressed {
+    -fx-background-color: #07486b;
+    -fx-transition: all 0.25s;
+    -fx-effect: null;
+    -fx-scale-x: 1;
+    -fx-scale-y: 1;
+}
+
+/* Main Button */
+.maincustomipbutton {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-font-weight: bold;
+    -fx-font-size: 12px;
+    -fx-text-fill: #ffffff;
+    -fx-padding: 0;
+}
+
+.maincustomipbutton:hover {
+    -fx-text-fill: #ffffff;
+    -fx-effect: dropshadow(gaussian, #dff1fd, 1, 0.06, 0, 0);
+    -fx-scale-x: 1.0005;
+    -fx-scale-y: 1.0005;
+}
+
+/* Save and exit Button */
+.customipbutton {
+    -fx-padding: 5px 20px;
+    -fx-border-width: 0;
+    -fx-border-radius: 80px;
+    -fx-background-color: #095c8adb;
+    -fx-text-fill: #ffffff;
+    -fx-font-weight: bold;
+    -fx-font-size: 12px;
+    -fx-transition: all 0.5s;
+    -fx-margin: 20px;
+    -fx-alignment: CENTER_RIGHT;
+}
+
+.customipbutton:hover {
+    -fx-background-color: #095c8adb;
+    -fx-effect: dropshadow(gaussian, #095c8adb, 1, 0.04, 0, 0);
+    -fx-scale-x: 1.005;
+    -fx-scale-y: 1.005;
+}

@@ -1,0 +1,33 @@
+combo-box-base{
+    -fx-background: transparent;
+    -fx-background-color: #ffffffc8;
+    -fx-border-color: transparent;
+}
+
+.combo-box-base:focused{
+    -fx-background-color: #ffffffc8;
+    -fx-text-fill: #333333;
+    -fx-border-color: transparent;
+}
+
+.combo-box-base:showing{
+    -fx-color: #c9c5c5;
+    -fx-border-color: transparent;
+    -fx-background-color: #ffffff;
+}
+
+.combo-box-popup .list-view{
+    -fx-border-color:#c9c5c5;
+}
+
+.combo-box-popup .list-view .list-cell:filled:hover{
+    -fx-background-color: #cee2ef;
+    -fx-text-fill: #333333;
+}
+
+.combo-box-popup .list-view .list-cell:filled:focused{
+    -fx-background-color: #ffffffc8;
+    -fx-text-fill: #333333;
+}
+
+
