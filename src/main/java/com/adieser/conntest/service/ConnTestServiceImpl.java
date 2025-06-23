@@ -19,6 +19,7 @@ import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * ConnTestService implementation. It uses {@link ExecutorService} for multithreading.
@@ -28,16 +29,21 @@ import java.util.regex.Pattern;
 public class ConnTestServiceImpl implements ConnTestService {
 
     public static final String CLOUD_IP = "8.8.8.8";
+
+    /**
+     * Regex pattern to match the hops in the tracert output.
+     * It captures the hop number and the IP address.
+     * The first group captures the hop number (1 or 2), and the second group captures the IP address.
+     */
+    public static final String HOP_PATTERN = "^\\s*([12])\\s+(?:.*?\\s)?(?:\\(?((?:\\d{1,3}\\.){3}\\d{1,3})\\)?)\\s";
+
     private final Logger logger;
+
     List<ConnTest> tests = new ArrayList<>();
+
     private final ExecutorService threadPoolExecutor;
 
     private final TracertProvider tracertProvider;
-
-    /**
-     * Tracert IP regex (Windows) for extracting the IP addresses from tracert output
-     */
-    private static final String REGEX_PATTERN_TRACERT_WINDOWS = "(?<!\\[)(\\b(?:\\d{1,3}\\.){3}\\d{1,3}\\b)(?!])\\b(?<!8\\.8\\.8\\.8)";
 
     private final PingLogRepository pingLogRepository;
 
@@ -218,12 +224,25 @@ public class ConnTestServiceImpl implements ConnTestService {
         try (BufferedReader reader = executeTracert()
                 .orElseThrow(() -> new IOException("Error executing tracert in the OS"))) {
 
-            String line;
-            while ((line = reader.readLine()) != null) {
-                Matcher matcher = Pattern.compile(REGEX_PATTERN_TRACERT_WINDOWS).matcher(line);
-                if (matcher.find())
-                    ipAddresses.add(matcher.group());
+            // Join all lines from the reader into a single String, preserving the original format
+            String tracertOutput = reader.lines().collect(Collectors.joining(System.lineSeparator()));
+            logger.info(tracertOutput);
+
+            // Use regex to find the first two hops (local gateway and ISP)
+            Matcher matcher = Pattern.compile(HOP_PATTERN, Pattern.MULTILINE).matcher(tracertOutput);
+
+            while (matcher.find()) {
+                String ip = matcher.group(2);
+                if (ip != null && !ip.isEmpty()) {
+                    ipAddresses.add(ip);
+                }
+
+                // We only need the 2 first hops (local gateway and ISP)
+                if (ipAddresses.size() == 2) {
+                    break;
+                }
             }
+
         }catch (IOException e) {
             logger.error("Traceroute error", e);
         }
