@@ -403,16 +403,19 @@ class ConnTestServiceImplTest {
         ConnTestServiceImpl underTest =
                 spy(new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository, pingUtils));
         BufferedReader bufferedReader = mock(BufferedReader.class);
-        when(bufferedReader.readLine())
-                .thenReturn("")
-                .thenReturn("xxxxx x xx xxxxxxxxx dns.google [8.8.8.8]")
-                .thenReturn("xxxxx xx xxxxxx xx 2 xxxxxx")
-                .thenReturn("")
-                .thenReturn("1    <1 ms    <1 ms    <1 ms  " + LOCAL_IP_ADDRESS)
-                .thenReturn("2     1 ms     2 ms     1 ms  " + ISP_IP_ADDRESS)
-                .thenReturn("")
-                .thenReturn("xxxxx xxxxxxxx.")
-                .thenReturn(null);
+        Stream<String> streamMock = mock(Stream.class);
+        String expectedOutput = """
+            Tracing route to google-public-dns-a.google.com [8.8.8.8]
+            over a maximum of 30 hops:
+            
+              1     1 ms     1 ms     1 ms  %s
+              2     5 ms     3 ms     3 ms  %s
+              3    11 ms    10 ms    10 ms  111.22.3.7
+            Trace complete.
+            """.formatted(LOCAL_IP_ADDRESS, ISP_IP_ADDRESS);
+
+        when(bufferedReader.lines()).thenReturn(streamMock);
+        when(streamMock.collect(any())).thenReturn(expectedOutput);
 
         doReturn(Optional.of(bufferedReader)).when(underTest).executeTracert();
 
@@ -430,10 +433,8 @@ class ConnTestServiceImplTest {
         // when
         ConnTestServiceImpl underTest =
                 spy(new ConnTestServiceImpl(executorService, logger, tracertProvider, pingLogRepository, pingUtils));
-        BufferedReader bufferedReader = mock(BufferedReader.class);
-        when(bufferedReader.readLine()).thenThrow(IOException.class);
 
-        doReturn(Optional.of(bufferedReader)).when(underTest).executeTracert();
+        doReturn(Optional.empty()).when(underTest).executeTracert();
 
         // then
         underTest.getLocalAndISPIpAddresses();
